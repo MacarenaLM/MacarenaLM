@@ -1,0 +1,97 @@
+---
+title: Problem 3_Installation of packages using *Pak*
+author: Macarena López-Mayorga
+date: 2026-02-23
+format: pdf
+---
+# Preliminary actions
+
+```{r}
+#| eval: FALSE
+# First, *pak* needs to be installed
+
+install.packages("pak")
+```
+
+```{r}
+#| eval: FALSE
+# Then, *pak* needs to be activated
+library(pak)
+```
+ Now, I can install *broom*, *cytoMEM* and *DillonHammill/CytoExploreR* using *pak*. Let's go!
+## broom
+
+```{r}
+#| eval: FALSE
+# *broom* is a package located in the CRAN repository
+pak::pkg_install("broom")
+```
+
+![](broom_installation.png)
+
+## cytoMEM
+
+```{r}
+#| eval: FALSE
+# *cytoMEM* is a package located in Bioconductor. The code used is the same for the CRAN repository
+pak::pkg_install("cytoMEM")
+```
+
+![](problem3\cytoMEM_installation.png)
+![](problem3\cytoMEM_installation2.png)
+
+## DillonHammill/CytoExploreR
+
+```{r}
+#| eval: FALSE
+# *DillonHammill/CytoExploreR* is a package from the GitHub repository, and the code is the same that I have previously shown.
+pak::pkg_install("DillonHammill/CytoExploreR")
+```
+
+![](problem3\CytoExploreR_installation.png)
+
+This error suggests that is necessary the installation of *EMbedSOM* and *superheat* first
+
+
+```{r}
+#| eval: FALSE
+# For *EmbedSOM*:
+pak::pkg_install("exaexa/EmbedSOM")
+```
+
+![](problem3\EmbedSOM.png)
+![](problem3\EmbedSOM2.png)
+![](problem3\EmbedSOM3.png)
+
+
+```{r}
+#| eval: FALSE
+# For *superheat*: 
+pak::pkg_install("superheat")
+```
+
+![](problem3\superheat.png)
+
+
+```{r}
+#| eval: FALSE
+#Let's try again with *cytoExploreR* from the GitHub repository:
+pak::pkg_install("DillonHammill/CytoExploreR")
+```
+
+![](problem3\superheat2.png)
+
+Now, the error seems to be related with the version of the package. I wasn't be able to find a newer version of *superheat*, so I'm going to try to install *CytoExploreR* without using *pak*.
+
+```{r}
+#| eval: FALSE
+library(remotes)
+install_github("DillonHammill/CytoExploreR")
+```
+
+![](problem3\CytoExploreR.png)
+![](problem3\CytoExploreR2.png)
+![](problem3\CytoExploreR3.png)
+![](problem3\CytoExploreR4.png)
+
+So, finally, CytoExploreR is installed. Although *pak* has one code for all repositories and this is an andvantage, seems to give some problems with the installation of some packages.
