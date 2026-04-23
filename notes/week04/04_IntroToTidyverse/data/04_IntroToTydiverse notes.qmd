@@ -2,7 +2,7 @@
 title: "week4_Introduction to tidyverse"
 author: "Macarena López-Mayorga"
 date: 2026-03-27
-format: pdf
+format: html
 ---
 First, we need to indicate where is located the file
 
