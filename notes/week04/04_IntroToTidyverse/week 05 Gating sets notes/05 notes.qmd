@@ -1,0 +1,111 @@
+---
+title: "Week 05_Gating sets"
+author: "Macarena López-Mayorga"
+date: 2026-04-23
+format: pdf
+---
+
+```{r}
+Folder <- file.path("C:/Users/Macarena/CytometryInR/course/05_GatingSets/data")
+fcs_files <- list.files(Folder, pattern=".fcs", full.names=TRUE)
+fcs_files
+```
+[1] "C:/Users/Macarena/CytometryInR/course/05_GatingSets/data/2025_07_26_AB_02_INF052_00_Ctrl.fcs"
+[2] "C:/Users/Macarena/CytometryInR/course/05_GatingSets/data/2025_07_26_AB_02_INF052_00_SEB.fcs" 
+[3] "C:/Users/Macarena/CytometryInR/course/05_GatingSets/data/2025_07_26_AB_02_INF100_00_Ctrl.fcs"
+[4] "C:/Users/Macarena/CytometryInR/course/05_GatingSets/data/2025_07_26_AB_02_INF100_00_SEB.fcs" 
+[5] "C:/Users/Macarena/CytometryInR/course/05_GatingSets/data/2025_07_26_AB_02_INF179_00_Ctrl.fcs"
+[6] "C:/Users/Macarena/CytometryInR/course/05_GatingSets/data/2025_07_26_AB_02_INF179_00_SEB.fcs" 
+
+We are going to name one of them as "fcs-files[x]". In our case, the first file
+```{r}
+fcs_files[1]
+```
+[1] "C:/Users/Macarena/CytometryInR/course/05_GatingSets/data/2025_07_26_AB_02_INF052_00_Ctrl.fcs"
+
+```{r}
+library(flowCore)
+```
+
+```{r}
+flowFrame <- read.FCS(filename=fcs_files[1], truncate_max_range = FALSE, transformation = FALSE)
+flowFrame
+```
+flowFrame object '2025_07_26_AB_02_INF052_00_Ctrl.fcs'
+with 10000 cells and 43 observables:
+               name      desc     range  minRange    maxRange
+$P1            Time        NA    896745         0     878.809
+$P2           SSC-W        NA   4194304         0 4194303.000
+$P3           SSC-H        NA   4194304         0 4194303.000
+$P4           SSC-A        NA   4194304         0 4194303.000
+$P5           FSC-W        NA   4194304         0 4194303.000
+...             ...       ...       ...       ...         ...
+$P39     APC-R700-A    CD107a   4194304      -111     4192506
+$P40   Zombie NIR-A Viability   4194304      -111     4192506
+$P41 APC-Fire 750-A      CD27   4194304      -111     4192506
+$P42 APC-Fire 810-A      CCR7   4194304      -111     4192506
+$P43           AF-A        NA   4194304      -111     4194303
+472 keywords are stored in the 'description' slot
+
+```{r}
+str(fcs_files)
+```
+ chr [1:6] "C:/Users/Macarena/CytometryInR/course/05_GatingSets/data/2025_07_26_AB_02_INF052_00_Ctrl.fcs" ...
+
+ All of them are character class.
+
+ If we want to read multiple fcs files at once, we will need another function:
+ 
+ ```{r}
+flowSet <- read.flowSet(files=fcs_files, truncate_max_range = FALSE, transformation = FALSE)
+flowSet
+ ```
+ A flowSet with 6 experiments.
+
+column names(43): Time SSC-W ... APC-Fire 810-A AF-A
+
+Also, we can select those fcs files that we can specifically read:
+
+```{r}
+read.flowSet(files=fcs_files[c(1, 3:4)], truncate_max_range = FALSE, transformation = FALSE)
+```
+A flowSet with 3 experiments.
+
+column names(43): Time SSC-W ... APC-Fire 810-A AF-A
+
+we can see that read.flowSet() has created a “flowSet” class object.
+
+```{r}
+class(flowSet)
+```
+[1] "flowSet"
+attr(,"package")
+[1] "flowCore"
+
+In the right secondary side bar, we can see that "flowSet” is another Bioconductor style S4-type object that within its frame slot contains individual “flowFrames”.
+If instead of class() we had used str(), we would have seen a similar output ton what we see in the Variables panel.
+
+```{r}
+str(flowSet)
+```
+Formal class 'flowSet' [package "flowCore"] with 2 slots
+  ..@ frames   :<environment: 0x000001fb5d4cf5a8> 
+  ..@ phenoData:Formal class 'AnnotatedDataFrame' [package "Biobase"] with 4 slots
+  .. .. ..@ varMetadata      :'data.frame':	1 obs. of  1 variable:
+  .. .. .. ..$ labelDescription: chr "Name"
+  .. .. ..@ data             :'data.frame':	6 obs. of  1 variable:
+  .. .. .. ..$ name: 'AsIs' chr [1:6] "2025_07_26_AB_02_INF052_00_Ctrl.fcs" "2025_07_26_AB_02_INF052_00_SEB.fcs" "2025_07_26_AB_02_INF100_00_Ctrl.fcs" "2025_07_26_AB_02_INF100_00_SEB.fcs" ...
+  .. .. ..@ dimLabels        : chr [1:2] "rowNames" "columnNames"
+  .. .. ..@ .__classVersion__:Formal class 'Versions' [package "Biobase"] with 1 slot
+  .. .. .. .. ..@ .Data:List of 1
+  .. .. .. .. .. ..$ : int [1:3] 1 1 0
+  .. .. .. .. ..$ names: chr "AnnotatedDataFrame"
+
+  REMINDER: While not today’s focus, remember we could access individual components inside the flowSet using the @ accessors covered during Week3.
+
+  One consideration of this method is the contents of your .fcs files are read into your computer’s random access memory (RAM). While for individual .fcs files or small experiments this will not present a problem for most modern computers, when working with large spectral flow cytometry files containing millions of events (or trying to analyze many .fcs files at once), you may encounter situations where you can quickly exceed your computers available RAM.
+  To build some contextual understanding of the problem, let’s learn how to check how much memory is being used by our individual variables/objects within our R session. We will primarily use the lobstr R packages obj_size() function, as it better handles evaluating complicated objects than base R’s object.size() function.
+  
+  ```{r}
+  
+  ```
