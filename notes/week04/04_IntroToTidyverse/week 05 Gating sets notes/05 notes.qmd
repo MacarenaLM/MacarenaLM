@@ -6,6 +6,7 @@ format: pdf
 ---
 
 ```{r}
+#| eval: FALSE
 Folder <- file.path("C:/Users/Macarena/CytometryInR/course/05_GatingSets/data")
 fcs_files <- list.files(Folder, pattern=".fcs", full.names=TRUE)
 fcs_files
@@ -19,15 +20,18 @@ fcs_files
 
 We are going to name one of them as "fcs-files[x]". In our case, the first file
 ```{r}
+#| eval: FALSE
 fcs_files[1]
 ```
 [1] "C:/Users/Macarena/CytometryInR/course/05_GatingSets/data/2025_07_26_AB_02_INF052_00_Ctrl.fcs"
 
 ```{r}
+#| eval: FALSE
 library(flowCore)
 ```
 
 ```{r}
+#| eval: FALSE
 flowFrame <- read.FCS(filename=fcs_files[1], truncate_max_range = FALSE, transformation = FALSE)
 flowFrame
 ```
@@ -48,6 +52,7 @@ $P43           AF-A        NA   4194304      -111     4194303
 472 keywords are stored in the 'description' slot
 
 ```{r}
+#| eval: FALSE
 str(fcs_files)
 ```
  chr [1:6] "C:/Users/Macarena/CytometryInR/course/05_GatingSets/data/2025_07_26_AB_02_INF052_00_Ctrl.fcs" ...
@@ -57,6 +62,7 @@ str(fcs_files)
  If we want to read multiple fcs files at once, we will need another function:
  
  ```{r}
+ #| eval: FALSE
 flowSet <- read.flowSet(files=fcs_files, truncate_max_range = FALSE, transformation = FALSE)
 flowSet
  ```
@@ -67,6 +73,7 @@ column names(43): Time SSC-W ... APC-Fire 810-A AF-A
 Also, we can select those fcs files that we can specifically read:
 
 ```{r}
+#| eval: FALSE
 read.flowSet(files=fcs_files[c(1, 3:4)], truncate_max_range = FALSE, transformation = FALSE)
 ```
 A flowSet with 3 experiments.
@@ -76,6 +83,7 @@ column names(43): Time SSC-W ... APC-Fire 810-A AF-A
 we can see that read.flowSet() has created a “flowSet” class object.
 
 ```{r}
+#| eval: FALSE
 class(flowSet)
 ```
 [1] "flowSet"
@@ -86,6 +94,7 @@ In the right secondary side bar, we can see that "flowSet” is another Biocondu
 If instead of class() we had used str(), we would have seen a similar output ton what we see in the Variables panel.
 
 ```{r}
+#| eval: FALSE
 str(flowSet)
 ```
 Formal class 'flowSet' [package "flowCore"] with 2 slots
@@ -107,16 +116,18 @@ Formal class 'flowSet' [package "flowCore"] with 2 slots
   To build some contextual understanding of the problem, let’s learn how to check how much memory is being used by our individual variables/objects within our R session. We will primarily use the lobstr R packages obj_size() function, as it better handles evaluating complicated objects than base R’s object.size() function.
   
   ```{r}
+  #| eval: FALSE
 object.size(flowFrame)
   ```
   3570976 bytes
 
   ```{r}
-# Only if it is NOT installed #
+#| eval: FALSE
 install.packages("lobstr")
   ```
 
   ```{r}
+#| eval: FALSE
  library(lobstr)
 obj_size(flowFrame) 
   ```
@@ -124,6 +135,7 @@ obj_size(flowFrame)
   FlowSet object contains multiples flowFrame objects, so the size should be bigger:
   
   ```{r}
+  #| eval: FALSE
 obj_size(flowSet)
   ```
   20.99 MB
@@ -131,6 +143,7 @@ obj_size(flowSet)
   If we were curious how much memory total we are using within R at the current moment, we can check using the mem_used() function:
   
   ```{r}
+  #| eval: FALSE
 mem_used()
   ```
   141.95 MB
@@ -140,6 +153,7 @@ Ultimately, how many .fcs files you are able to read in and interact with before
 To simplify the process, here is an additional example of where a conditional can prove useful, allowing us to check in an operating system specific manner. It takes the output of the Sys.info() function, namely the “sysname” argument and then retrieves the relavent function.
 
 ```{r}
+#| eval: FALSE
 OperatingSystem <- Sys.info()[["sysname"]]
 if (OperatingSystem == "Windows")
 Memory <- ps::ps_system_memory()
@@ -151,10 +165,12 @@ Total GB 15.78
 Free GB 7.69
 
 ```{r}
+#| eval: FALSE
 install.packages("ps")
 ```
 
 ```{r}
+#| eval: FALSE
 library(ps)
 Memory <- ps::ps_system_memory()
 message("Total GB ", round(Memory$total / 1024^3, 2))
@@ -163,6 +179,7 @@ Total GB 15.78
 
 
 ```{r}
+#| eval: FALSE
 message("Free GB ", round(Memory$free / 1024^3, 2))
 ```
 Free GB 7.83
@@ -170,6 +187,7 @@ Free GB 7.83
 In addition to the flowCore R package, additional flow cytometry infrastructure support is provided by the flowWorkspace package. Instead of the reading all the .fcs files contents into active RAM, flowWorkspace reduces the memory overhead by using “pointers” to interact with the object in it’s current storage location (either on your harddrive, SSD, etc.), only reading in components to RAM as needed.
 
 ```{r}
+#| eval: FALSE
 library(flowWorkspace)
 ```
 As part of improvements to flowWorkspace, some behavior of
@@ -179,6 +197,7 @@ titled "The cytoframe and cytoset classes" in the package vignette:
   vignette("flowWorkspace-Introduction", "flowWorkspace")
 
   ```{r}
+#| eval: FALSE
 cytoframe <- load_cytoframe_from_fcs(fcs_files[1], truncate_max_range = FALSE, transformation = FALSE)
 cytoframe
   ```
@@ -200,6 +219,7 @@ $P43           AF-A        NA     4194303      -111     4194303
 row names(0):
 
 ```{r}
+#| eval: FALSE
 class(cytoframe)
 ```
 [1] "cytoframe"
@@ -209,19 +229,18 @@ attr(,"package")
 Which also still errors out when not given a scalar object
 
 ```{r}
+#| eval: FALSE
 load_cytoframe_from_fcs(fcs_files, truncate_max_range = FALSE, transformation = FALSE)
 ```
 
 Error:
 ! Expected string vector of length 1
-Hide Traceback
-    ▆
- 1. └─flowWorkspace::load_cytoframe_from_fcs(...)
- 2.   └─flowWorkspace:::parseFCS(...)
+
 
  We can use Cytoset to handle multiples fcs files:
  
  ```{r}
+ #| eval: FALSE
 cytoset <- load_cytoset_from_fcs(fcs_files, truncate_max_range = FALSE, transformation = FALSE)
 cytoset
  ```
@@ -231,6 +250,7 @@ cytoset
     Time, SSC-W, SSC-H, SSC-A, FSC-W, FSC-H, FSC-A, SSC-B-W, SSC-B-H, SSC-B-A, BUV395-A, BUV563-A, BUV615-A, BUV661-A, BUV737-A, BUV805-A, Pacific Blue-A, BV480-A, BV570-A, BV605-A, BV650-A, BV711-A, BV750-A, BV786-A, Alexa Fluor 488-A, Spark Blue 550-A, Spark Blue 574-A, RB613-A, RB705-A, RB780-A, PE-A, PE-Dazzle594-A, PE-Cy5-A, PE-Fire 700-A, PE-Fire 744-A, PE-Vio770-A, APC-A, Alexa Fluor 647-A, APC-R700-A, Zombie NIR-A, APC-Fire 750-A, APC-Fire 810-A, AF-A
 
 ```{r}
+#| eval: FALSE
 class(cytoset)
 ```
 [1] "cytoset"
@@ -238,7 +258,9 @@ attr(,"package")
 [1] "flowWorkspace"
 
 Unlike “flowFrame” and “flowSet”, when we run str(), for “cytoframe” and “cytoset” objects we don’t get back quite as much information.
+
 ```{r}
+#| eval: FALSE
 str(cytoframe)
 ```
 Formal class 'cytoframe' [package "flowWorkspace"] with 5 slots
@@ -262,8 +284,8 @@ Formal class 'cytoframe' [package "flowWorkspace"] with 5 slots
   ..@ description:List of 1
   .. ..$ note: chr "empty"
 
-  
   ```{r}
+#| eval: FALSE
   str(cytoset)
   ```
   Formal class 'cytoset' [package "flowWorkspace"] with 3 slots
@@ -283,11 +305,13 @@ Formal class 'cytoframe' [package "flowWorkspace"] with 5 slots
   Due to flowWorkspace use of pointers, the missing data remains stored on the drive, only being retrieved right before it is required. This reduces the overall RAM utilization. Let’s double check the differences in memory utilization for flowFrame/cytoframe:
   
   ```{r}
-  obj_size(flowFrame)
+#| eval: FALSE
+obj_size(flowFrame)
   ```
   3.53 MB
 
 ```{r}
+#| eval: FALSE
 obj_size(cytoframe)
 ```
 5.40 kB
@@ -295,11 +319,13 @@ obj_size(cytoframe)
 And similarly the case for flowSet and cytoset:
 
 ```{r}
+#| eval: FALSE
 obj_size(flowSet)
 ```
 20.99 MB
 
 ```{r}
+#| eval: FALSE
 obj_size(cytoset)
 ```
 3.88 kB
@@ -309,6 +335,7 @@ Despite both R packages having been around for a while, many Bioconductor and Gi
 To go from a flowFrame to a cytoframe, we can use the flowFrame_to_cytoframe() function
 
 ```{r}
+#| eval: FALSE
 ConvertedToCytoframe <- flowFrame_to_cytoframe(flowFrame)
 ConvertedToCytoframe
 ```
@@ -329,9 +356,293 @@ $P43           AF-A        NA     4194303      -111     4194303
 472 keywords are stored in the 'description' slot
 row names(0):
 
-As we move forward in the course, it helps to be aware of which ones we are working with, and have the ability to interconvert between them as needed.
-To go from a flowFrame to a cytoframe, we can use the flowFrame_to_cytoframe() function
 
 ```{r}
-
+#| eval: FALSE
+obj_size(ConvertedToCytoframe)
 ```
+5.40 kB
+
+To go from a cytoframe to a flowFrame, we can use the cytoframe_to_flowFrame() function
+
+```{r}
+#| eval: FALSE
+ConvertedToFlowframe <- flowWorkspace::cytoframe_to_flowFrame(cytoframe)
+ConvertedToFlowframe
+```
+flowFrame object '2025_07_26_AB_02_INF052_00_Ctrl.fcs'
+with 10000 cells and 43 observables:
+               name      desc       range  minRange    maxRange
+$P1            Time        NA     878.809         0     878.809
+$P2           SSC-W        NA 4194303.000         0 4194303.000
+$P3           SSC-H        NA 4194303.000         0 4194303.000
+$P4           SSC-A        NA 4194303.000         0 4194303.000
+$P5           FSC-W        NA 4194303.000         0 4194303.000
+...             ...       ...         ...       ...         ...
+$P39     APC-R700-A    CD107a     4192506      -111     4192506
+$P40   Zombie NIR-A Viability     4192506      -111     4192506
+$P41 APC-Fire 750-A      CD27     4192506      -111     4192506
+$P42 APC-Fire 810-A      CCR7     4192506      -111     4192506
+$P43           AF-A        NA     4194303      -111     4194303
+472 keywords are stored in the 'description' slot
+
+This other code gives the same result:
+
+```{r}
+#| eval: FALSE
+ConvertedToFlowframe <- cytoframe_to_flowFrame(cytoframe)
+ConvertedToFlowframe
+```
+
+```{r}
+#| eval: FALSE
+obj_size(ConvertedToFlowframe)
+```
+3.53 MB
+
+To go from a flowSet to a cytoSet, we can use the flowSet_to_cytoset() function:
+
+```{r}
+#| eval: FALSE
+ConvertedToCytoset <- flowSet_to_cytoset(flowSet)
+ConvertedToCytoset
+```
+A cytoset with 6 samples.
+
+  column names:
+    Time, SSC-W, SSC-H, SSC-A, FSC-W, FSC-H, FSC-A, SSC-B-W, SSC-B-H, SSC-B-A, BUV395-A, BUV563-A, BUV615-A, BUV661-A, BUV737-A, BUV805-A, Pacific Blue-A, BV480-A, BV570-A, BV605-A, BV650-A, BV711-A, BV750-A, BV786-A, Alexa Fluor 488-A, Spark Blue 550-A, Spark Blue 574-A, RB613-A, RB705-A, RB780-A, PE-A, PE-Dazzle594-A, PE-Cy5-A, PE-Fire 700-A, PE-Fire 744-A, PE-Vio770-A, APC-A, Alexa Fluor 647-A, APC-R700-A, Zombie NIR-A, APC-Fire 750-A, APC-Fire 810-A, AF-A
+
+```{r}
+#| eval: FALSE
+obj_size(ConvertedToCytoset)
+```
+3.88 kB
+
+```{r}
+#| eval: FALSE
+ConvertedToFlowset <- cytoset_to_flowSet(flowSet)
+ConvertedToFlowset
+```
+A flowSet with 6 experiments.
+
+column names(43): Time SSC-W ... APC-Fire 810-A AF-A
+
+```{r}
+#| eval: FALSE
+obj_size(ConvertedToFlowset)
+```
+20.99 MB
+
+Fortunately, regardless of whether we are using flowFrame/flowSet (RAM) and cytoframe/cytoset (memory pointers), both routes end up converging at the next step, where the underlying .fcs files are passed off to the GatingSet() function.
+
+```{r}
+#| eval: FALSE
+GatingSet1 <- GatingSet(flowSet)
+GatingSet1 
+```
+A GatingSet with 6 samples
+
+```{r}
+#| eval: FALSE
+class(GatingSet1)
+```
+[1] "GatingSet"
+attr(,"package")
+[1] "flowWorkspace"
+
+```{r}
+#| eval: FALSE
+GatingSet2 <- GatingSet(cytoset)
+GatingSet2
+```
+A GatingSet with 6 samples
+
+```{r}
+#| eval: FALSE
+class(GatingSet2)
+```
+[1] "GatingSet"
+attr(,"package")
+[1] "flowWorkspace"
+
+As we prefaced in the background, beyond the .fcs files themselves, we need infrastructural elements with which to interact with the underlying data, which allows us to organize the various files, transform (scale), compensate (for conventional flow), visualize, derrive statistics, etc. A GatingSet serves as the infrastructural framework that allows us to do this in R.
+
+If we investigate our current GatingSet objects, we won’t see much. This will change as we start layering on additional elements. However, rather than try to cram everything into a single week, we will explore in greater depth the individual components over the next three weeks. Instead, for the rest of today, we will work backward, by exploring a GatingSet objecct and what it is capable of doing once fully assembled.
+
+The CytoML R package (also maintained by Mike Jiang) is a sister package to the flowWorkspace. It’s main purpose is to permit bringing in existing FlowJo, Diva and Cytobank Workspaces, with all their gates, transformations, etc. into R as fully assembled GatingSet objects. For those who already use one of these commercial softwares, it can be quite useful tool.
+
+Since our goal is to examine a fully assembled GatingSet object, we will be using it today to bring in a FlowJo workspace to R. However, since this is a free Cytometry in R course, and not about to have everyone pay for a license for a one-off topic, in the pre-course Floreada walkthrough I documented how to convert a free Floreada.io workspae into a FlowJo.wsp that can also be used (please note that as of early 2026, some scaling bugs may be present and require troubleshooting).
+
+To get started, let’s first attach CytoML to our local environment via the library() call.
+
+```{r}
+#| eval: FALSE
+library(CytoML)
+```
+The .wsp files within this week’s data where created via Floreada.io. The main difference between the two files is one is a copy of the original that was opened within FlowJo, and subsequently swtiched from logicle to bi-exponential transformation.
+
+We will need to provide the appropiate file path for our desired .wsp file. We can start by identifying which are present using list.files()
+
+```{r}
+#| eval: FALSE
+Folder <- file.path("C:/Users/Macarena/CytometryInR/course/05_GatingSets/data")
+FlowJoWsp <- list.files(path = Folder, pattern = ".wsp", full = TRUE)
+FlowJoWsp
+```
+[1] "C:/Users/Macarena/CytometryInR/course/05_GatingSets/data/FlowJoWSP_OpenedCopy.wsp"
+[2] "C:/Users/Macarena/CytometryInR/course/05_GatingSets/data/FlowJoWSP_Unopened.wsp"  
+
+In our case, we will proceed by using str_detect() to select the .wsp that contains the pattern “Opened”
+
+```{r}
+#| eval: FALSE
+ThisWorkspace <- FlowJoWsp[stringr::str_detect(FlowJoWsp, "Opened")]
+ThisWorkspace
+```
+[1] "C:/Users/Macarena/CytometryInR/course/05_GatingSets/data/FlowJoWSP_OpenedCopy.wsp"
+
+With our single .wsp filepath now identified, we can now proceed to set up the intermediate object using open_flowjo_xml()
+
+```{r}
+#| eval: FALSE
+ws <- open_flowjo_xml(ThisWorkspace)
+ws
+```
+File location:  C:/Users/Macarena/CytometryInR/course/05_GatingSets/data/FlowJoWSP_OpenedCopy.wsp 
+
+Groups in Workspace
+         Name Num.Samples
+1 All Samples           6
+
+```{r}
+#| eval: FALSE
+class(ws)
+```
+[1] "flowjo_workspace"
+attr(,"package")
+[1] "CytoML"
+
+Having set up the intermediate flowjo_workspace object, we can attempt to read in the actual data from the .wsp into a GatingSet using the flowjo_to_gatingset() function.
+
+However, due to how I named the original .fcs files (“GROUPNAME” being individual specimens, “TUBENAME” being either Ctrl or SEB), and downsampled to the same number of cells, we will encounter the following error:
+
+```{r}
+#| eval: FALSE
+gs <- flowjo_to_gatingset(ws=ws, name=1, path = Folder)
+```
+Error:
+! Multiple FCS files match sample 00_Ctrl.fcs by filename, event count, and keywords.
+Candidates are: 
+C:\Users\Macarena\CytometryInR\course\05_GatingSets\data\2025_07_26_AB_02_INF052_00_Ctrl.fcs
+C:\Users\Macarena\CytometryInR\course\05_GatingSets\data\2025_07_26_AB_02_INF100_00_Ctrl.fcs
+C:\Users\Macarena\CytometryInR\course\05_GatingSets\data\2025_07_26_AB_02_INF179_00_Ctrl.fcs
+Please move incorrect files out of this directory or its subdirectories.
+Show Traceback
+
+```{r}
+#| eval: FALSE
+gs
+```
+
+Error:
+! object 'gs' not found
+
+As with any error, my first move is to check the help documentation. In this case, my initial response is to see if I can identify an argument that will help differentiate between the names for each specimen.
+
+```{r}
+#| eval: FALSE
+?flowjo_to_gatingset
+```
+parseWorkspace(obj, ...)
+
+## S4 method for signature 'flowjo_workspace'
+parseWorkspace(obj, ...)
+
+flowjo_to_gatingset(
+  ws,
+  name = NULL,
+  subset = list(),
+  execute = TRUE,
+  path = "",
+  cytoset = NULL,
+  backend_dir = tempdir(),
+  backend = get_default_backend(),
+  includeGates = TRUE,
+  additional.keys = "$TOT",
+  additional.sampleID = FALSE,
+  keywords = character(),
+  keywords.source = "XML",
+  keyword.ignore.case = FALSE,
+  extend_val = 0,
+  extend_to = -4000,
+  channel.ignore.case = FALSE,
+  leaf.bool = TRUE,
+  include_empty_tree = FALSE,
+  skip_faulty_gate = FALSE,
+  compensation = NULL,
+  transform = TRUE,
+  fcs_file_extension = ".fcs",
+  greedy_match = FALSE,
+  mc.cores = 1,
+  ...
+)
+In this case, I find that the “additional.keys” argument would likely work for this troubleshooting:
+additional.keys	
+character vector: The keywords (parsed from FCS header) to be combined(concatenated with "_") with FCS filename to uniquely identify samples. Default is '$TOT' (total number of cells) and more keywords can be added to make this GUID.
+
+```{r}
+#| eval: FALSE
+gs <- flowjo_to_gatingset(ws=ws, name=1, path = Folder, additional.keys="GROUPNAME")
+gs
+```
+A GatingSet with 6 samples
+
+```{r}
+#| eval: FALSE
+class(gs)
+```
+[1] "GatingSet"
+attr(,"package")
+[1] "flowWorkspace"
+
+Especially when working with CytoML, it is often good to have an idea of how long it will take a particular function to run (to better plan how to use our time while waiting, whether to go grab coffee, etc.). There are a couple ways to do so.
+
+One, using the system.time() function from base R, in which we surround whatever line of code we wish to evaluate in {}
+
+```{r}
+#| eval: FALSE
+system.time({flowjo_to_gatingset(ws=ws, name=1, path = Folder, additional.keys="GROUPNAME")})
+```
+   user  system elapsed 
+   0.81    0.04    0.89 
+
+Alternatively, if we install the bench package, we can use the mark function to evaluate how long it takes on average across numerous iterations.
+
+```{r}
+#| eval: FALSE
+install.packages("bench")
+```
+
+```{r}
+#| eval: FALSE
+library(bench)
+```
+
+```{r}
+#| eval: FALSE
+mark(Test <- flowjo_to_gatingset(ws=ws, name=1, path = Folder, additional.keys="GROUPNAME"), iterations= 5)
+```
+# A tibble: 1 × 13
+  expression                      min median `itr/sec` mem_alloc `gc/sec` n_itr  n_gc total_time result     memory     time       gc      
+  <bch:expr>                    <bch> <bch:>     <dbl> <bch:byt>    <dbl> <int> <dbl>   <bch:tm> <list>     <list>     <list>     <list>  
+1 "Test <- flowjo_to_gatingset… 859ms  865ms      1.15    13.3KB        0     5     0      4.35s <GatingSt> <Rprofmem> <bench_tm> <tibble>
+
+Now that we have loaded the contents of the FlowJo/Floreada workspace, we can start exploring the various infrastructural capabilities of a GatingSet object.
+
+Let’s start by evaluating whether the manually-drawn gates I drew survived the journey. To do this, I can generate a visual gating treee using the plot() function.
+
+```{r}
+#| eval: FALSE
+plot(gs)
+```
+  

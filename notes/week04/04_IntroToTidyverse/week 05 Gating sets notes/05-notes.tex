@@ -1,0 +1,1090 @@
+% Options for packages loaded elsewhere
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\PassOptionsToPackage{dvipsnames,svgnames,x11names}{xcolor}
+%
+\documentclass[
+  letterpaper,
+  DIV=11,
+  numbers=noendperiod]{scrartcl}
+\usepackage{xcolor}
+\usepackage{amsmath,amssymb}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+% Make \paragraph and \subparagraph free-standing
+\makeatletter
+\ifx\paragraph\undefined\else
+  \let\oldparagraph\paragraph
+  \renewcommand{\paragraph}{
+    \@ifstar
+      \xxxParagraphStar
+      \xxxParagraphNoStar
+  }
+  \newcommand{\xxxParagraphStar}[1]{\oldparagraph*{#1}\mbox{}}
+  \newcommand{\xxxParagraphNoStar}[1]{\oldparagraph{#1}\mbox{}}
+\fi
+\ifx\subparagraph\undefined\else
+  \let\oldsubparagraph\subparagraph
+  \renewcommand{\subparagraph}{
+    \@ifstar
+      \xxxSubParagraphStar
+      \xxxSubParagraphNoStar
+  }
+  \newcommand{\xxxSubParagraphStar}[1]{\oldsubparagraph*{#1}\mbox{}}
+  \newcommand{\xxxSubParagraphNoStar}[1]{\oldsubparagraph{#1}\mbox{}}
+\fi
+\makeatother
+
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{241,243,245}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.68,0.00,0.00}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.37,0.37,0.37}{#1}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.40,0.45,0.13}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.68,0.00,0.00}{#1}}
+\newcommand{\BuiltInTok}[1]{\textcolor[rgb]{0.00,0.23,0.31}{#1}}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.13,0.47,0.30}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.37,0.37,0.37}{#1}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.37,0.37,0.37}{\textit{#1}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.00,0.23,0.31}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.68,0.00,0.00}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.68,0.00,0.00}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.37,0.37,0.37}{\textit{#1}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.68,0.00,0.00}{#1}}
+\newcommand{\ExtensionTok}[1]{\textcolor[rgb]{0.00,0.23,0.31}{#1}}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.68,0.00,0.00}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.28,0.35,0.67}{#1}}
+\newcommand{\ImportTok}[1]{\textcolor[rgb]{0.00,0.46,0.62}{#1}}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.37,0.37,0.37}{#1}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.00,0.23,0.31}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{\textcolor[rgb]{0.00,0.23,0.31}{#1}}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.37,0.37,0.37}{#1}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.00,0.23,0.31}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.68,0.00,0.00}{#1}}
+\newcommand{\RegionMarkerTok}[1]{\textcolor[rgb]{0.00,0.23,0.31}{#1}}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.37,0.37,0.37}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.13,0.47,0.30}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.13,0.47,0.30}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.07,0.07,0.07}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.13,0.47,0.30}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.37,0.37,0.37}{\textit{#1}}}
+
+\usepackage{longtable,booktabs,array}
+\newcounter{none} % for unnumbered tables
+\usepackage{calc} % for calculating minipage widths
+% Correct order of tables after \paragraph or \subparagraph
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd\longtable{\par}{\if@noskipsec\mbox{}\fi\par}{}{}
+\makeatother
+% Allow footnotes in longtable head/foot
+\IfFileExists{footnotehyper.sty}{\usepackage{footnotehyper}}{\usepackage{footnote}}
+\makesavenoteenv{longtable}
+\usepackage{graphicx}
+\makeatletter
+\newsavebox\pandoc@box
+\newcommand*\pandocbounded[1]{% scales image to fit in text height/width
+  \sbox\pandoc@box{#1}%
+  \Gscale@div\@tempa{\textheight}{\dimexpr\ht\pandoc@box+\dp\pandoc@box\relax}%
+  \Gscale@div\@tempb{\linewidth}{\wd\pandoc@box}%
+  \ifdim\@tempb\p@<\@tempa\p@\let\@tempa\@tempb\fi% select the smaller of both
+  \ifdim\@tempa\p@<\p@\scalebox{\@tempa}{\usebox\pandoc@box}%
+  \else\usebox{\pandoc@box}%
+  \fi%
+}
+% Set default figure placement to htbp
+\def\fps@figure{htbp}
+\makeatother
+
+
+
+
+
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+
+
+
+ 
+
+
+\KOMAoption{captions}{tableheading}
+\makeatletter
+\@ifpackageloaded{caption}{}{\usepackage{caption}}
+\AtBeginDocument{%
+\ifdefined\contentsname
+  \renewcommand*\contentsname{Table of contents}
+\else
+  \newcommand\contentsname{Table of contents}
+\fi
+\ifdefined\listfigurename
+  \renewcommand*\listfigurename{List of Figures}
+\else
+  \newcommand\listfigurename{List of Figures}
+\fi
+\ifdefined\listtablename
+  \renewcommand*\listtablename{List of Tables}
+\else
+  \newcommand\listtablename{List of Tables}
+\fi
+\ifdefined\figurename
+  \renewcommand*\figurename{Figure}
+\else
+  \newcommand\figurename{Figure}
+\fi
+\ifdefined\tablename
+  \renewcommand*\tablename{Table}
+\else
+  \newcommand\tablename{Table}
+\fi
+}
+\@ifpackageloaded{float}{}{\usepackage{float}}
+\floatstyle{ruled}
+\@ifundefined{c@chapter}{\newfloat{codelisting}{h}{lop}}{\newfloat{codelisting}{h}{lop}[chapter]}
+\floatname{codelisting}{Listing}
+\newcommand*\listoflistings{\listof{codelisting}{List of Listings}}
+\makeatother
+\makeatletter
+\makeatother
+\makeatletter
+\@ifpackageloaded{caption}{}{\usepackage{caption}}
+\@ifpackageloaded{subcaption}{}{\usepackage{subcaption}}
+\makeatother
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdftitle={Week 05\_Gating sets},
+  pdfauthor={Macarena López-Mayorga},
+  colorlinks=true,
+  linkcolor={blue},
+  filecolor={Maroon},
+  citecolor={Blue},
+  urlcolor={Blue},
+  pdfcreator={LaTeX via pandoc}}
+
+
+\title{Week 05\_Gating sets}
+\author{Macarena López-Mayorga}
+\date{2026-04-23}
+\begin{document}
+\maketitle
+
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{Folder }\OtherTok{\textless{}{-}} \FunctionTok{file.path}\NormalTok{(}\StringTok{"C:/Users/Macarena/CytometryInR/course/05\_GatingSets/data"}\NormalTok{)}
+\NormalTok{fcs\_files }\OtherTok{\textless{}{-}} \FunctionTok{list.files}\NormalTok{(Folder, }\AttributeTok{pattern=}\StringTok{".fcs"}\NormalTok{, }\AttributeTok{full.names=}\ConstantTok{TRUE}\NormalTok{)}
+\NormalTok{fcs\_files}
+\end{Highlighting}
+\end{Shaded}
+
+{[}1{]}
+``C:/Users/Macarena/CytometryInR/course/05\_GatingSets/data/2025\_07\_26\_AB\_02\_INF052\_00\_Ctrl.fcs''
+{[}2{]}
+``C:/Users/Macarena/CytometryInR/course/05\_GatingSets/data/2025\_07\_26\_AB\_02\_INF052\_00\_SEB.fcs''
+{[}3{]}
+``C:/Users/Macarena/CytometryInR/course/05\_GatingSets/data/2025\_07\_26\_AB\_02\_INF100\_00\_Ctrl.fcs''
+{[}4{]}
+``C:/Users/Macarena/CytometryInR/course/05\_GatingSets/data/2025\_07\_26\_AB\_02\_INF100\_00\_SEB.fcs''
+{[}5{]}
+``C:/Users/Macarena/CytometryInR/course/05\_GatingSets/data/2025\_07\_26\_AB\_02\_INF179\_00\_Ctrl.fcs''
+{[}6{]}
+``C:/Users/Macarena/CytometryInR/course/05\_GatingSets/data/2025\_07\_26\_AB\_02\_INF179\_00\_SEB.fcs''
+
+We are going to name one of them as ``fcs-files{[}x{]}''. In our case,
+the first file
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{fcs\_files[}\DecValTok{1}\NormalTok{]}
+\end{Highlighting}
+\end{Shaded}
+
+{[}1{]}
+``C:/Users/Macarena/CytometryInR/course/05\_GatingSets/data/2025\_07\_26\_AB\_02\_INF052\_00\_Ctrl.fcs''
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(flowCore)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{flowFrame }\OtherTok{\textless{}{-}} \FunctionTok{read.FCS}\NormalTok{(}\AttributeTok{filename=}\NormalTok{fcs\_files[}\DecValTok{1}\NormalTok{], }\AttributeTok{truncate\_max\_range =} \ConstantTok{FALSE}\NormalTok{, }\AttributeTok{transformation =} \ConstantTok{FALSE}\NormalTok{)}
+\NormalTok{flowFrame}
+\end{Highlighting}
+\end{Shaded}
+
+flowFrame object `2025\_07\_26\_AB\_02\_INF052\_00\_Ctrl.fcs' with 10000
+cells and 43 observables: name desc range minRange maxRange
+\(P1            Time        NA    896745         0     878.809\)P2 SSC-W
+NA 4194304 0 4194303.000
+\(P3           SSC-H        NA   4194304         0 4194303.000\)P4 SSC-A
+NA 4194304 0 4194303.000
+\(P5           FSC-W        NA   4194304         0 4194303.000
+...             ...       ...       ...       ...         ...\)P39
+APC-R700-A CD107a 4194304 -111 4192506
+\(P40   Zombie NIR-A Viability   4194304      -111     4192506\)P41
+APC-Fire 750-A CD27 4194304 -111 4192506
+\(P42 APC-Fire 810-A      CCR7   4194304      -111     4192506\)P43 AF-A
+NA 4194304 -111 4194303 472 keywords are stored in the `description'
+slot
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{str}\NormalTok{(fcs\_files)}
+\end{Highlighting}
+\end{Shaded}
+
+chr {[}1:6{]}
+``C:/Users/Macarena/CytometryInR/course/05\_GatingSets/data/2025\_07\_26\_AB\_02\_INF052\_00\_Ctrl.fcs''
+\ldots{}
+
+All of them are character class.
+
+If we want to read multiple fcs files at once, we will need another
+function:
+
+::: \{.cell\}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{flowSet }\OtherTok{\textless{}{-}} \FunctionTok{read.flowSet}\NormalTok{(}\AttributeTok{files=}\NormalTok{fcs\_files, }\AttributeTok{truncate\_max\_range =} \ConstantTok{FALSE}\NormalTok{, }\AttributeTok{transformation =} \ConstantTok{FALSE}\NormalTok{)}
+\NormalTok{flowSet}
+\end{Highlighting}
+\end{Shaded}
+
+:::
+
+A flowSet with 6 experiments.
+
+column names(43): Time SSC-W \ldots{} APC-Fire 810-A AF-A
+
+Also, we can select those fcs files that we can specifically read:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{read.flowSet}\NormalTok{(}\AttributeTok{files=}\NormalTok{fcs\_files[}\FunctionTok{c}\NormalTok{(}\DecValTok{1}\NormalTok{, }\DecValTok{3}\SpecialCharTok{:}\DecValTok{4}\NormalTok{)], }\AttributeTok{truncate\_max\_range =} \ConstantTok{FALSE}\NormalTok{, }\AttributeTok{transformation =} \ConstantTok{FALSE}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+A flowSet with 3 experiments.
+
+column names(43): Time SSC-W \ldots{} APC-Fire 810-A AF-A
+
+we can see that read.flowSet() has created a ``flowSet'' class object.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{class}\NormalTok{(flowSet)}
+\end{Highlighting}
+\end{Shaded}
+
+{[}1{]} ``flowSet'' attr(,``package'') {[}1{]} ``flowCore''
+
+In the right secondary side bar, we can see that ``flowSet'' is another
+Bioconductor style S4-type object that within its frame slot contains
+individual ``flowFrames''. If instead of class() we had used str(), we
+would have seen a similar output ton what we see in the Variables panel.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{str}\NormalTok{(flowSet)}
+\end{Highlighting}
+\end{Shaded}
+
+Formal class `flowSet' {[}package ``flowCore''{]} with 2 slots ..@
+frames :\textless environment: 0x000001fb5d4cf5a8\textgreater{} ..@
+phenoData:Formal class `AnnotatedDataFrame' {[}package ``Biobase''{]}
+with 4 slots .. .. ..@ varMetadata :`data.frame': 1 obs. of 1 variable:
+.. .. .. ..\$ labelDescription: chr ``Name'' .. .. ..@ data
+:`data.frame': 6 obs. of 1 variable: .. .. .. ..\$ name: `AsIs' chr
+{[}1:6{]} ``2025\_07\_26\_AB\_02\_INF052\_00\_Ctrl.fcs''
+``2025\_07\_26\_AB\_02\_INF052\_00\_SEB.fcs''
+``2025\_07\_26\_AB\_02\_INF100\_00\_Ctrl.fcs''
+``2025\_07\_26\_AB\_02\_INF100\_00\_SEB.fcs'' \ldots{} .. .. ..@
+dimLabels : chr {[}1:2{]} ``rowNames'' ``columnNames'' .. .. ..@
+.\_\_classVersion\_\_:Formal class `Versions' {[}package ``Biobase''{]}
+with 1 slot .. .. .. .. ..@ .Data:List of 1 .. .. .. .. .. ..\$ : int
+{[}1:3{]} 1 1 0 .. .. .. .. ..\$ names: chr ``AnnotatedDataFrame''
+
+REMINDER: While not today's focus, remember we could access individual
+components inside the flowSet using the @ accessors covered during
+Week3.
+
+One consideration of this method is the contents of your .fcs files are
+read into your computer's random access memory (RAM). While for
+individual .fcs files or small experiments this will not present a
+problem for most modern computers, when working with large spectral flow
+cytometry files containing millions of events (or trying to analyze many
+.fcs files at once), you may encounter situations where you can quickly
+exceed your computers available RAM. To build some contextual
+understanding of the problem, let's learn how to check how much memory
+is being used by our individual variables/objects within our R session.
+We will primarily use the lobstr R packages obj\_size() function, as it
+better handles evaluating complicated objects than base R's
+object.size() function.
+
+::: \{.cell\}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{object.size}\NormalTok{(flowFrame)}
+\end{Highlighting}
+\end{Shaded}
+
+:::
+
+3570976 bytes
+
+::: \{.cell\}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{install.packages}\NormalTok{(}\StringTok{"lobstr"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+:::
+
+::: \{.cell\}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+ \FunctionTok{library}\NormalTok{(lobstr)}
+\FunctionTok{obj\_size}\NormalTok{(flowFrame) }
+\end{Highlighting}
+\end{Shaded}
+
+:::
+
+3.53 MB FlowSet object contains multiples flowFrame objects, so the size
+should be bigger:
+
+::: \{.cell\}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{obj\_size}\NormalTok{(flowSet)}
+\end{Highlighting}
+\end{Shaded}
+
+:::
+
+20.99 MB
+
+If we were curious how much memory total we are using within R at the
+current moment, we can check using the mem\_used() function:
+
+::: \{.cell\}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{mem\_used}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
+
+:::
+
+141.95 MB
+
+Ultimately, how many .fcs files you are able to read in and interact
+with before running out of available RAM memory space will be dictated
+by your individual computers hardware configuration. There are various
+ways you can check programmatically how much RAM your computer has
+available, although the specific functions will vary depending on your
+computers operating system, since they often involve system-level code
+outside R. Using the ps R package's ps\_system\_memory() function is one
+of the easier ways for Windows users.
+
+To simplify the process, here is an additional example of where a
+conditional can prove useful, allowing us to check in an operating
+system specific manner. It takes the output of the Sys.info() function,
+namely the ``sysname'' argument and then retrieves the relavent
+function.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{OperatingSystem }\OtherTok{\textless{}{-}} \FunctionTok{Sys.info}\NormalTok{()[[}\StringTok{"sysname"}\NormalTok{]]}
+\ControlFlowTok{if}\NormalTok{ (OperatingSystem }\SpecialCharTok{==} \StringTok{"Windows"}\NormalTok{)}
+\NormalTok{Memory }\OtherTok{\textless{}{-}}\NormalTok{ ps}\SpecialCharTok{::}\FunctionTok{ps\_system\_memory}\NormalTok{()}
+\FunctionTok{message}\NormalTok{(}\StringTok{"Total GB "}\NormalTok{, }\FunctionTok{round}\NormalTok{(Memory}\SpecialCharTok{$}\NormalTok{total }\SpecialCharTok{/} \DecValTok{1024}\SpecialCharTok{\^{}}\DecValTok{3}\NormalTok{, }\DecValTok{2}\NormalTok{))}
+\FunctionTok{message}\NormalTok{(}\StringTok{"Free GB "}\NormalTok{, }\FunctionTok{round}\NormalTok{(Memory}\SpecialCharTok{$}\NormalTok{free }\SpecialCharTok{/} \DecValTok{1024}\SpecialCharTok{\^{}}\DecValTok{3}\NormalTok{, }\DecValTok{2}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+Total GB 15.78 Free GB 7.69
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{install.packages}\NormalTok{(}\StringTok{"ps"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(ps)}
+\NormalTok{Memory }\OtherTok{\textless{}{-}}\NormalTok{ ps}\SpecialCharTok{::}\FunctionTok{ps\_system\_memory}\NormalTok{()}
+\FunctionTok{message}\NormalTok{(}\StringTok{"Total GB "}\NormalTok{, }\FunctionTok{round}\NormalTok{(Memory}\SpecialCharTok{$}\NormalTok{total }\SpecialCharTok{/} \DecValTok{1024}\SpecialCharTok{\^{}}\DecValTok{3}\NormalTok{, }\DecValTok{2}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+Total GB 15.78
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{message}\NormalTok{(}\StringTok{"Free GB "}\NormalTok{, }\FunctionTok{round}\NormalTok{(Memory}\SpecialCharTok{$}\NormalTok{free }\SpecialCharTok{/} \DecValTok{1024}\SpecialCharTok{\^{}}\DecValTok{3}\NormalTok{, }\DecValTok{2}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+Free GB 7.83
+
+In addition to the flowCore R package, additional flow cytometry
+infrastructure support is provided by the flowWorkspace package. Instead
+of the reading all the .fcs files contents into active RAM,
+flowWorkspace reduces the memory overhead by using ``pointers'' to
+interact with the object in it's current storage location (either on
+your harddrive, SSD, etc.), only reading in components to RAM as needed.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(flowWorkspace)}
+\end{Highlighting}
+\end{Shaded}
+
+As part of improvements to flowWorkspace, some behavior of GatingSet
+objects has changed. For details, please read the section titled ``The
+cytoframe and cytoset classes'' in the package vignette:
+
+vignette(``flowWorkspace-Introduction'', ``flowWorkspace'')
+
+::: \{.cell\}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{cytoframe }\OtherTok{\textless{}{-}} \FunctionTok{load\_cytoframe\_from\_fcs}\NormalTok{(fcs\_files[}\DecValTok{1}\NormalTok{], }\AttributeTok{truncate\_max\_range =} \ConstantTok{FALSE}\NormalTok{, }\AttributeTok{transformation =} \ConstantTok{FALSE}\NormalTok{)}
+\NormalTok{cytoframe}
+\end{Highlighting}
+\end{Shaded}
+
+:::
+
+cytoframe object `2025\_07\_26\_AB\_02\_INF052\_00\_Ctrl.fcs' with 10000
+cells and 43 observables: name desc range minRange maxRange
+\(P1            Time        NA     878.809         0     878.809\)P2
+SSC-W NA 4194303.000 0 4194303.000
+\(P3           SSC-H        NA 4194303.000         0 4194303.000\)P4
+SSC-A NA 4194303.000 0 4194303.000
+\(P5           FSC-W        NA 4194303.000         0 4194303.000
+...             ...       ...         ...       ...         ...\)P39
+APC-R700-A CD107a 4192506 -111 4192506
+\(P40   Zombie NIR-A Viability     4192506      -111     4192506\)P41
+APC-Fire 750-A CD27 4192506 -111 4192506
+\(P42 APC-Fire 810-A      CCR7     4192506      -111     4192506\)P43
+AF-A NA 4194303 -111 4194303 472 keywords are stored in the
+`description' slot row names(0):
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{class}\NormalTok{(cytoframe)}
+\end{Highlighting}
+\end{Shaded}
+
+{[}1{]} ``cytoframe'' attr(,``package'') {[}1{]} ``flowWorkspace''
+
+Which also still errors out when not given a scalar object
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{load\_cytoframe\_from\_fcs}\NormalTok{(fcs\_files, }\AttributeTok{truncate\_max\_range =} \ConstantTok{FALSE}\NormalTok{, }\AttributeTok{transformation =} \ConstantTok{FALSE}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+Error: ! Expected string vector of length 1
+
+We can use Cytoset to handle multiples fcs files:
+
+::: \{.cell\}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{cytoset }\OtherTok{\textless{}{-}} \FunctionTok{load\_cytoset\_from\_fcs}\NormalTok{(fcs\_files, }\AttributeTok{truncate\_max\_range =} \ConstantTok{FALSE}\NormalTok{, }\AttributeTok{transformation =} \ConstantTok{FALSE}\NormalTok{)}
+\NormalTok{cytoset}
+\end{Highlighting}
+\end{Shaded}
+
+:::
+
+A cytoset with 6 samples.
+
+column names: Time, SSC-W, SSC-H, SSC-A, FSC-W, FSC-H, FSC-A, SSC-B-W,
+SSC-B-H, SSC-B-A, BUV395-A, BUV563-A, BUV615-A, BUV661-A, BUV737-A,
+BUV805-A, Pacific Blue-A, BV480-A, BV570-A, BV605-A, BV650-A, BV711-A,
+BV750-A, BV786-A, Alexa Fluor 488-A, Spark Blue 550-A, Spark Blue 574-A,
+RB613-A, RB705-A, RB780-A, PE-A, PE-Dazzle594-A, PE-Cy5-A, PE-Fire
+700-A, PE-Fire 744-A, PE-Vio770-A, APC-A, Alexa Fluor 647-A, APC-R700-A,
+Zombie NIR-A, APC-Fire 750-A, APC-Fire 810-A, AF-A
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{class}\NormalTok{(cytoset)}
+\end{Highlighting}
+\end{Shaded}
+
+{[}1{]} ``cytoset'' attr(,``package'') {[}1{]} ``flowWorkspace''
+
+Unlike ``flowFrame'' and ``flowSet'', when we run str(), for
+``cytoframe'' and ``cytoset'' objects we don't get back quite as much
+information.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{str}\NormalTok{(cytoframe)}
+\end{Highlighting}
+\end{Shaded}
+
+Formal class `cytoframe' {[}package ``flowWorkspace''{]} with 5 slots
+..@ pointer : ..@ use.exprs : logi TRUE ..@ exprs : num{[}0 , 0 {]} ..@
+parameters :Formal class `AnnotatedDataFrame' {[}package ``Biobase''{]}
+with 4 slots .. .. ..@ varMetadata :`data.frame': 5 obs. of 1 variable:
+.. .. .. ..\$ labelDescription: chr {[}1:5{]} ``Name of Parameter''
+``Description of Parameter'' ``Range of Parameter'' ``Minimum Parameter
+Value after Transformation'' \ldots{} .. .. ..@ data :`data.frame': 0
+obs. of 5 variables: .. .. .. ..\$ name : chr(0) .. .. .. ..\$
+description: chr(0) .. .. .. ..\$ range : num(0) .. .. .. ..\$ minRange
+: num(0) .. .. .. ..\$ maxRange : num(0) .. .. ..@ dimLabels : chr
+{[}1:2{]} ``rowNames'' ``columnNames'' .. .. ..@
+.\_\_classVersion\_\_:Formal class `Versions' {[}package ``Biobase''{]}
+with 1 slot .. .. .. .. ..@ .Data:List of 1 .. .. .. .. .. ..\$ : int
+{[}1:3{]} 1 1 0 .. .. .. .. ..\$ names: chr ``AnnotatedDataFrame'' ..@
+description:List of 1 .. ..\$ note: chr ``empty''
+
+::: \{.cell\}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{str}\NormalTok{(cytoset)}
+\end{Highlighting}
+\end{Shaded}
+
+:::
+
+Formal class `cytoset' {[}package ``flowWorkspace''{]} with 3 slots ..@
+pointer : ..@ frames :\textless environment:
+0x000001e3cf33dee8\textgreater{} ..@ phenoData:Formal class
+`AnnotatedDataFrame' {[}package ``Biobase''{]} with 4 slots .. .. ..@
+varMetadata :`data.frame': 0 obs. of 1 variable: .. .. .. ..\$
+labelDescription: chr(0) .. .. ..@ data :`data.frame': 0 obs. of 0
+variables .. .. ..@ dimLabels : chr {[}1:2{]} ``rowNames''
+``columnNames'' .. .. ..@ .\_\_classVersion\_\_:Formal class `Versions'
+{[}package ``Biobase''{]} with 1 slot .. .. .. .. ..@ .Data:List of 1 ..
+.. .. .. .. ..\$ : int {[}1:3{]} 1 1 0 .. .. .. .. ..\$ names: chr
+``AnnotatedDataFrame''
+
+This is similarly the case when glancing at the right secondary side
+bar, as the respective objects under variables appear to have empty
+matrices where normally we would have seen the MFI values. Due to
+flowWorkspace use of pointers, the missing data remains stored on the
+drive, only being retrieved right before it is required. This reduces
+the overall RAM utilization. Let's double check the differences in
+memory utilization for flowFrame/cytoframe:
+
+::: \{.cell\}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{obj\_size}\NormalTok{(flowFrame)}
+\end{Highlighting}
+\end{Shaded}
+
+:::
+
+3.53 MB
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{obj\_size}\NormalTok{(cytoframe)}
+\end{Highlighting}
+\end{Shaded}
+
+5.40 kB
+
+And similarly the case for flowSet and cytoset:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{obj\_size}\NormalTok{(flowSet)}
+\end{Highlighting}
+\end{Shaded}
+
+20.99 MB
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{obj\_size}\NormalTok{(cytoset)}
+\end{Highlighting}
+\end{Shaded}
+
+3.88 kB
+
+Despite both R packages having been around for a while, many
+Bioconductor and GitHub often only implement methods to handle either
+flowFrames or cytoframes (although newer R packages are now allowing for
+both). Consequently, as we move forward in the course, it helps to be
+aware of which ones we are working with, and have the ability to
+interconvert between them as needed.
+
+To go from a flowFrame to a cytoframe, we can use the
+flowFrame\_to\_cytoframe() function
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{ConvertedToCytoframe }\OtherTok{\textless{}{-}} \FunctionTok{flowFrame\_to\_cytoframe}\NormalTok{(flowFrame)}
+\NormalTok{ConvertedToCytoframe}
+\end{Highlighting}
+\end{Shaded}
+
+cytoframe object `file207836ed2889' with 10000 cells and 43 observables:
+name desc range minRange maxRange
+\(P1            Time        NA     878.809         0     878.809\)P2
+SSC-W NA 4194303.000 0 4194303.000
+\(P3           SSC-H        NA 4194303.000         0 4194303.000\)P4
+SSC-A NA 4194303.000 0 4194303.000
+\(P5           FSC-W        NA 4194303.000         0 4194303.000
+...             ...       ...         ...       ...         ...\)P39
+APC-R700-A CD107a 4192506 -111 4192506
+\(P40   Zombie NIR-A Viability     4192506      -111     4192506\)P41
+APC-Fire 750-A CD27 4192506 -111 4192506
+\(P42 APC-Fire 810-A      CCR7     4192506      -111     4192506\)P43
+AF-A NA 4194303 -111 4194303 472 keywords are stored in the
+`description' slot row names(0):
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{obj\_size}\NormalTok{(ConvertedToCytoframe)}
+\end{Highlighting}
+\end{Shaded}
+
+5.40 kB
+
+To go from a cytoframe to a flowFrame, we can use the
+cytoframe\_to\_flowFrame() function
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{ConvertedToFlowframe }\OtherTok{\textless{}{-}}\NormalTok{ flowWorkspace}\SpecialCharTok{::}\FunctionTok{cytoframe\_to\_flowFrame}\NormalTok{(cytoframe)}
+\NormalTok{ConvertedToFlowframe}
+\end{Highlighting}
+\end{Shaded}
+
+flowFrame object `2025\_07\_26\_AB\_02\_INF052\_00\_Ctrl.fcs' with 10000
+cells and 43 observables: name desc range minRange maxRange
+\(P1            Time        NA     878.809         0     878.809\)P2
+SSC-W NA 4194303.000 0 4194303.000
+\(P3           SSC-H        NA 4194303.000         0 4194303.000\)P4
+SSC-A NA 4194303.000 0 4194303.000
+\(P5           FSC-W        NA 4194303.000         0 4194303.000
+...             ...       ...         ...       ...         ...\)P39
+APC-R700-A CD107a 4192506 -111 4192506
+\(P40   Zombie NIR-A Viability     4192506      -111     4192506\)P41
+APC-Fire 750-A CD27 4192506 -111 4192506
+\(P42 APC-Fire 810-A      CCR7     4192506      -111     4192506\)P43
+AF-A NA 4194303 -111 4194303 472 keywords are stored in the
+`description' slot
+
+This other code gives the same result:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{ConvertedToFlowframe }\OtherTok{\textless{}{-}} \FunctionTok{cytoframe\_to\_flowFrame}\NormalTok{(cytoframe)}
+\NormalTok{ConvertedToFlowframe}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{obj\_size}\NormalTok{(ConvertedToFlowframe)}
+\end{Highlighting}
+\end{Shaded}
+
+3.53 MB
+
+To go from a flowSet to a cytoSet, we can use the flowSet\_to\_cytoset()
+function:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{ConvertedToCytoset }\OtherTok{\textless{}{-}} \FunctionTok{flowSet\_to\_cytoset}\NormalTok{(flowSet)}
+\NormalTok{ConvertedToCytoset}
+\end{Highlighting}
+\end{Shaded}
+
+A cytoset with 6 samples.
+
+column names: Time, SSC-W, SSC-H, SSC-A, FSC-W, FSC-H, FSC-A, SSC-B-W,
+SSC-B-H, SSC-B-A, BUV395-A, BUV563-A, BUV615-A, BUV661-A, BUV737-A,
+BUV805-A, Pacific Blue-A, BV480-A, BV570-A, BV605-A, BV650-A, BV711-A,
+BV750-A, BV786-A, Alexa Fluor 488-A, Spark Blue 550-A, Spark Blue 574-A,
+RB613-A, RB705-A, RB780-A, PE-A, PE-Dazzle594-A, PE-Cy5-A, PE-Fire
+700-A, PE-Fire 744-A, PE-Vio770-A, APC-A, Alexa Fluor 647-A, APC-R700-A,
+Zombie NIR-A, APC-Fire 750-A, APC-Fire 810-A, AF-A
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{obj\_size}\NormalTok{(ConvertedToCytoset)}
+\end{Highlighting}
+\end{Shaded}
+
+3.88 kB
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{ConvertedToFlowset }\OtherTok{\textless{}{-}} \FunctionTok{cytoset\_to\_flowSet}\NormalTok{(flowSet)}
+\NormalTok{ConvertedToFlowset}
+\end{Highlighting}
+\end{Shaded}
+
+A flowSet with 6 experiments.
+
+column names(43): Time SSC-W \ldots{} APC-Fire 810-A AF-A
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{obj\_size}\NormalTok{(ConvertedToFlowset)}
+\end{Highlighting}
+\end{Shaded}
+
+20.99 MB
+
+Fortunately, regardless of whether we are using flowFrame/flowSet (RAM)
+and cytoframe/cytoset (memory pointers), both routes end up converging
+at the next step, where the underlying .fcs files are passed off to the
+GatingSet() function.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{GatingSet1 }\OtherTok{\textless{}{-}} \FunctionTok{GatingSet}\NormalTok{(flowSet)}
+\NormalTok{GatingSet1 }
+\end{Highlighting}
+\end{Shaded}
+
+A GatingSet with 6 samples
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{class}\NormalTok{(GatingSet1)}
+\end{Highlighting}
+\end{Shaded}
+
+{[}1{]} ``GatingSet'' attr(,``package'') {[}1{]} ``flowWorkspace''
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{GatingSet2 }\OtherTok{\textless{}{-}} \FunctionTok{GatingSet}\NormalTok{(cytoset)}
+\NormalTok{GatingSet2}
+\end{Highlighting}
+\end{Shaded}
+
+A GatingSet with 6 samples
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{class}\NormalTok{(GatingSet2)}
+\end{Highlighting}
+\end{Shaded}
+
+{[}1{]} ``GatingSet'' attr(,``package'') {[}1{]} ``flowWorkspace''
+
+As we prefaced in the background, beyond the .fcs files themselves, we
+need infrastructural elements with which to interact with the underlying
+data, which allows us to organize the various files, transform (scale),
+compensate (for conventional flow), visualize, derrive statistics, etc.
+A GatingSet serves as the infrastructural framework that allows us to do
+this in R.
+
+If we investigate our current GatingSet objects, we won't see much. This
+will change as we start layering on additional elements. However, rather
+than try to cram everything into a single week, we will explore in
+greater depth the individual components over the next three weeks.
+Instead, for the rest of today, we will work backward, by exploring a
+GatingSet objecct and what it is capable of doing once fully assembled.
+
+The CytoML R package (also maintained by Mike Jiang) is a sister package
+to the flowWorkspace. It's main purpose is to permit bringing in
+existing FlowJo, Diva and Cytobank Workspaces, with all their gates,
+transformations, etc. into R as fully assembled GatingSet objects. For
+those who already use one of these commercial softwares, it can be quite
+useful tool.
+
+Since our goal is to examine a fully assembled GatingSet object, we will
+be using it today to bring in a FlowJo workspace to R. However, since
+this is a free Cytometry in R course, and not about to have everyone pay
+for a license for a one-off topic, in the pre-course Floreada
+walkthrough I documented how to convert a free Floreada.io workspae into
+a FlowJo.wsp that can also be used (please note that as of early 2026,
+some scaling bugs may be present and require troubleshooting).
+
+To get started, let's first attach CytoML to our local environment via
+the library() call.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(CytoML)}
+\end{Highlighting}
+\end{Shaded}
+
+The .wsp files within this week's data where created via Floreada.io.
+The main difference between the two files is one is a copy of the
+original that was opened within FlowJo, and subsequently swtiched from
+logicle to bi-exponential transformation.
+
+We will need to provide the appropiate file path for our desired .wsp
+file. We can start by identifying which are present using list.files()
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{Folder }\OtherTok{\textless{}{-}} \FunctionTok{file.path}\NormalTok{(}\StringTok{"C:/Users/Macarena/CytometryInR/course/05\_GatingSets/data"}\NormalTok{)}
+\NormalTok{FlowJoWsp }\OtherTok{\textless{}{-}} \FunctionTok{list.files}\NormalTok{(}\AttributeTok{path =}\NormalTok{ Folder, }\AttributeTok{pattern =} \StringTok{".wsp"}\NormalTok{, }\AttributeTok{full =} \ConstantTok{TRUE}\NormalTok{)}
+\NormalTok{FlowJoWsp}
+\end{Highlighting}
+\end{Shaded}
+
+{[}1{]}
+``C:/Users/Macarena/CytometryInR/course/05\_GatingSets/data/FlowJoWSP\_OpenedCopy.wsp''
+{[}2{]}
+``C:/Users/Macarena/CytometryInR/course/05\_GatingSets/data/FlowJoWSP\_Unopened.wsp''
+
+In our case, we will proceed by using str\_detect() to select the .wsp
+that contains the pattern ``Opened''
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{ThisWorkspace }\OtherTok{\textless{}{-}}\NormalTok{ FlowJoWsp[stringr}\SpecialCharTok{::}\FunctionTok{str\_detect}\NormalTok{(FlowJoWsp, }\StringTok{"Opened"}\NormalTok{)]}
+\NormalTok{ThisWorkspace}
+\end{Highlighting}
+\end{Shaded}
+
+{[}1{]}
+``C:/Users/Macarena/CytometryInR/course/05\_GatingSets/data/FlowJoWSP\_OpenedCopy.wsp''
+
+With our single .wsp filepath now identified, we can now proceed to set
+up the intermediate object using open\_flowjo\_xml()
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{ws }\OtherTok{\textless{}{-}} \FunctionTok{open\_flowjo\_xml}\NormalTok{(ThisWorkspace)}
+\NormalTok{ws}
+\end{Highlighting}
+\end{Shaded}
+
+File location:
+C:/Users/Macarena/CytometryInR/course/05\_GatingSets/data/FlowJoWSP\_OpenedCopy.wsp
+
+Groups in Workspace Name Num.Samples 1 All Samples 6
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{class}\NormalTok{(ws)}
+\end{Highlighting}
+\end{Shaded}
+
+{[}1{]} ``flowjo\_workspace'' attr(,``package'') {[}1{]} ``CytoML''
+
+Having set up the intermediate flowjo\_workspace object, we can attempt
+to read in the actual data from the .wsp into a GatingSet using the
+flowjo\_to\_gatingset() function.
+
+However, due to how I named the original .fcs files (``GROUPNAME'' being
+individual specimens, ``TUBENAME'' being either Ctrl or SEB), and
+downsampled to the same number of cells, we will encounter the following
+error:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{gs }\OtherTok{\textless{}{-}} \FunctionTok{flowjo\_to\_gatingset}\NormalTok{(}\AttributeTok{ws=}\NormalTok{ws, }\AttributeTok{name=}\DecValTok{1}\NormalTok{, }\AttributeTok{path =}\NormalTok{ Folder)}
+\end{Highlighting}
+\end{Shaded}
+
+Error: ! Multiple FCS files match sample 00\_Ctrl.fcs by filename, event
+count, and keywords. Candidates are:
+C:\Users\Macarena\CytometryInR\course\textbackslash05\_GatingSets\data\textbackslash2025\_07\_26\_AB\_02\_INF052\_00\_Ctrl.fcs
+C:\Users\Macarena\CytometryInR\course\textbackslash05\_GatingSets\data\textbackslash2025\_07\_26\_AB\_02\_INF100\_00\_Ctrl.fcs
+C:\Users\Macarena\CytometryInR\course\textbackslash05\_GatingSets\data\textbackslash2025\_07\_26\_AB\_02\_INF179\_00\_Ctrl.fcs
+Please move incorrect files out of this directory or its subdirectories.
+Show Traceback
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{gs}
+\end{Highlighting}
+\end{Shaded}
+
+Error: ! object `gs' not found
+
+As with any error, my first move is to check the help documentation. In
+this case, my initial response is to see if I can identify an argument
+that will help differentiate between the names for each specimen.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{?flowjo\_to\_gatingset}
+\end{Highlighting}
+\end{Shaded}
+
+parseWorkspace(obj, \ldots)
+
+\subsection{S4 method for signature
+`flowjo\_workspace'}\label{s4-method-for-signature-flowjo_workspace}
+
+parseWorkspace(obj, \ldots)
+
+flowjo\_to\_gatingset( ws, name = NULL, subset = list(), execute = TRUE,
+path = ``\,``, cytoset = NULL, backend\_dir = tempdir(), backend =
+get\_default\_backend(), includeGates = TRUE, additional.keys =''\(TOT",
+  additional.sampleID = FALSE,
+  keywords = character(),
+  keywords.source = "XML",
+  keyword.ignore.case = FALSE,
+  extend_val = 0,
+  extend_to = -4000,
+  channel.ignore.case = FALSE,
+  leaf.bool = TRUE,
+  include_empty_tree = FALSE,
+  skip_faulty_gate = FALSE,
+  compensation = NULL,
+  transform = TRUE,
+  fcs_file_extension = ".fcs",
+  greedy_match = FALSE,
+  mc.cores = 1,
+  ...
+)
+In this case, I find that the “additional.keys” argument would likely work for this troubleshooting:
+additional.keys
+character vector: The keywords (parsed from FCS header) to be combined(concatenated with "_") with FCS filename to uniquely identify samples. Default is '\)TOT'
+(total number of cells) and more keywords can be added to make this
+GUID.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{gs }\OtherTok{\textless{}{-}} \FunctionTok{flowjo\_to\_gatingset}\NormalTok{(}\AttributeTok{ws=}\NormalTok{ws, }\AttributeTok{name=}\DecValTok{1}\NormalTok{, }\AttributeTok{path =}\NormalTok{ Folder, }\AttributeTok{additional.keys=}\StringTok{"GROUPNAME"}\NormalTok{)}
+\NormalTok{gs}
+\end{Highlighting}
+\end{Shaded}
+
+A GatingSet with 6 samples
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{class}\NormalTok{(gs)}
+\end{Highlighting}
+\end{Shaded}
+
+{[}1{]} ``GatingSet'' attr(,``package'') {[}1{]} ``flowWorkspace''
+
+Especially when working with CytoML, it is often good to have an idea of
+how long it will take a particular function to run (to better plan how
+to use our time while waiting, whether to go grab coffee, etc.). There
+are a couple ways to do so.
+
+One, using the system.time() function from base R, in which we surround
+whatever line of code we wish to evaluate in \{\}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{system.time}\NormalTok{(\{}\FunctionTok{flowjo\_to\_gatingset}\NormalTok{(}\AttributeTok{ws=}\NormalTok{ws, }\AttributeTok{name=}\DecValTok{1}\NormalTok{, }\AttributeTok{path =}\NormalTok{ Folder, }\AttributeTok{additional.keys=}\StringTok{"GROUPNAME"}\NormalTok{)\})}
+\end{Highlighting}
+\end{Shaded}
+
+user system elapsed 0.81 0.04 0.89
+
+Alternatively, if we install the bench package, we can use the mark
+function to evaluate how long it takes on average across numerous
+iterations.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{install.packages}\NormalTok{(}\StringTok{"bench"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(bench)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{mark}\NormalTok{(Test }\OtherTok{\textless{}{-}} \FunctionTok{flowjo\_to\_gatingset}\NormalTok{(}\AttributeTok{ws=}\NormalTok{ws, }\AttributeTok{name=}\DecValTok{1}\NormalTok{, }\AttributeTok{path =}\NormalTok{ Folder, }\AttributeTok{additional.keys=}\StringTok{"GROUPNAME"}\NormalTok{), }\AttributeTok{iterations=} \DecValTok{5}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\section{A tibble: 1 × 13}\label{a-tibble-1-13}
+
+expression min median \texttt{itr/sec} mem\_alloc \texttt{gc/sec} n\_itr
+n\_gc total\_time result memory time gc\\
+\textless bch:\textgreater{} \\
+1 ``Test \textless- flowjo\_to\_gatingset\ldots{} 859ms 865ms 1.15
+13.3KB 0 5 0 4.35s
+
+Now that we have loaded the contents of the FlowJo/Floreada workspace,
+we can start exploring the various infrastructural capabilities of a
+GatingSet object.
+
+Let's start by evaluating whether the manually-drawn gates I drew
+survived the journey. To do this, I can generate a visual gating treee
+using the plot() function.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{plot}\NormalTok{(gs)}
+\end{Highlighting}
+\end{Shaded}
+
+\pandocbounded{\includegraphics[keepaspectratio]{C:/Users/Macarena/MacarenaLM/notes/week04/04_IntroToTidyverse/week 05 Gating sets notes/imagenweek5.png}}
+
+
+
+
+\end{document}
