@@ -530,12 +530,13 @@ However, due to how I named the original .fcs files (“GROUPNAME” being indiv
 #| eval: FALSE
 gs <- flowjo_to_gatingset(ws=ws, name=1, path = Folder)
 ```
+
 Error:
 ! Multiple FCS files match sample 00_Ctrl.fcs by filename, event count, and keywords.
-Candidates are: 
-C:\Users\Macarena\CytometryInR\course\05_GatingSets\data\2025_07_26_AB_02_INF052_00_Ctrl.fcs
-C:\Users\Macarena\CytometryInR\course\05_GatingSets\data\2025_07_26_AB_02_INF100_00_Ctrl.fcs
-C:\Users\Macarena\CytometryInR\course\05_GatingSets\data\2025_07_26_AB_02_INF179_00_Ctrl.fcs
+Candidates are:'
+C:/Users/Macarena/CytometryInR/course/05_GatingSets/data/2025_07_26_AB_02_INF052_00_Ctrl.fcs
+C:/Users/Macarena/CytometryInR/course/05_GatingSets/data/2025_07_26_AB_02_INF100_00_Ctrl.fcs
+C:/Users/Macarena/CytometryInR/course/05_GatingSets/data/2025_07_26_AB_02_INF179_00_Ctrl.fcs
 Please move incorrect files out of this directory or its subdirectories.
 Show Traceback
 
@@ -645,4 +646,120 @@ Let’s start by evaluating whether the manually-drawn gates I drew survived the
 #| eval: FALSE
 plot(gs)
 ```
-  
+![](C:/Users/Macarena/MacarenaLM/notes/week04/04_IntroToTidyverse/week 05 Gating sets notes/imagenweek5.png){width=25%}
+
+We can also retrieve the individual gates and their gaing paths using the gs_get_pop_paths() function.
+
+```{r}
+#| eval: FALSE
+gs_get_pop_paths(gs)
+```
+ [1] "root"                                              "/Scatter"                                         
+ [3] "/Scatter/Singlets"                                 "/Scatter/Singlets/Live"                           
+ [5] "/Scatter/Singlets/Live/Tcells"                     "/Scatter/Singlets/Live/Tcells/CD4+"               
+ [7] "/Scatter/Singlets/Live/Tcells/CD4+/TNFa+IFNg+"     "/Scatter/Singlets/Live/Tcells/CD4+/TNFa+IFNg-"    
+ [9] "/Scatter/Singlets/Live/Tcells/CD4+/TNFa-IFNg+"     "/Scatter/Singlets/Live/Tcells/CD4+/TNFa-IFNg-"    
+[11] "/Scatter/Singlets/Live/Tcells/CD4-CD8-"            "/Scatter/Singlets/Live/Tcells/CD4-CD8-/TNFa+IFNg+"
+[13] "/Scatter/Singlets/Live/Tcells/CD4-CD8-/TNFa+IFNg-" "/Scatter/Singlets/Live/Tcells/CD4-CD8-/TNFa-IFNg+"
+[15] "/Scatter/Singlets/Live/Tcells/CD4-CD8-/TNFa-IFNg-" "/Scatter/Singlets/Live/Tcells/CD8+"               
+[17] "/Scatter/Singlets/Live/Tcells/CD8+/TNFa+IFNg+"     "/Scatter/Singlets/Live/Tcells/CD8+/TNFa+IFNg-"    
+[19] "/Scatter/Singlets/Live/Tcells/CD8+/TNFa-IFNg+"     "/Scatter/Singlets/Live/Tcells/CD8+/TNFa-IFNg-"  
+
+If we wanted to retrieve counts of cells found within the individual gates, we could do so with gs_pop_get_count_fast()
+
+```{r}
+#| eval: FALSE
+Data <- gs_pop_get_count_fast(gs)
+head(Data, 5)
+```
+                 name                         Population                        Parent Count ParentCount
+               <char>                             <char>                        <char> <int>       <int>
+1: 00_Ctrl.fcs_INF052                           /Scatter                          root 10000       10000
+2: 00_Ctrl.fcs_INF052                  /Scatter/Singlets                      /Scatter  9986       10000
+3: 00_Ctrl.fcs_INF052             /Scatter/Singlets/Live             /Scatter/Singlets  9708        9986
+4: 00_Ctrl.fcs_INF052      /Scatter/Singlets/Live/Tcells        /Scatter/Singlets/Live  9708        9708
+5: 00_Ctrl.fcs_INF052 /Scatter/Singlets/Live/Tcells/CD4+ /Scatter/Singlets/Live/Tcells  6151        9708
+
+Since GatingSets contain multiple .fcs files, we may want to be able to subset them based on metadata for a particular variable. We can check to see current metadata using the pData() function.
+
+```{r}
+#| eval: FALSE
+pData(gs)
+```
+                          name
+00_Ctrl.fcs_INF052 00_Ctrl.fcs
+00_Ctrl.fcs_INF100 00_Ctrl.fcs
+00_Ctrl.fcs_INF179 00_Ctrl.fcs
+00_SEB.fcs_INF052   00_SEB.fcs
+00_SEB.fcs_INF100   00_SEB.fcs
+00_SEB.fcs_INF179   00_SEB.fcs
+
+It currently doesn’t have much, but we will explore how to change this more over the next few weeks. For now, just know that we could add additional metadata via either a .csv file, or by retrieving additional description keywords from within the .fcs files themselves (as shown below)
+
+```{r}
+#| eval: FALSE
+AlternateGS <- flowjo_to_gatingset(ws=ws, name=1, path = Folder, additional.keys="GROUPNAME", keywords=c("$DATE", "$CYT", "GROUPNAME"))
+pData(AlternateGS)
+```
+                   GROUPNAME   $CYT       $DATE        name
+00_Ctrl.fcs_INF052    INF052 Aurora 26-Jul-2025 00_Ctrl.fcs
+00_Ctrl.fcs_INF100    INF100 Aurora 26-Jul-2025 00_Ctrl.fcs
+00_Ctrl.fcs_INF179    INF179 Aurora 26-Jul-2025 00_Ctrl.fcs
+00_SEB.fcs_INF052     INF052 Aurora 26-Jul-2025  00_SEB.fcs
+00_SEB.fcs_INF100     INF100 Aurora 26-Jul-2025  00_SEB.fcs
+00_SEB.fcs_INF179     INF179 Aurora 26-Jul-2025  00_SEB.fcs
+
+Within R, most plots are generated using the ggplot2 package from the tidyverse. The Bioconductor ggcyto R package extends this concept to enable flow cytometry data contained within a GatingSet to be plotted.Gplot2 recently had a major version change, with significant internal changes occuring. As a consequence of these changes, ggcyto functions that relied on the old ggplot2 functions broke and had to be updated. Let’s start off by checking what version of both the ggplot2 and ggcyto packages you currently have installed on your computer.
+
+```{r}
+#| eval: FALSE
+packageVersion("ggplot2")
+```
+[1] ‘4.0.2’
+
+```{r}
+#| eval: FALSE
+packageVersion("ggcyto")
+```
+[1] ‘1.38.1’
+
+The version for ggplot2 is the newest one. However, for ggcyto, there is a newer version, 1.39.3. So, I am going to remove ggcyto first, close Positron an run all chunks again (go to the last chunk and clic in "run above") and install again ggcyto:
+
+```{r}
+remove.packages("ggcyto")
+```
+Removing package from ‘C:/Users/Macarena/AppData/Local/R/win-library/4.5’
+(as ‘lib’ is unspecified)
+
+```{r}
+remotes::install_github("RGLab/ggcyto")
+```
+When I have reinstalled ggcyto, ggplot2 is also updated, among others CRAN packages, now this are the versions intalled:
+> packageVersion("ggplot2")
+[1] ‘4.0.3’
+> packageVersion("ggcyto")
+[1] ‘1.39.4’
+
+```{r}
+library(ggplot2)
+library(ggcyto)
+```
+Loading required package: ncdfFlow
+
+Loading required package: BH
+
+Ggcyto follows the ggplot2 grammar of graphics syntax, which we will learn more extensively next week. For now, lets look at a simple example:
+
+```{r}
+ggcyto(gs[1], subset="root", aes(x="FSC-A", y="SSC-A")) + geom_hex(bins=100) 
+```
+![](C:/Users/Macarena/MacarenaLM/notes/week04/04_IntroToTidyverse/week 05 Gating sets notes/plot.png){width=25%}
+
+The function responsible for plotting is the ggcyto() function. The first argument (“gs[1]”) is designating which .fcs file in our GatingSet we are trying to visualize.
+
+The second argument (“subset”) corresponds to which gating node we want to visualize. In this case, when set to “root”, we are seeing all cells present in the .fcs file. If we however wanted to visualize the cells within the CD4+ gate, we would swap the value provided to this argument.
+
+```{r}
+ggcyto(gs[1], subset="CD4+", aes(x="FSC-A", y="SSC-A")) + geom_hex(bins=100) 
+```
+![](C:/Users/Macarena/MacarenaLM/notes/week04/04_IntroToTidyverse/week 05 Gating sets notes/plot2.png){width=25%}
