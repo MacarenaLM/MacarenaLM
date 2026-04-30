@@ -32,7 +32,8 @@ library(flowCore)
 
 ```{r}
 #| eval: FALSE
-flowFrame <- read.FCS(filename=fcs_files[1], truncate_max_range = FALSE, transformation = FALSE)
+flowFrame <- read.FCS(filename=fcs_files[1], truncate_max_range = FALSE,
+ transformation = FALSE)
 flowFrame
 ```
 flowFrame object '2025_07_26_AB_02_INF052_00_Ctrl.fcs'
@@ -198,7 +199,8 @@ titled "The cytoframe and cytoset classes" in the package vignette:
 
   ```{r}
 #| eval: FALSE
-cytoframe <- load_cytoframe_from_fcs(fcs_files[1], truncate_max_range = FALSE, transformation = FALSE)
+cytoframe <- load_cytoframe_from_fcs(fcs_files[1], truncate_max_range = FALSE,
+ transformation = FALSE)
 cytoframe
   ```
 cytoframe object '2025_07_26_AB_02_INF052_00_Ctrl.fcs'
@@ -241,7 +243,8 @@ Error:
  
  ```{r}
  #| eval: FALSE
-cytoset <- load_cytoset_from_fcs(fcs_files, truncate_max_range = FALSE, transformation = FALSE)
+cytoset <- load_cytoset_from_fcs(fcs_files, truncate_max_range = FALSE,
+ transformation = FALSE)
 cytoset
  ```
  A cytoset with 6 samples.
@@ -646,10 +649,8 @@ Let’s start by evaluating whether the manually-drawn gates I drew survived the
 #| eval: FALSE
 plot(gs)
 ```
-![](C:/Users/Macarena/MacarenaLM/notes/week04/04_IntroToTidyverse/week 05 Gating sets notes/imagenweek5.png){width=25%}
-
+![](C:/Users/Macarena/MacarenaLM/notes/week04/04_IntroToTidyverse/week 05 Gating sets notes/imagenweek5.png){width=50%}
 We can also retrieve the individual gates and their gaing paths using the gs_get_pop_paths() function.
-
 ```{r}
 #| eval: FALSE
 gs_get_pop_paths(gs)
@@ -698,7 +699,8 @@ It currently doesn’t have much, but we will explore how to change this more ov
 
 ```{r}
 #| eval: FALSE
-AlternateGS <- flowjo_to_gatingset(ws=ws, name=1, path = Folder, additional.keys="GROUPNAME", keywords=c("$DATE", "$CYT", "GROUPNAME"))
+AlternateGS <- flowjo_to_gatingset(ws=ws, name=1, path = Folder, additional.keys="GROUPNAME",
+ keywords=c("$DATE", "$CYT", "GROUPNAME"))
 pData(AlternateGS)
 ```
                    GROUPNAME   $CYT       $DATE        name
@@ -757,8 +759,7 @@ Ggcyto follows the ggplot2 grammar of graphics syntax, which we will learn more 
 #| eval: FALSE
 ggcyto(gs[1], subset="root", aes(x="FSC-A", y="SSC-A")) + geom_hex(bins=100) 
 ```
-![](C:/Users/Macarena/MacarenaLM/notes/week04/04_IntroToTidyverse/week 05 Gating sets notes/plot.png){width=25%}
-
+![](C:/Users/Macarena/MacarenaLM/notes/week04/04_IntroToTidyverse/week 05 Gating sets notes/plot.png){width=40%}
 The function responsible for plotting is the ggcyto() function. The first argument (“gs[1]”) is designating which .fcs file in our GatingSet we are trying to visualize.
 
 The second argument (“subset”) corresponds to which gating node we want to visualize. In this case, when set to “root”, we are seeing all cells present in the .fcs file. If we however wanted to visualize the cells within the CD4+ gate, we would swap the value provided to this argument.
@@ -767,25 +768,22 @@ The second argument (“subset”) corresponds to which gating node we want to v
 #| eval: FALSE
 ggcyto(gs[1], subset="CD4+", aes(x="FSC-A", y="SSC-A")) + geom_hex(bins=100) 
 ```
-![](C:/Users/Macarena/MacarenaLM/notes/week04/04_IntroToTidyverse/week 05 Gating sets notes/plot2.png){width=25%}
-
+![](C:/Users/Macarena/MacarenaLM/notes/week04/04_IntroToTidyverse/week 05 Gating sets notes/plot2.png){width=40%}
 For CD8+
 ```{r}
 #| eval: FALSE
 ggcyto(gs[1], subset="CD8+", aes(x="IFNg", y="TNFa")) + geom_hex(bins=100) 
 ```
-![](C:/Users/Macarena/MacarenaLM/notes/week04/04_IntroToTidyverse/week 05 Gating sets notes/plot3.png){width=25%}
-
+![](C:/Users/Macarena/MacarenaLM/notes/week04/04_IntroToTidyverse/week 05 Gating sets notes/plot3.png){width=40%}
 If we didn’t remember the marker, we could specify the fluorophore:
-
 ```{r}
 #| eval: FALSE
 ggcyto(gs[1], subset="CD8+", aes(x="BV750-A", y="PE-Dazzle594-A")) + geom_hex(bins=100) 
 ```
-![](C:/Users/Macarena/MacarenaLM/notes/week04/04_IntroToTidyverse/week 05 Gating sets notes/plot4.png){width=25%}
+![](C:/Users/Macarena/MacarenaLM/notes/week04/04_IntroToTidyverse/week 05 Gating sets notes/plot4.png){width=40%}
 
 ```{r}
 #| eval: FALSE
 ggcyto(gs[6], subset="Tcells", aes(x="CD4", y="CD8")) + geom_hex(bins=100)
 ```
-![](C:/Users/Macarena/MacarenaLM/notes/week04/04_IntroToTidyverse/week 05 Gating sets notes/plot5.png){width=25%}
+![](C:/Users/Macarena/MacarenaLM/notes/week04/04_IntroToTidyverse/week 05 Gating sets notes/plot5.png){width=40%}
