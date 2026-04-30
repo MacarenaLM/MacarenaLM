@@ -726,12 +726,14 @@ packageVersion("ggcyto")
 The version for ggplot2 is the newest one. However, for ggcyto, there is a newer version, 1.39.3. So, I am going to remove ggcyto first, close Positron an run all chunks again (go to the last chunk and clic in "run above") and install again ggcyto:
 
 ```{r}
+#| eval: FALSE
 remove.packages("ggcyto")
 ```
 Removing package from ‘C:/Users/Macarena/AppData/Local/R/win-library/4.5’
 (as ‘lib’ is unspecified)
 
 ```{r}
+#| eval: FALSE
 remotes::install_github("RGLab/ggcyto")
 ```
 When I have reinstalled ggcyto, ggplot2 is also updated, among others CRAN packages, now this are the versions intalled:
@@ -741,6 +743,7 @@ When I have reinstalled ggcyto, ggplot2 is also updated, among others CRAN packa
 [1] ‘1.39.4’
 
 ```{r}
+#| eval: FALSE
 library(ggplot2)
 library(ggcyto)
 ```
@@ -751,6 +754,7 @@ Loading required package: BH
 Ggcyto follows the ggplot2 grammar of graphics syntax, which we will learn more extensively next week. For now, lets look at a simple example:
 
 ```{r}
+#| eval: FALSE
 ggcyto(gs[1], subset="root", aes(x="FSC-A", y="SSC-A")) + geom_hex(bins=100) 
 ```
 ![](C:/Users/Macarena/MacarenaLM/notes/week04/04_IntroToTidyverse/week 05 Gating sets notes/plot.png){width=25%}
@@ -760,6 +764,28 @@ The function responsible for plotting is the ggcyto() function. The first argume
 The second argument (“subset”) corresponds to which gating node we want to visualize. In this case, when set to “root”, we are seeing all cells present in the .fcs file. If we however wanted to visualize the cells within the CD4+ gate, we would swap the value provided to this argument.
 
 ```{r}
+#| eval: FALSE
 ggcyto(gs[1], subset="CD4+", aes(x="FSC-A", y="SSC-A")) + geom_hex(bins=100) 
 ```
 ![](C:/Users/Macarena/MacarenaLM/notes/week04/04_IntroToTidyverse/week 05 Gating sets notes/plot2.png){width=25%}
+
+For CD8+
+```{r}
+#| eval: FALSE
+ggcyto(gs[1], subset="CD8+", aes(x="IFNg", y="TNFa")) + geom_hex(bins=100) 
+```
+![](C:/Users/Macarena/MacarenaLM/notes/week04/04_IntroToTidyverse/week 05 Gating sets notes/plot3.png){width=25%}
+
+If we didn’t remember the marker, we could specify the fluorophore:
+
+```{r}
+#| eval: FALSE
+ggcyto(gs[1], subset="CD8+", aes(x="BV750-A", y="PE-Dazzle594-A")) + geom_hex(bins=100) 
+```
+![](C:/Users/Macarena/MacarenaLM/notes/week04/04_IntroToTidyverse/week 05 Gating sets notes/plot4.png){width=25%}
+
+```{r}
+#| eval: FALSE
+ggcyto(gs[6], subset="Tcells", aes(x="CD4", y="CD8")) + geom_hex(bins=100)
+```
+![](C:/Users/Macarena/MacarenaLM/notes/week04/04_IntroToTidyverse/week 05 Gating sets notes/plot5.png){width=25%}
