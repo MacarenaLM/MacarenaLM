@@ -703,4 +703,30 @@ ggplot(Data) + aes(x=timepoint, y=TcellFrequency) +
 Error in `discrete_scale()`:
 ! unused argument (shape = c(22, 21))
 
+This did not quite work as expected, with our additional arguments not being perceived by the plot. Part of this is due to needing to set up the underlying geometry layer with the necessary arguments as well. After some investigation, lets try
 
+```{r}
+ggplot(Data) + aes(x=timepoint, y=TcellFrequency) + 
+    geom_boxplot() + geom_beeswarm(size=2.5, cex=2.5, aes(shape=infant_sex, fill=infant_sex)) +
+    scale_shape_manual(values=shape_sex) + scale_fill_manual(values=fill_sex)
+```
+![](C:/Users/Macarena/MacarenaLM/notes/week06 Visualizing with ggplot2/ggplot2 box plot 11.png){width=50%}
+
+# Facets
+At this point, we have added the Data, Aesthetic, and two Geometry layers. The next layer, Facets, allows creation of separate plots based on an additional variable. For example, if we were interested in seeing the difference between male and female infrants, we could specify the column name within the facet_wrap() argument.
+
+```{r}
+ggplot(Data) + aes(x=timepoint, y=TcellFrequency) +
+     geom_boxplot() + geom_beeswarm(size=2.5, cex=2.5, aes(shape=infant_sex, fill=infant_sex)) +
+     scale_shape_manual(values=shape_sex) + scale_fill_manual(values=fill_sex) + facet_wrap(~ infant_sex)
+```
+![](C:/Users/Macarena/MacarenaLM/notes/week06 Visualizing with ggplot2/ggplot2 box plot 12.png){width=50%}
+
+We could similarly return individual plots for various treatment conditions (Ctrl, PPD, SEB)
+
+```{r}
+ggplot(Data) + aes(x=timepoint, y=TcellFrequency) +
+     geom_boxplot() + geom_beeswarm(size=2.5, cex=2.5, aes(shape=infant_sex, fill=infant_sex)) +
+     scale_shape_manual(values=shape_sex) + scale_fill_manual(values=fill_sex) + facet_wrap(~ Condition)
+```
+![](C:/Users/Macarena/MacarenaLM/notes/week06 Visualizing with ggplot2/ggplot2 box plot 13.png){width=50%}
