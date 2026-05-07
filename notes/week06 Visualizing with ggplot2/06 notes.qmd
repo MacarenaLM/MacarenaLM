@@ -7,6 +7,7 @@ format: pdf
 First, we have to load dplyr
 
 ```{r}
+#| eval: FALSE
 library(dplyr)
 ```
 
@@ -25,16 +26,19 @@ This message means that R is masking (or hiding) the base R stats and base packa
 Now, we are going to work with dataset from week04
 
 ```{r}
+#| eval: false
 StorageLocation <- file.path("C:/Users/Macarena/CytometryInR/course/04_IntroToTidyverse/data")
 StorageLocation
 ```
 
 ```{r}
+#| eval: false
 TheCSV <- list.files(StorageLocation, full.names=TRUE)
 TheCSV
 ```
 
 ```{r}
+#| eval: false
 Data <- read.csv(TheCSV, check.names=FALSE)
 head(Data, 3)
 ```
@@ -86,6 +90,7 @@ head(Data, 3)
 And now we are going to determine what type of values contains each column:
 
 ```{r}
+#| eval: false
 str(Data)
 ``` 
 'data.frame':	196 obs. of  31 variables:
@@ -123,6 +128,7 @@ str(Data)
  The type of values that a column contains are particularly important to be aware of when working with ggplot2 plots. For example, we can see that several columns contain character values:
  
  ```{r}
+ #| eval: false
  Data |> select(bid, Condition, Date, infant_sex, ptype) |> head(6) |> str()
  ```
  'data.frame':	6 obs. of  5 variables:
@@ -135,6 +141,7 @@ str(Data)
  This is other way to do same but using tidyselect package (dplyr):
  
  ```{r}
+ #| eval: false
  Data |> select(where(is.character)) |> head(6) |> str()
  ```
  'data.frame':	6 obs. of  5 variables:
@@ -153,6 +160,7 @@ str(Data)
  
  We can also ask for numeric values or logical values:
  ```{r}
+ #| eval: false
  Data |> select(where(is.numeric)) |> head(6) |> str()
  ```
  'data.frame':	6 obs. of  26 variables:
@@ -184,6 +192,7 @@ str(Data)
  $ CD45_count       : int  915203 1438047 820570 271304 940733 675857
  
  ```{r}
+ #| eval: false
  Data |> select(where(is.logical)) |> head(6) |> str()
  ```
  'data.frame':	6 obs. of  0 variables
@@ -192,6 +201,7 @@ str(Data)
  Date column is currently consider as a character value:
  
  ```{r}
+ #| eval: false
  Data |> select(Date) |> str()
  ```
  'data.frame':	196 obs. of  1 variable:
@@ -200,6 +210,7 @@ str(Data)
  Character values when plotting are generally treated as categorical factors. When plotted, these will arrange according to alphabetical order. In this particular case, this may not be an issue:
  
  ```{r}
+ #| eval: false
  Data |> pull(Date) |> sort() |> unique() 
  ```
  [1] "2025-07-26" "2025-07-29" "2025-07-31" "2025-08-05"
@@ -208,6 +219,7 @@ str(Data)
 However, if year/month/day is formatted differently, as character values, the alphabetical reordering could result in your dates being scrambled:
 
 ```{r}
+#| eval: false
 AlternateFormat <- c("26-07-2025", "27-08-2019", "09-09-2025", "16-03-2026")
 AlternateFormat |> sort() |> unique()
 ```
@@ -216,6 +228,7 @@ AlternateFormat |> sort() |> unique()
 Because of this, I generally recommend reformatting these character type values over to Date type values. I will generally use the tidyverse lubridate package, as it has various functions that can handle the date format variation. In this case, since the character values appear year-month-day, we can use the ymd() function to update the column type:
 
 ```{r}
+#| eval: false
 library(lubridate)
 ```
 Attaching package: ‘lubridate’
@@ -225,6 +238,7 @@ The following objects are masked from ‘package:base’:
     date, intersect, setdiff, union
 
 ```{r}
+#| eval: false
 Data$Date <- ymd(Data$Date)
 str(Data[,1:5])
 ```
@@ -244,6 +258,7 @@ str(Data[,1:5])
 For example, if we look at the Timepoint column, we can see its numeric values are discrete, corresponding to the timepoint in months when the blood sample was collected (0, 4, 9):
 
 ```{r}
+#| eval: false
 Data |> pull(timepoint) |> unique()
 ```
 [1] 0 4 9
@@ -251,6 +266,7 @@ Data |> pull(timepoint) |> unique()
 If we want to avoid having ggplot treating these values as continuous, and instead see them as categorical, we will need to specify to R to treat these as such. We can do this by converting them into factors, using the factor() function:
 
 ```{r}
+#| eval: false
 Data1 <- Data
 Data1$timepoint <- factor(Data1$timepoint)
 str(Data1[,1:3])
@@ -263,6 +279,7 @@ str(Data1[,1:3])
   Let’s try creating a boxplot, with the different timepoints on the x-axis, and the frequency of T cells in the CD45+ gate on the y-axis. Let’s go ahead and actually convert timepoint over to a categorical factor for this example, and mutate the frequency column:
   
   ```{r}
+  #| eval: false
   Data <- Data |> 
     mutate(TcellProportion=Tcells_count/CD45_count) |>
     mutate(TcellFrequency=TcellProportion *100) |>
@@ -272,10 +289,12 @@ Data$timepoint <- factor(Data$timepoint)
   ```
   
   ```{r}
+  #| eval: false
   library(ggplot2)
   ```
   
   ```{r}
+  #| eval: false
   Plot <- ggplot(Data)
   Plot
   ```
@@ -284,6 +303,7 @@ Data$timepoint <- factor(Data$timepoint)
   As you can see, nothing is yet outputted at this stage. Let’s however peak behind the curtain.
   
   ```{r}
+  #| eval: false
   str(Plot)
   ```
   <ggplot2::ggplot>
@@ -467,5 +487,220 @@ Data$timepoint <- factor(Data$timepoint)
  @ plot_env   :<environment: R_GlobalEnv> 
 
  In this first chunk, we see that the data slot of the ggplot object now contains the underlying data.frame object. If we scroll past, we can spot additional slots, which are currently empty, waiting to be filled. We will sporadically check back and see how this changes.
+So, we have stablish the first layer of our plot (Data). Now, we have to specify the next layer: aesthetics. In our case, we were interested in placing timepoint on the x-axis, and placing the TcellFrequency on the y-axis.
 
+```{r}
+#| eval: false
+Plot <- ggplot(Data) + aes(x=timepoint, y=TcellFrequency)
+Plot
+```
+ (now we get a grey square, like before, and the x and y axis with white lines).
+
+If we glanced behind the curtains, we now see the mapping slot has now been filled in:
+
+```{r}
+#| eval: false
+str(Plot)
+```
+(I paste just the interesting fragment of the data obtained)
+@ mapping    : <ggplot2::mapping> List of 2
+ .. $ x: language ~timepoint
+ ..  ..- attr(*, ".Environment")=<environment: R_GlobalEnv> 
+ .. $ y: language ~TcellFrequency
+ ..  ..- attr(*, ".Environment")=<environment: R_GlobalEnv> 
+
+ IMPORTANT NOTE: We should not put "" (quotation marks) around timepoint and TcellFrequency, because we use tidyverse to determine that they are columns and not objects. If we put quotation marks around them, we will obtain the two axis using those names as values (object) in the graphic.
+
+ Now we have to add a new layer: geometrics. We have to decide what geometries we want to use. This is the layer that determines how our data is displayed/plotted.
  
+ ```{r}
+ #| eval: false
+ ggplot(Data) + aes(x=timepoint, y=TcellFrequency) + geom_point()
+ ```
+ ![](C:/Users/Macarena/MacarenaLM/notes/week06 Visualizing with ggplot2/ggplot2 scatter plot 1.png){width=50%}
+
+ We could swap geom_point() out for geom_boxplot():
+ 
+ ```{r}
+ #| eval: false
+ ggplot(Data) + aes(x=timepoint, y=TcellFrequency) + geom_boxplot()
+ ```
+ ![](C:/Users/Macarena/MacarenaLM/notes/week06 Visualizing with ggplot2/ggplot2 box plot 1.png){width=50%}
+
+```{r}
+#| eval: false
+ggplot(Data) + aes(x=timepoint, y=TcellFrequency) + geom_violin()
+```
+ ![](C:/Users/Macarena/MacarenaLM/notes/week06 Visualizing with ggplot2/ggplot2 violin plot 1.png){width=50%}
+
+We could also add two geometries
+
+```{r}
+#| eval: false
+ggplot(Data) + aes(x=timepoint, y=TcellFrequency) + geom_boxplot() + geom_point()
+```
+![](C:/Users/Macarena/MacarenaLM/notes/week06 Visualizing with ggplot2/ggplot2 box plot 2.png){width=50%}
+
+As you can see, many different geom_ functions exist in both ggplot2, as well as other R packages that expand the plotting capacity further. One I like to use for my own plots is the ggbeeswarm package, specifically the geom_beeswarm() function in conjunction with the geom_boxplots().
+
+```{r}
+#| eval: false
+install.packages("ggbeeswarm")
+```
+
+```{r}
+#| eval: false
+library(ggbeeswarm)
+Plot <- ggplot(Data) + aes(x=timepoint, y=TcellFrequency) + geom_boxplot() + geom_beeswarm()
+Plot
+```
+![](C:/Users/Macarena/MacarenaLM/notes/week06 Visualizing with ggplot2/ggplot2 box plot 3.png){width=50%}
+
+In the case of the above dataset, we had converted timepoint to a factor. But what would our plot have looked like if we had left it in the original continuous format?
+
+```{r}
+#| eval: false
+AlternateData <- read.csv(TheCSV, check.names=FALSE)
+AlternateData <- AlternateData |> 
+    mutate(TcellProportion=Tcells_count/CD45_count) |>
+    mutate(TcellFrequency=TcellProportion *100) |>
+    mutate(TcellFrequency=round(TcellFrequency, 1))
+ggplot(AlternateData) + aes(x=timepoint, y=TcellFrequency) + geom_beeswarm()
+```
+![](C:/Users/Macarena/MacarenaLM/notes/week06 Visualizing with ggplot2/ggplot2 scatter plot 2.png){width=50%}
+
+ In this case, the x-axis instead of being spaced categorically, now appears as continuous, with the individual dots being plotted at 0, 4, 9 respectively. Given that geom_boxplot is expecting a categorical factor, this fails to plot correctly when added on:
+ 
+ ```{r}
+ #| eval: false
+ ggplot(AlternateData) + aes(x=timepoint, y=TcellFrequency) + geom_boxplot() + geom_beeswarm()
+ ```
+ Warning messages:
+1: Orientation is not uniquely specified when both the x and
+y aesthetics are continuous. Picking default orientation
+'x'. 
+2: Continuous x aesthetic
+ℹ did you forget `aes(group = ...)`? 
+
+![](C:/Users/Macarena/MacarenaLM/notes/week06 Visualizing with ggplot2/ggplot2 box plot 4.png){width=50%}
+
+Fortunately, the warning message provides some context we can use when troubleshooting. If we implement the suggestion, we are able to rescue geom_boxplot() plotting attempt even in abscence of specifying timepoint as categorical.
+
+```{r}
+#| eval: false
+ggplot(AlternateData) + aes(x=timepoint, y=TcellFrequency, group=timepoint) + geom_boxplot() + geom_beeswarm()
+```
+![](C:/Users/Macarena/MacarenaLM/notes/week06 Visualizing with ggplot2/ggplot2 box plot 5.png){width=50%}
+
+This example generally highlights the importance of being aware of what types of values you are trying to plot, warning messages, and some of the quiky odd-looking plots that can arise when the assumptions are not met.
+
+# Mismatched Assumptions
+In this case, the two “geom_” functions we are using are using x-axis value as categorical, and y-axis as a continuous variable. What happens if we used a “geom_” function that has different specifications?
+
+```{r}
+#| eval: false
+ggplot(Data) + aes(x=timepoint, y=TcellFrequency) + geom_histogram() 
+```
+
+Error in `geom_histogram()`:
+! Problem while computing stat.
+ℹ Error occurred in the 1st layer.
+Caused by error in `setup_params()`:
+! `stat_bin()` must only have an x or y aesthetic.
+
+In the case of the above, geom_histogram() was expecting only one column being present in the aes() argument.
+
+```{r}
+#| eval: false
+ggplot(Data) + aes(x=TcellFrequency) + geom_histogram() 
+```
+`stat_bin()` using `bins = 30`. Pick better value
+`binwidth`.
+![](C:/Users/Macarena/MacarenaLM/notes/week06 Visualizing with ggplot2/ggplot2 bar chart 1.png){width=50%}
+
+This would similarly be the case for geom_density()
+
+```{r}
+#| eval: false
+ggplot(Data) + aes(x=TcellFrequency) + geom_density() 
+```
+![](C:/Users/Macarena/MacarenaLM/notes/week06 Visualizing with ggplot2/ggplot2 density plot 1.png){width=50%}
+
+Let's back to our current beeswarm boxplot:
+
+```{r}
+#| eval: false
+Plot <- ggplot(Data) + aes(x=timepoint, y=TcellFrequency) + geom_boxplot() + geom_beeswarm()
+Plot
+```
+![](C:/Users/Macarena/MacarenaLM/notes/week06 Visualizing with ggplot2/ggplot2 box plot 3.png){width=50%}
+
+If we are making any large changes to the geometry layer, it would be occuring as an argument provided to the geometry determining functions. Lets check to see what our argument options are for both of the above.
+
+```{r}
+?geom_boxplot
+```
+
+```{r}
+?geom_beeswarm
+```
+Currently, all the dots in the beeswarm are kind of small, and tightly wrapped together around the vertical axis for their respective groups. Let’s attempt to change this. One of the easiest things to do when modifying arguments is to start with size (or the equivalent argument)
+
+```{r}
+ggplot(Data) + aes(x=timepoint, y=TcellFrequency) + 
+    geom_boxplot() + geom_beeswarm(size=5)
+```
+![](C:/Users/Macarena/MacarenaLM/notes/week06 Visualizing with ggplot2/ggplot2 box plot 7.png){width=50%}
+
+Let’s tone it back.
+
+```{r}
+ggplot(Data) + aes(x=timepoint, y=TcellFrequency) +
+     geom_boxplot() + geom_beeswarm(size=2.5)
+```
+![](C:/Users/Macarena/MacarenaLM/notes/week06 Visualizing with ggplot2/ggplot2 box plot 5.png){width=50%}
+
+Better, but now the individual dots being too tightly wrapped together is limiting our capacity to visualize individuals. Lets next attempt to get the dots to spread out more horizontally from each other. Taking a look at the documentation, it looks like “cex” is the argument that might work.
+
+```{r}
+ggplot(Data) + aes(x=timepoint, y=TcellFrequency) + 
+    geom_boxplot() + geom_beeswarm(size=2.5, cex=5)
+```
+![](C:/Users/Macarena/MacarenaLM/notes/week06 Visualizing with ggplot2/ggplot2 box plot 9.png){width=50%}
+
+Too far! Let’s adjust it again
+
+```{r}
+ggplot(Data) + aes(x=timepoint, y=TcellFrequency) + 
+    geom_boxplot() + geom_beeswarm(size=2.5, cex=2.5)
+```
+![](C:/Users/Macarena/MacarenaLM/notes/week06 Visualizing with ggplot2/ggplot2 box plot 10.png){width=50%}
+
+Good enough for now!
+# Scales
+The next ggplot2 layer is escales. We have seen that we are able to change the size of dots and the space among them. However, we can also modify their appearance at the scale level.
+In our metadata, we can see that there is a column named "infant_sex", that stablish the sex origin of cells:
+
+```{r}
+Data |> pull(infant_sex) |> unique()
+```
+[1] "Male"   "Female"
+
+Let’s go ahead and attempt to alter the dots to reflect based on this additional metadata variable. First, we can assign values based on the categorical values that are present for that column.
+
+```{r}
+shape_sex <- c("Female" = 22, "Male" = 21)
+fill_sex <- c("Female" = "white", "Male" = "black")
+```
+The two scale layer functions we will use will be scale_shape_manual() and scale_fill_manual().
+
+```{r}
+ggplot(Data) + aes(x=timepoint, y=TcellFrequency) + 
+    geom_boxplot() + geom_beeswarm(size=2.5, cex=2.5) +
+    scale_shape_manual(shape=shape_sex) + scale_fill_manual(fill=fill_sex)
+```
+
+Error in `discrete_scale()`:
+! unused argument (shape = c(22, 21))
+
+
