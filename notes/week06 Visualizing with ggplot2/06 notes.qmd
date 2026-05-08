@@ -638,15 +638,18 @@ Plot
 If we are making any large changes to the geometry layer, it would be occuring as an argument provided to the geometry determining functions. Lets check to see what our argument options are for both of the above.
 
 ```{r}
+#| eval: false
 ?geom_boxplot
 ```
 
 ```{r}
+#| eval: false
 ?geom_beeswarm
 ```
 Currently, all the dots in the beeswarm are kind of small, and tightly wrapped together around the vertical axis for their respective groups. Let’s attempt to change this. One of the easiest things to do when modifying arguments is to start with size (or the equivalent argument)
 
 ```{r}
+#| eval: false
 ggplot(Data) + aes(x=timepoint, y=TcellFrequency) + 
     geom_boxplot() + geom_beeswarm(size=5)
 ```
@@ -655,6 +658,7 @@ ggplot(Data) + aes(x=timepoint, y=TcellFrequency) +
 Let’s tone it back.
 
 ```{r}
+#| eval: false
 ggplot(Data) + aes(x=timepoint, y=TcellFrequency) +
      geom_boxplot() + geom_beeswarm(size=2.5)
 ```
@@ -663,6 +667,7 @@ ggplot(Data) + aes(x=timepoint, y=TcellFrequency) +
 Better, but now the individual dots being too tightly wrapped together is limiting our capacity to visualize individuals. Lets next attempt to get the dots to spread out more horizontally from each other. Taking a look at the documentation, it looks like “cex” is the argument that might work.
 
 ```{r}
+#| eval: false
 ggplot(Data) + aes(x=timepoint, y=TcellFrequency) + 
     geom_boxplot() + geom_beeswarm(size=2.5, cex=5)
 ```
@@ -671,6 +676,7 @@ ggplot(Data) + aes(x=timepoint, y=TcellFrequency) +
 Too far! Let’s adjust it again
 
 ```{r}
+#| eval: false
 ggplot(Data) + aes(x=timepoint, y=TcellFrequency) + 
     geom_boxplot() + geom_beeswarm(size=2.5, cex=2.5)
 ```
@@ -683,6 +689,7 @@ The next ggplot2 layer is escales. We have seen that we are able to change the s
 In our metadata, we can see that there is a column named "infant_sex", that stablish the sex origin of cells:
 
 ```{r}
+#| eval: false
 Data |> pull(infant_sex) |> unique()
 ```
 [1] "Male"   "Female"
@@ -690,12 +697,14 @@ Data |> pull(infant_sex) |> unique()
 Let’s go ahead and attempt to alter the dots to reflect based on this additional metadata variable. First, we can assign values based on the categorical values that are present for that column.
 
 ```{r}
+#| eval: false
 shape_sex <- c("Female" = 22, "Male" = 21)
 fill_sex <- c("Female" = "white", "Male" = "black")
 ```
 The two scale layer functions we will use will be scale_shape_manual() and scale_fill_manual().
 
 ```{r}
+#| eval: false
 ggplot(Data) + aes(x=timepoint, y=TcellFrequency) + 
     geom_boxplot() + geom_beeswarm(size=2.5, cex=2.5) +
     scale_shape_manual(shape=shape_sex) + scale_fill_manual(fill=fill_sex)
@@ -707,9 +716,10 @@ Error in `discrete_scale()`:
 This did not quite work as expected, with our additional arguments not being perceived by the plot. Part of this is due to needing to set up the underlying geometry layer with the necessary arguments as well. After some investigation, lets try
 
 ```{r}
+#| eval: false
 ggplot(Data) + aes(x=timepoint, y=TcellFrequency) + 
-    geom_boxplot() + geom_beeswarm(size=2.5, cex=2.5, aes(shape=infant_sex, fill=infant_sex)) +
-    scale_shape_manual(values=shape_sex) + scale_fill_manual(values=fill_sex)
+    geom_boxplot() + geom_beeswarm(size=2.5, cex=2.5, aes(shape=infant_sex, fill=infant_sex))
+     + scale_shape_manual(values=shape_sex) + scale_fill_manual(values=fill_sex)
 ```
 ![](C:/Users/Macarena/MacarenaLM/notes/week06 Visualizing with ggplot2/ggplot2 box plot 11.png){width=50%}
 
@@ -717,27 +727,33 @@ ggplot(Data) + aes(x=timepoint, y=TcellFrequency) +
 At this point, we have added the Data, Aesthetic, and two Geometry layers. The next layer, Facets, allows creation of separate plots based on an additional variable. For example, if we were interested in seeing the difference between male and female infrants, we could specify the column name within the facet_wrap() argument.
 
 ```{r}
+#| eval: false
 ggplot(Data) + aes(x=timepoint, y=TcellFrequency) +
-     geom_boxplot() + geom_beeswarm(size=2.5, cex=2.5, aes(shape=infant_sex, fill=infant_sex)) +
-     scale_shape_manual(values=shape_sex) + scale_fill_manual(values=fill_sex) + facet_wrap(~ infant_sex)
+     geom_boxplot() + geom_beeswarm(size=2.5, cex=2.5, aes(shape=infant_sex, fill=infant_sex)) 
+     + scale_shape_manual(values=shape_sex) + scale_fill_manual(values=fill_sex)
+      + facet_wrap(~ infant_sex)
 ```
 ![](C:/Users/Macarena/MacarenaLM/notes/week06 Visualizing with ggplot2/ggplot2 box plot 12.png){width=50%}
 
 We could similarly return individual plots for various treatment conditions (Ctrl, PPD, SEB)
 
 ```{r}
+#| eval: false
 ggplot(Data) + aes(x=timepoint, y=TcellFrequency) +
-     geom_boxplot() + geom_beeswarm(size=2.5, cex=2.5, aes(shape=infant_sex, fill=infant_sex)) +
-     scale_shape_manual(values=shape_sex) + scale_fill_manual(values=fill_sex) + facet_wrap(~ Condition)
+     geom_boxplot() + geom_beeswarm(size=2.5, cex=2.5, aes(shape=infant_sex, fill=infant_sex)) 
+     + scale_shape_manual(values=shape_sex) + scale_fill_manual(values=fill_sex) 
+     + facet_wrap(~ Condition)
 ```
 ![](C:/Users/Macarena/MacarenaLM/notes/week06 Visualizing with ggplot2/ggplot2 box plot 13.png){width=50%}
 
 We could also use the variant facet_grid() to facet on the basis of two separate variables.
 
 ```{r}
+#| eval: false
 ggplot(Data) + aes(x=timepoint, y=TcellFrequency) + 
-    geom_boxplot() + geom_beeswarm(size=2.5, cex=2.5, aes(shape=infant_sex, fill=infant_sex)) +
-     scale_shape_manual(values=shape_sex) + scale_fill_manual(values=fill_sex) + facet_grid(infant_sex ~ Condition)
+    geom_boxplot() + geom_beeswarm(size=2.5, cex=2.5, aes(shape=infant_sex, fill=infant_sex))
+     + scale_shape_manual(values=shape_sex) + scale_fill_manual(values=fill_sex)
+      + facet_grid(infant_sex ~ Condition)
 ```
 ![](C:/Users/Macarena/MacarenaLM/notes/week06 Visualizing with ggplot2/ggplot2 box plot 14.png){width=50%}
 
@@ -745,9 +761,10 @@ ggplot(Data) + aes(x=timepoint, y=TcellFrequency) +
 Having built out much of the underlying plot, we currently have the following plot
 
 ```{r}
+#| eval: false
 ggplot(Data) + aes(x=timepoint, y=TcellFrequency) +
-     geom_boxplot() + geom_beeswarm(size=2.5, cex=2.5, aes(shape=infant_sex, fill=infant_sex)) +
-     scale_shape_manual(values=shape_sex) + scale_fill_manual(values=fill_sex)
+     geom_boxplot() + geom_beeswarm(size=2.5, cex=2.5, aes(shape=infant_sex, fill=infant_sex)) 
+     + scale_shape_manual(values=shape_sex) + scale_fill_manual(values=fill_sex)
 ```
 ![](C:/Users/Macarena/MacarenaLM/notes/week06 Visualizing with ggplot2/ggplot2 box plot 11.png){width=50%}
 
@@ -757,27 +774,32 @@ The final layer in todays exploration of ggplot2 is the “theme” layer. This 
 Here are a couple examples of what applying one of the various default “theme_”’s looks like.
 
 ```{r}
+#| eval: false
 ggplot(Data) + aes(x=timepoint, y=TcellFrequency) +
-     geom_boxplot() + geom_beeswarm(size=2.5, cex=2.5, aes(shape=infant_sex, fill=infant_sex)) +
-     scale_shape_manual(values=shape_sex) + scale_fill_manual(values=fill_sex) + theme_classic()
+     geom_boxplot() + geom_beeswarm(size=2.5, cex=2.5, aes(shape=infant_sex, fill=infant_sex))
+      + scale_shape_manual(values=shape_sex) + scale_fill_manual(values=fill_sex)
+       + theme_classic()
 ```
 ![](C:/Users/Macarena/MacarenaLM/notes/week06 Visualizing with ggplot2/ggplot2 box plot 16.png){width=50%}
 
 (in this case, background is white and there is no lines from axis)
 
 ```{r}
+#| eval: false
 ggplot(Data) + aes(x=timepoint, y=TcellFrequency) +
-     geom_boxplot() + geom_beeswarm(size=2.5, cex=2.5, aes(shape=infant_sex, fill=infant_sex)) +
-     scale_shape_manual(values=shape_sex) + scale_fill_manual(values=fill_sex) + theme_bw()
+     geom_boxplot() + geom_beeswarm(size=2.5, cex=2.5, aes(shape=infant_sex, fill=infant_sex)) 
+     + scale_shape_manual(values=shape_sex) + scale_fill_manual(values=fill_sex) + theme_bw()
 ```
 ![](C:/Users/Macarena/MacarenaLM/notes/week06 Visualizing with ggplot2/ggplot2 box plot 17.png){width=50%}
 
 (here, the background is white and appears lines from axis. Also there is an square surrounding the plot)
 
 ```{r}
+#| eval: false
 ggplot(Data) + aes(x=timepoint, y=TcellFrequency) +
-     geom_boxplot() + geom_beeswarm(size=2.5, cex=2.5, aes(shape=infant_sex, fill=infant_sex)) +
-     scale_shape_manual(values=shape_sex) + scale_fill_manual(values=fill_sex) + theme_minimal()
+     geom_boxplot() + geom_beeswarm(size=2.5, cex=2.5, aes(shape=infant_sex, fill=infant_sex)) 
+     + scale_shape_manual(values=shape_sex) + scale_fill_manual(values=fill_sex)
+      + theme_minimal()
 ```
 ![](C:/Users/Macarena/MacarenaLM/notes/week06 Visualizing with ggplot2/ggplot2 box plot 18.png){width=50%}
 
@@ -786,9 +808,10 @@ ggplot(Data) + aes(x=timepoint, y=TcellFrequency) +
 By contrast, instead of (or in addition to) applying a broad theme, we can also modify individual elements of our plots. For example, within theme functions parenthesis, we can silence a particular plot element by setting its theme element equal to the element_blank(). If we were trying to remove the major grid lines, we would run a line of code like this:
 
 ```{r}
+#| eval: false
 ggplot(Data) + aes(x=timepoint, y=TcellFrequency) + 
-    geom_boxplot() + geom_beeswarm(size=2.5, cex=2.5, aes(shape=infant_sex, fill=infant_sex)) +
-     scale_shape_manual(values=shape_sex) + scale_fill_manual(values=fill_sex) +
+    geom_boxplot() + geom_beeswarm(size=2.5, cex=2.5, aes(shape=infant_sex, fill=infant_sex)) 
+    + scale_shape_manual(values=shape_sex) + scale_fill_manual(values=fill_sex) +
 theme(
     panel.grid.major = element_blank())
 ```
@@ -797,10 +820,11 @@ theme(
 If we decided to remove the minor grid lines, we would set it’s equivalent argument equal to element_blank() within the theme (), although we must first add a comma to distinguish it from the previous argument.
 
 ```{r}
+#| eval: false
 ggplot(Data) + aes(x=timepoint, y=TcellFrequency) + 
-    geom_boxplot() + geom_beeswarm(size=2.5, cex=2.5, aes(shape=infant_sex, fill=infant_sex)) +
-     scale_shape_manual(values=shape_sex) + scale_fill_manual(values=fill_sex) +
-theme(
+    geom_boxplot() + geom_beeswarm(size=2.5, cex=2.5, aes(shape=infant_sex, fill=infant_sex)) 
+    + scale_shape_manual(values=shape_sex) + scale_fill_manual(values=fill_sex) 
+    + theme(
     panel.grid.major = element_blank(),
     panel.grid.minor = element_blank())
 ```
@@ -809,10 +833,11 @@ theme(
 In addition to removing things, we can also modify theme elements. One issue often encountered is the axis-text labels obscure one another. One solution is to rotate them (via the “angle” argument)and horizontally justify their starting position using “hjust” to line up with the original starting position.
 
 ```{r}
+#| eval: false
 ggplot(Data) + aes(x=timepoint, y=TcellFrequency) +
-     geom_boxplot() + geom_beeswarm(size=2.5, cex=2.5, aes(shape=infant_sex, fill=infant_sex)) +
-     scale_shape_manual(values=shape_sex) + scale_fill_manual(values=fill_sex) +
-theme(
+     geom_boxplot() + geom_beeswarm(size=2.5, cex=2.5, aes(shape=infant_sex, fill=infant_sex)) 
+     + scale_shape_manual(values=shape_sex) + scale_fill_manual(values=fill_sex) 
+     + theme(
     panel.grid.major = element_blank(),
     panel.grid.minor = element_blank(),
     axis.text.x = element_text(angle=45, hjust=1, size = 16))
@@ -822,10 +847,11 @@ theme(
 We can in a similar manner adjust the size of the axis text labels, using the “size” argument.
 
 ```{r}
+#| eval: false
 ggplot(Data) + aes(x=timepoint, y=TcellFrequency) +
-     geom_boxplot() + geom_beeswarm(size=2.5, cex=2.5, aes(shape=infant_sex, fill=infant_sex)) +
-     scale_shape_manual(values=shape_sex) + scale_fill_manual(values=fill_sex) +
-theme(
+     geom_boxplot() + geom_beeswarm(size=2.5, cex=2.5, aes(shape=infant_sex, fill=infant_sex)) 
+     + scale_shape_manual(values=shape_sex) + scale_fill_manual(values=fill_sex) 
+     + theme(
     panel.grid.major = element_blank(),
     panel.grid.minor = element_blank(),
     axis.text.x = element_text(angle=45, hjust=1, size = 12),
@@ -837,6 +863,7 @@ theme(
 Let’s begin by loading in the additional R packages we will need
 
 ```{r}
+#| eval: false
 library(CytoML)
 library(ggcyto)
 ```
@@ -853,37 +880,44 @@ titled "The cytoframe and cytoset classes" in the package vignette:
   We are going to use again the example from week5 to obtain a GatingSet object:
   
   ```{r}
+  #| eval: false
   Folder <- file.path("C:/Users/Macarena/CytometryInR/course/05_GatingSets/data")
   Folder
   ```
 
 ```{r}
+#| eval: false
 FlowJoWsp <- list.files(path = Folder, pattern=".wsp", full = TRUE)
 FlowJoWsp
 ```
 
 ```{r}
+#| eval: false
 ThisWorkspace <- FlowJoWsp[stringr::str_detect(FlowJoWsp, "Opened")]
 ThisWorkspace
 ```
 
 ```{r}
+#| eval: false
 ws <- open_flowjo_xml(ThisWorkspace)
 ws
 ```
 
 ```{r}
+#| eval: false
 gs <- flowjo_to_gatingset(ws=ws, name=1, path=Folder, additional.keys = "GROUPNAME")
 gs
 ```
 And return to the plot we had left off on:
 
 ```{r}
+#| eval: FALSE
 Plot <- ggcyto(gs[6], subset="Tcells", aes(x="CD8", y="CD4")) + geom_hex(bins=100)
 ```
 And we are going to use some ggplot2 functions:
 
 ```{r}
+#| eval: false
 Plot + theme_bw()
 ```
 ![](C:/Users/Macarena/MacarenaLM/notes/week06 Visualizing with ggplot2/ggplot2 3.png){width=50%}
