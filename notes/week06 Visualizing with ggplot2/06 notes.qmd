@@ -849,7 +849,44 @@ GatingSet objects has changed. For details, please read the section
 titled "The cytoframe and cytoset classes" in the package vignette:
 
   vignette("flowWorkspace-Introduction", "flowWorkspace")
+
+  We are going to use again the example from week5 to obtain a GatingSet object:
   
+  ```{r}
+  Folder <- file.path("C:/Users/Macarena/CytometryInR/course/05_GatingSets/data")
+  Folder
+  ```
+
+```{r}
+FlowJoWsp <- list.files(path = Folder, pattern=".wsp", full = TRUE)
+FlowJoWsp
+```
+
+```{r}
+ThisWorkspace <- FlowJoWsp[stringr::str_detect(FlowJoWsp, "Opened")]
+ThisWorkspace
+```
+
+```{r}
+ws <- open_flowjo_xml(ThisWorkspace)
+ws
+```
+
+```{r}
+gs <- flowjo_to_gatingset(ws=ws, name=1, path=Folder, additional.keys = "GROUPNAME")
+gs
+```
+And return to the plot we had left off on:
+
+```{r}
+Plot <- ggcyto(gs[6], subset="Tcells", aes(x="CD8", y="CD4")) + geom_hex(bins=100)
+```
+And we are going to use some ggplot2 functions:
+
+```{r}
+Plot + theme_bw()
+```
+![](C:/Users/Macarena/MacarenaLM/notes/week06 Visualizing with ggplot2/ggplot2 3.png){width=50%}
 
 
 
