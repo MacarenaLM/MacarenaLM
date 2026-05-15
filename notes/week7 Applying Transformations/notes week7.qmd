@@ -1,0 +1,113 @@
+---
+title: "week6_Visualizing with ggplot2"
+author: "Macarena López-Mayorga"
+date: 2026-05-05
+format: pdf
+---
+First, we attach flowWorkspace and ggcyto to our local environment:
+
+```{r}
+library(flowWorkspace)
+library(ggcyto)
+```
+
+
+```{r}
+StorageLocation <- file.path("C:/Users/Macarena/CytometryInR/course/07_Transformations/data")
+fcs_files <- list.files(StorageLocation, ".fcs", full.names=TRUE)
+SFC_files <- fcs_files[stringr::str_detect(fcs_files, "2025")]
+MC_files <- fcs_files[stringr::str_detect(fcs_files, "G1_2")]
+```
+
+Lets start by working with the SFC dataset. First off, let’s double check that we have just the SFC files (as flowWorkspace will throw an error if the .fcs files passed contain different number of fluorophore/metal columns)
+
+```{r}
+SFC_files
+```
+[1] "C:/Users/Macarena/CytometryInR/course/07_Transformations/data/2025_07_26_AB_02_INF052_00_Ctrl.fcs"
+[2] "C:/Users/Macarena/CytometryInR/course/07_Transformations/data/2025_07_26_AB_02_INF052_00_SEB.fcs" 
+[3] "C:/Users/Macarena/CytometryInR/course/07_Transformations/data/2025_07_26_AB_02_INF100_00_Ctrl.fcs"
+[4] "C:/Users/Macarena/CytometryInR/course/07_Transformations/data/2025_07_26_AB_02_INF100_00_SEB.fcs" 
+[5] "C:/Users/Macarena/CytometryInR/course/07_Transformations/data/2025_07_26_AB_02_INF179_00_Ctrl.fcs"
+[6] "C:/Users/Macarena/CytometryInR/course/07_Transformations/data/2025_07_26_AB_02_INF179_00_SEB.fcs" 
+
+Circling back to where we left off during Week 05, we will pass these file path locations to load_cytoset_from_fcs() to load them into a GatingSet object.
+
+```{r}
+SFC_cytoset <- load_cytoset_from_fcs(SFC_files, truncate_max_range=FALSE, transformation=FALSE)
+SFC_GatingSet <- GatingSet(SFC_cytoset)
+SFC_GatingSet
+```
+A GatingSet with 6 samples
+
+One worthwile thing when first starting is to check the metadata for the GatingSet, using the pData() function.
+
+```{r}
+pData(SFC_GatingSet)
+```
+                                                                   name
+2025_07_26_AB_02_INF052_00_Ctrl.fcs 2025_07_26_AB_02_INF052_00_Ctrl.fcs
+2025_07_26_AB_02_INF052_00_SEB.fcs   2025_07_26_AB_02_INF052_00_SEB.fcs
+2025_07_26_AB_02_INF100_00_Ctrl.fcs 2025_07_26_AB_02_INF100_00_Ctrl.fcs
+2025_07_26_AB_02_INF100_00_SEB.fcs   2025_07_26_AB_02_INF100_00_SEB.fcs
+2025_07_26_AB_02_INF179_00_Ctrl.fcs 2025_07_26_AB_02_INF179_00_Ctrl.fcs
+2025_07_26_AB_02_INF179_00_SEB.fcs   2025_07_26_AB_02_INF179_00_SEB.fcs
+
+In the current form, the metadata is kinda empty, only containing rownames and the name column. However, we can notice that within the existing names, we have some useful information present between the underscores that we might be able to extract out and append as additional metadata colums.
+
+Lets first off retrieve the metadata by assigning to its own object/variable:
+
+```{r}
+Metadata <- pData(SFC_GatingSet)
+str(Metadata)
+```
+'data.frame':	6 obs. of  1 variable:
+ $ name: chr  "2025_07_26_AB_02_INF052_00_Ctrl.fcs" "2025_07_26_AB_02_INF052_00_SEB.fcs" "2025_07_26_AB_02_INF100_00_Ctrl.fcs" "2025_07_26_AB_02_INF100_00_SEB.fcs" ...
+
+ As you can see, it is just a data.frame style object that we have encountered in the past. We can therefore use dplyr package functions to help us tidy the metadata to extract the additional information that we may need in the future. Let’s go ahead and load in dplyr
+
+ ```{r}
+ library(dplyr)
+ ```
+ 
+ ```{r}
+ library(stringr)
+ ```
+ And then create a new column for Condition so that we can better evaluate how the various extraction functions work, and also not risk messing up the underlying data while testing out how to use several new functions.
+
+ ```{r}
+ Testing <- Metadata |> mutate(Condition=name)
+ ```
+ Glancing at the current names, we can notice that if we wanted to extract the Condition (Ctrl, PPD, SEB), we would need to remove all character values up the final underscore (_), and before the “.fcs”.
+ 
+ ```{r}
+ Testing |> pull(Condition)
+ ```
+ [1] "2025_07_26_AB_02_INF052_00_Ctrl.fcs"
+[2] "2025_07_26_AB_02_INF052_00_SEB.fcs" 
+[3] "2025_07_26_AB_02_INF100_00_Ctrl.fcs"
+[4] "2025_07_26_AB_02_INF100_00_SEB.fcs" 
+[5] "2025_07_26_AB_02_INF179_00_Ctrl.fcs"
+[6] "2025_07_26_AB_02_INF179_00_SEB.fcs" 
+Within base R, two functions, sub() and gsub() are most frequently encountered when attempting to extract out a particular pattern. These rely on providing a regular expression (RegEx) pattern to match, and a replacement value to swap in its place (which can be left empty by providing a ““).
+
+Consequently, if we were using sub(), our first step to replace everything up through the last underscore would be the RegEx expression “.*_”
+
+```{r}
+sub(".*_", "", Testing$Condition)
+```
+[1] "Ctrl.fcs" "SEB.fcs"  "Ctrl.fcs" "SEB.fcs"  "Ctrl.fcs"
+[6] "SEB.fcs" 
+
+And we could follow up by matching the “.fcs” pattern and leaving the replacement value as “” as well.
+
+```{r}
+Intermediate <- sub(".*_", "", Testing$Condition)
+sub(".fcs", "", Intermediate)
+```
+[1] "Ctrl" "SEB"  "Ctrl" "SEB"  "Ctrl" "SEB" 
+
+IMPORTANT NOTE: Please be advised, even with years of practice, I still will struggle to remember the proper RegEx syntax code to extract out a pattern from a long complicated character string. This is one use case where having a LLM provide a narrowly focused answer can be quite useful. Prompt example:
+
+“I am working in R, using sub(), I want to keep everything after the last _ : 2025_07_26_AB_02_INF052_00_Ctrl.fcs”
+
