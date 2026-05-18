@@ -111,3 +111,472 @@ IMPORTANT NOTE: Please be advised, even with years of practice, I still will str
 
 “I am working in R, using sub(), I want to keep everything after the last _ : 2025_07_26_AB_02_INF052_00_Ctrl.fcs”
 
+In addition to sub() and gsub() in base R, we can also achieve a similar outcome using the stringr package from the tidyverse, using the str_extract() function (after investigating the correct RegEx style syntax). To interpret this RegEx-inspired hieroglyphic, note that “^” is used for the start of a string, and “$” for the end of the string. So we are extracting the pattern after the underscore “^_“, but keeping the contents before the final .fcs
+
+```{r}
+str_extract(Testing$Condition, "[^_]+(?=\\.fcs$)")
+```
+[1] "Ctrl" "SEB"  "Ctrl" "SEB"  "Ctrl" "SEB"
+
+So, wrapping it all together, we could write the following to create a Condition column
+
+```{r}
+Metadata |> mutate(Condition = name) |> mutate(Condition=str_extract(Condition, "[^_]+(?=\\.fcs$)"))
+```
+                                                                   name
+2025_07_26_AB_02_INF052_00_Ctrl.fcs 2025_07_26_AB_02_INF052_00_Ctrl.fcs
+2025_07_26_AB_02_INF052_00_SEB.fcs   2025_07_26_AB_02_INF052_00_SEB.fcs
+2025_07_26_AB_02_INF100_00_Ctrl.fcs 2025_07_26_AB_02_INF100_00_Ctrl.fcs
+2025_07_26_AB_02_INF100_00_SEB.fcs   2025_07_26_AB_02_INF100_00_SEB.fcs
+2025_07_26_AB_02_INF179_00_Ctrl.fcs 2025_07_26_AB_02_INF179_00_Ctrl.fcs
+2025_07_26_AB_02_INF179_00_SEB.fcs   2025_07_26_AB_02_INF179_00_SEB.fcs
+                                    Condition
+2025_07_26_AB_02_INF052_00_Ctrl.fcs      Ctrl
+2025_07_26_AB_02_INF052_00_SEB.fcs        SEB
+2025_07_26_AB_02_INF100_00_Ctrl.fcs      Ctrl
+2025_07_26_AB_02_INF100_00_SEB.fcs        SEB
+2025_07_26_AB_02_INF179_00_Ctrl.fcs      Ctrl
+2025_07_26_AB_02_INF179_00_SEB.fcs        SEB
+
+Fortunately, extracting an actual pattern is a bit simpler, so we can similarly grab the specimen ID number.
+
+```{r}
+TwoExtraColumns <- Metadata |> mutate(Condition = name) |>
+     mutate(Condition=str_extract(Condition, "[^_]+(?=\\.fcs$)")) |>
+     mutate(Specimen=str_extract(name, "INF\\d{3}")) |> select(Condition, Specimen)
+TwoExtraColumns
+```
+                                    Condition
+2025_07_26_AB_02_INF052_00_Ctrl.fcs      Ctrl
+2025_07_26_AB_02_INF052_00_SEB.fcs        SEB
+2025_07_26_AB_02_INF100_00_Ctrl.fcs      Ctrl
+2025_07_26_AB_02_INF100_00_SEB.fcs        SEB
+2025_07_26_AB_02_INF179_00_Ctrl.fcs      Ctrl
+2025_07_26_AB_02_INF179_00_SEB.fcs        SEB
+                                    Specimen
+2025_07_26_AB_02_INF052_00_Ctrl.fcs   INF052
+2025_07_26_AB_02_INF052_00_SEB.fcs    INF052
+2025_07_26_AB_02_INF100_00_Ctrl.fcs   INF100
+2025_07_26_AB_02_INF100_00_SEB.fcs    INF100
+2025_07_26_AB_02_INF179_00_Ctrl.fcs   INF179
+2025_07_26_AB_02_INF179_00_SEB.fcs    INF179
+
+# Updating Metadata
+When binding columns from two separate data.frame objects in R, we can use the cbind() base R function.
+
+```{r}
+UpdatedMetadata <- cbind(Metadata, TwoExtraColumns)
+UpdatedMetadata
+```
+                                                                   name
+2025_07_26_AB_02_INF052_00_Ctrl.fcs 2025_07_26_AB_02_INF052_00_Ctrl.fcs
+2025_07_26_AB_02_INF052_00_SEB.fcs   2025_07_26_AB_02_INF052_00_SEB.fcs
+2025_07_26_AB_02_INF100_00_Ctrl.fcs 2025_07_26_AB_02_INF100_00_Ctrl.fcs
+2025_07_26_AB_02_INF100_00_SEB.fcs   2025_07_26_AB_02_INF100_00_SEB.fcs
+2025_07_26_AB_02_INF179_00_Ctrl.fcs 2025_07_26_AB_02_INF179_00_Ctrl.fcs
+2025_07_26_AB_02_INF179_00_SEB.fcs   2025_07_26_AB_02_INF179_00_SEB.fcs
+                                    Condition
+2025_07_26_AB_02_INF052_00_Ctrl.fcs      Ctrl
+2025_07_26_AB_02_INF052_00_SEB.fcs        SEB
+2025_07_26_AB_02_INF100_00_Ctrl.fcs      Ctrl
+2025_07_26_AB_02_INF100_00_SEB.fcs        SEB
+2025_07_26_AB_02_INF179_00_Ctrl.fcs      Ctrl
+2025_07_26_AB_02_INF179_00_SEB.fcs        SEB
+                                    Specimen
+2025_07_26_AB_02_INF052_00_Ctrl.fcs   INF052
+2025_07_26_AB_02_INF052_00_SEB.fcs    INF052
+2025_07_26_AB_02_INF100_00_Ctrl.fcs   INF100
+2025_07_26_AB_02_INF100_00_SEB.fcs    INF100
+2025_07_26_AB_02_INF179_00_Ctrl.fcs   INF179
+2025_07_26_AB_02_INF179_00_SEB.fcs    INF179
+
+Which we can then use to overwrite the existing metadata present for the GatingSet.
+
+```{r}
+pData(SFC_GatingSet) <- UpdatedMetadata
+pData(SFC_GatingSet)
+```
+                                                                   name
+2025_07_26_AB_02_INF052_00_Ctrl.fcs 2025_07_26_AB_02_INF052_00_Ctrl.fcs
+2025_07_26_AB_02_INF052_00_SEB.fcs   2025_07_26_AB_02_INF052_00_SEB.fcs
+2025_07_26_AB_02_INF100_00_Ctrl.fcs 2025_07_26_AB_02_INF100_00_Ctrl.fcs
+2025_07_26_AB_02_INF100_00_SEB.fcs   2025_07_26_AB_02_INF100_00_SEB.fcs
+2025_07_26_AB_02_INF179_00_Ctrl.fcs 2025_07_26_AB_02_INF179_00_Ctrl.fcs
+2025_07_26_AB_02_INF179_00_SEB.fcs   2025_07_26_AB_02_INF179_00_SEB.fcs
+                                    Specimen
+2025_07_26_AB_02_INF052_00_Ctrl.fcs   INF052
+2025_07_26_AB_02_INF052_00_SEB.fcs    INF052
+2025_07_26_AB_02_INF100_00_Ctrl.fcs   INF100
+2025_07_26_AB_02_INF100_00_SEB.fcs    INF100
+2025_07_26_AB_02_INF179_00_Ctrl.fcs   INF179
+2025_07_26_AB_02_INF179_00_SEB.fcs    INF179
+                                    Condition
+2025_07_26_AB_02_INF052_00_Ctrl.fcs      Ctrl
+2025_07_26_AB_02_INF052_00_SEB.fcs        SEB
+2025_07_26_AB_02_INF100_00_Ctrl.fcs      Ctrl
+2025_07_26_AB_02_INF100_00_SEB.fcs        SEB
+2025_07_26_AB_02_INF179_00_Ctrl.fcs      Ctrl
+2025_07_26_AB_02_INF179_00_SEB.fcs        SEB
+
+# SFC
+Having emerged from the metadata, let’s return to focusing on our SFC dataset.
+
+```{r}
+SFC_GatingSet
+```
+A GatingSet with 6 samples
+
+## colnames
+ When working with .fcs files that we have not worked with recently, it is often good to go ahead and check to see what fluorophores/markers are present at the start. This is also useful as different cytometer platforms have slightly different naming conventions. We can use colnames()
+ 
+ ```{r}
+ colnames(SFC_GatingSet)
+ ```
+  [1] "Time"              "SSC-W"            
+ [3] "SSC-H"             "SSC-A"            
+ [5] "FSC-W"             "FSC-H"            
+ [7] "FSC-A"             "SSC-B-W"          
+ [9] "SSC-B-H"           "SSC-B-A"          
+[11] "BUV395-A"          "BUV563-A"         
+[13] "BUV615-A"          "BUV661-A"         
+[15] "BUV737-A"          "BUV805-A"         
+[17] "Pacific Blue-A"    "BV480-A"          
+[19] "BV570-A"           "BV605-A"          
+[21] "BV650-A"           "BV711-A"          
+[23] "BV750-A"           "BV786-A"          
+[25] "Alexa Fluor 488-A" "Spark Blue 550-A" 
+[27] "Spark Blue 574-A"  "RB613-A"          
+[29] "RB705-A"           "RB780-A"          
+[31] "PE-A"              "PE-Dazzle594-A"   
+[33] "PE-Cy5-A"          "PE-Fire 700-A"    
+[35] "PE-Fire 744-A"     "PE-Vio770-A"      
+[37] "APC-A"             "Alexa Fluor 647-A"
+[39] "APC-R700-A"        "Zombie NIR-A"     
+[41] "APC-Fire 750-A"    "APC-Fire 810-A"   
+[43] "AF-A" 
+
+As we can see from the output, most of the fluorophores have an “-A” appended to the end, although the FSC and SSC parameters feature area, height and width (“-A”, “-H”, “-W”) respectively.
+
+## markernames
+If we wanted to retrieve the markers corresponding to the individual fluorophores, rather than attempting the breaking into the S4 object as we did during Week 03, we can take advantage of the markernames() function provided by the developers.
+
+```{r}
+markernames(SFC_GatingSet)
+```
+         BUV395-A          BUV563-A 
+          "CD62L"            "CD69" 
+         BUV615-A          BUV661-A 
+           "CCR4"             "Vd2" 
+         BUV737-A          BUV805-A 
+           "CD38"             "CD4" 
+   Pacific Blue-A           BV480-A 
+           "Dump"           "CD161" 
+          BV570-A           BV605-A 
+           "CD16"          "CD45RA" 
+          BV650-A           BV711-A 
+            "CD8"           "Va7.2" 
+          BV750-A           BV786-A 
+           "IFNg"            "CCR6" 
+Alexa Fluor 488-A  Spark Blue 550-A 
+          "FoxP3"             "CD3" 
+ Spark Blue 574-A           RB613-A 
+           "CD45"             "PD1" 
+          RB705-A           RB780-A 
+           "CD26"           "CXCR5" 
+             PE-A    PE-Dazzle594-A 
+           "ICOS"            "TNFa" 
+         PE-Cy5-A     PE-Fire 700-A 
+          "CXCR3"           "CD127" 
+    PE-Fire 744-A       PE-Vio770-A 
+           "CD25"          "HLA-DR" 
+            APC-A Alexa Fluor 647-A 
+           "CD39"            "IL-2" 
+       APC-R700-A      Zombie NIR-A 
+         "CD107a"       "Viability" 
+   APC-Fire 750-A    APC-Fire 810-A 
+           "CD27"            "CCR7" 
+
+## ggcyto
+At this point, we can then use what we have learned about the ggcyto package to make sure that the FSC x SSC plotting is working correctly.
+
+```{r}
+ggcyto(SFC_GatingSet[1], subset="root",
+ aes(x="FSC-A", y="SSC-A")) + geom_hex(bins=100)
+```
+![]("C:/Users/Macarena/MacarenaLM/notes/week7 Applying Transformations/ggplot2 1.png")
+
+Please note, that for ggcyto it’s just one set of [] after the GatingSet name to subset for plotting.
+
+```{r}
+str(SFC_GatingSet[1])
+```
+Formal class 'GatingSet' [package "flowWorkspace"] with 2 slots
+  ..@ pointer       :<externalptr> 
+  ..@ transformation: list()
+
+## Untransformed Data
+Let’s go ahead and plot a couple of the fluorophores, to see what untransformed data in R looks like.
+
+```{r}
+ggcyto(SFC_GatingSet[6], subset="root",
+ aes(x="BUV805-A", y="BV650-A")) + geom_hex(bins=100)
+```
+![]("C:/Users/Macarena/MacarenaLM/notes/week7 Applying Transformations/ggplot2 2.png")
+
+As we can see, the scale currently appears linear, with a wide stretch of positive values for both CD4 and CD8 T cells. By contrast, you may remember the transformed version brought for this same .fcs file brought in from FlowJo via CytoML resembled the following
+
+![]("C:/Users/Macarena/MacarenaLM/notes/week7 Applying Transformations/00_Transformed.png")
+
+If we use the gh_get_transformations function, we can see that there are currently no transformations applied to the GatingSet.
+
+```{r}
+gh_get_transformations(SFC_GatingSet[[1]])
+```
+list()
+
+## Transformers
+flowWorkspace provides several default transforms (with the option to create your own). The functions in question return transformer objects, which are list that collect the required information for the transformations that are subsequently applied.
+
+```{r}
+Logicle <- logicle_trans()
+str(Logicle)
+```
+List of 9
+ $ name        : chr "logicle"
+ $ transform   :function (x)  
+ $ inverse     :function (x)  
+ $ d_transform : NULL
+ $ d_inverse   : NULL
+ $ breaks      :function (x)  
+ $ minor_breaks:function (b, limits, n)  
+ $ format      :function (x)  
+ $ domain      : num [1:2] -Inf Inf
+ - attr(*, "class")= chr "transform"
+
+ ```{r}
+ Biexponential <- flowjo_biexp_trans()
+str(Biexponential)
+ ```
+ List of 9
+ $ name        : chr "flowJo_biexp"
+ $ transform   :function (x, deriv = 0)  
+  ..- attr(*, "type")= chr "biexp"
+  ..- attr(*, "parameters")=List of 5
+  .. ..$ channelRange: int 4096
+  .. ..$ maxValue    : num 262144
+  .. ..$ neg         : num 0
+  .. ..$ pos         : num 4.5
+  .. ..$ widthBasis  : num -10
+ $ inverse     :function (x, deriv = 0)  
+  ..- attr(*, "type")= chr "biexp"
+  ..- attr(*, "parameters")=List of 5
+  .. ..$ channelRange: int 4096
+  .. ..$ maxValue    : num 262144
+  .. ..$ neg         : num 0
+  .. ..$ pos         : num 4.5
+  .. ..$ widthBasis  : num -10
+ $ d_transform : NULL
+ $ d_inverse   : NULL
+ $ breaks      :function (x)  
+ $ minor_breaks:function (b, limits, n)  
+ $ format      :function (x)  
+ $ domain      : num [1:2] -Inf Inf
+ - attr(*, "class")= chr "transform"
+ 
+ ```{r}
+ Asinh <- flowjo_fasinh_trans()
+str(Asinh)
+ ```
+ List of 9
+ $ name        : chr "flowJo_fasinh"
+ $ transform   :function (x)  
+ $ inverse     :function (x)  
+ $ d_transform : NULL
+ $ d_inverse   : NULL
+ $ breaks      :function (x)  
+ $ minor_breaks:function (b, limits, n)  
+ $ format      :function (x)  
+ $ domain      : num [1:2] -Inf Inf
+ - attr(*, "class")= chr "transform"
+ 
+ ```{r}
+ AsinhGML <- asinhtGml2_trans()
+str(AsinhGML)
+ ```
+ List of 9
+ $ name        : chr "asinhtGml2"
+ $ transform   :function (x)  
+ $ inverse     :function (x)  
+ $ d_transform : NULL
+ $ d_inverse   : NULL
+ $ breaks      :function (x)  
+ $ minor_breaks:function (b, limits, n)  
+ $ format      :function (x)  
+ $ domain      : num [1:2] -Inf Inf
+ - attr(*, "class")= chr "transform"
+
+ As always, it can be worthwhile to first check the help documentation, to investigate the various arguments that can be used within the setup.
+
+ ## Column names to be transformed
+ While having the transformation parameters is one component, the other is the fluorophores that are to be transformed. Recalling the colnames() function, we can see we have the following fluorophores for this panel.
+ 
+ ```{r}
+ SFC_Parameters <- colnames(SFC_GatingSet)
+SFC_Parameters
+ ```
+  [1] "Time"              "SSC-W"            
+ [3] "SSC-H"             "SSC-A"            
+ [5] "FSC-W"             "FSC-H"            
+ [7] "FSC-A"             "SSC-B-W"          
+ [9] "SSC-B-H"           "SSC-B-A"          
+[11] "BUV395-A"          "BUV563-A"         
+[13] "BUV615-A"          "BUV661-A"         
+[15] "BUV737-A"          "BUV805-A"         
+[17] "Pacific Blue-A"    "BV480-A"          
+[19] "BV570-A"           "BV605-A"          
+[21] "BV650-A"           "BV711-A"          
+[23] "BV750-A"           "BV786-A"          
+[25] "Alexa Fluor 488-A" "Spark Blue 550-A" 
+[27] "Spark Blue 574-A"  "RB613-A"          
+[29] "RB705-A"           "RB780-A"          
+[31] "PE-A"              "PE-Dazzle594-A"   
+[33] "PE-Cy5-A"          "PE-Fire 700-A"    
+[35] "PE-Fire 744-A"     "PE-Vio770-A"      
+[37] "APC-A"             "Alexa Fluor 647-A"
+[39] "APC-R700-A"        "Zombie NIR-A"     
+[41] "APC-Fire 750-A"    "APC-Fire 810-A"   
+[43] "AF-A"     
+
+We will only need to apply transformations to fluorophores, not to FSC, SSC or Time parameters. We will therefore need to remove these from the list. One way would be to use [] index method, combining a ! and stringr str_detect() to remove for values that would be shared by those parameters
+
+```{r}
+FluorophoresOnly <- SFC_Parameters[!stringr::str_detect(SFC_Parameters, "FSC|SSC|Time")]
+FluorophoresOnly
+```
+ [1] "BUV395-A"          "BUV563-A"         
+ [3] "BUV615-A"          "BUV661-A"         
+ [5] "BUV737-A"          "BUV805-A"         
+ [7] "Pacific Blue-A"    "BV480-A"          
+ [9] "BV570-A"           "BV605-A"          
+[11] "BV650-A"           "BV711-A"          
+[13] "BV750-A"           "BV786-A"          
+[15] "Alexa Fluor 488-A" "Spark Blue 550-A" 
+[17] "Spark Blue 574-A"  "RB613-A"          
+[19] "RB705-A"           "RB780-A"          
+[21] "PE-A"              "PE-Dazzle594-A"   
+[23] "PE-Cy5-A"          "PE-Fire 700-A"    
+[25] "PE-Fire 744-A"     "PE-Vio770-A"      
+[27] "APC-A"             "Alexa Fluor 647-A"
+[29] "APC-R700-A"        "Zombie NIR-A"     
+[31] "APC-Fire 750-A"    "APC-Fire 810-A"   
+[33] "AF-A"     
+
+## transformerList
+Now that we have the fluorophore columns identified, using the transformerList() function we can combine them with the Transformer object we previously created.
+
+```{r}
+MyBiexTransform <- transformerList(FluorophoresOnly, Biexponential)
+MyBiexTransform
+```
+$`BUV395-A`
+Transformer: flowJo_biexp [-Inf, Inf]
+
+$`BUV563-A`
+Transformer: flowJo_biexp [-Inf, Inf]
+
+$`BUV615-A`
+Transformer: flowJo_biexp [-Inf, Inf]
+
+$`BUV661-A`
+Transformer: flowJo_biexp [-Inf, Inf]
+
+$`BUV737-A`
+Transformer: flowJo_biexp [-Inf, Inf]
+
+$`BUV805-A`
+Transformer: flowJo_biexp [-Inf, Inf]
+
+$`Pacific Blue-A`
+Transformer: flowJo_biexp [-Inf, Inf]
+
+$`BV480-A`
+Transformer: flowJo_biexp [-Inf, Inf]
+
+$`BV570-A`
+Transformer: flowJo_biexp [-Inf, Inf]
+
+$`BV605-A`
+Transformer: flowJo_biexp [-Inf, Inf]
+
+$`BV650-A`
+Transformer: flowJo_biexp [-Inf, Inf]
+
+$`BV711-A`
+Transformer: flowJo_biexp [-Inf, Inf]
+
+$`BV750-A`
+Transformer: flowJo_biexp [-Inf, Inf]
+
+$`BV786-A`
+Transformer: flowJo_biexp [-Inf, Inf]
+
+$`Alexa Fluor 488-A`
+Transformer: flowJo_biexp [-Inf, Inf]
+
+$`Spark Blue 550-A`
+Transformer: flowJo_biexp [-Inf, Inf]
+
+$`Spark Blue 574-A`
+Transformer: flowJo_biexp [-Inf, Inf]
+
+$`RB613-A`
+Transformer: flowJo_biexp [-Inf, Inf]
+
+$`RB705-A`
+Transformer: flowJo_biexp [-Inf, Inf]
+
+$`RB780-A`
+Transformer: flowJo_biexp [-Inf, Inf]
+
+$`PE-A`
+Transformer: flowJo_biexp [-Inf, Inf]
+
+$`PE-Dazzle594-A`
+Transformer: flowJo_biexp [-Inf, Inf]
+
+$`PE-Cy5-A`
+Transformer: flowJo_biexp [-Inf, Inf]
+
+$`PE-Fire 700-A`
+Transformer: flowJo_biexp [-Inf, Inf]
+
+$`PE-Fire 744-A`
+Transformer: flowJo_biexp [-Inf, Inf]
+
+$`PE-Vio770-A`
+Transformer: flowJo_biexp [-Inf, Inf]
+
+$`APC-A`
+Transformer: flowJo_biexp [-Inf, Inf]
+
+$`Alexa Fluor 647-A`
+Transformer: flowJo_biexp [-Inf, Inf]
+
+$`APC-R700-A`
+Transformer: flowJo_biexp [-Inf, Inf]
+
+$`Zombie NIR-A`
+Transformer: flowJo_biexp [-Inf, Inf]
+
+$`APC-Fire 750-A`
+Transformer: flowJo_biexp [-Inf, Inf]
+
+$`APC-Fire 810-A`
+Transformer: flowJo_biexp [-Inf, Inf]
+
+$`AF-A`
+Transformer: flowJo_biexp [-Inf, Inf]
+
+attr(,"class")
+[1] "transformerList" "list"   
+
