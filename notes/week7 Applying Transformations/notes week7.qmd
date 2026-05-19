@@ -580,3 +580,264 @@ Transformer: flowJo_biexp [-Inf, Inf]
 attr(,"class")
 [1] "transformerList" "list"   
 
+```{r}
+str(MyBiexTransform[1:3])
+```
+List of 3
+ $ BUV395-A:List of 9
+  ..$ name        : chr "flowJo_biexp"
+  ..$ transform   :function (x, deriv = 0)  
+  .. ..- attr(*, "type")= chr "biexp"
+  .. ..- attr(*, "parameters")=List of 5
+  .. .. ..$ channelRange: int 4096
+  .. .. ..$ maxValue    : num 262144
+  .. .. ..$ neg         : num 0
+  .. .. ..$ pos         : num 4.5
+  .. .. ..$ widthBasis  : num -10
+  ..$ inverse     :function (x, deriv = 0)  
+  .. ..- attr(*, "type")= chr "biexp"
+  .. ..- attr(*, "parameters")=List of 5
+  .. .. ..$ channelRange: int 4096
+  .. .. ..$ maxValue    : num 262144
+  .. .. ..$ neg         : num 0
+  .. .. ..$ pos         : num 4.5
+  .. .. ..$ widthBasis  : num -10
+  ..$ d_transform : NULL
+  ..$ d_inverse   : NULL
+  ..$ breaks      :function (x)  
+  ..$ minor_breaks:function (b, limits, n)  
+  ..$ format      :function (x)  
+  ..$ domain      : num [1:2] -Inf Inf
+  ..- attr(*, "class")= chr "transform"
+ $ BUV563-A:List of 9
+  ..$ name        : chr "flowJo_biexp"
+  ..$ transform   :function (x, deriv = 0)  
+  .. ..- attr(*, "type")= chr "biexp"
+  .. ..- attr(*, "parameters")=List of 5
+  .. .. ..$ channelRange: int 4096
+  .. .. ..$ maxValue    : num 262144
+  .. .. ..$ neg         : num 0
+  .. .. ..$ pos         : num 4.5
+  .. .. ..$ widthBasis  : num -10
+  ..$ inverse     :function (x, deriv = 0)  
+  .. ..- attr(*, "type")= chr "biexp"
+  .. ..- attr(*, "parameters")=List of 5
+  .. .. ..$ channelRange: int 4096
+  .. .. ..$ maxValue    : num 262144
+  .. .. ..$ neg         : num 0
+  .. .. ..$ pos         : num 4.5
+  .. .. ..$ widthBasis  : num -10
+  ..$ d_transform : NULL
+  ..$ d_inverse   : NULL
+  ..$ breaks      :function (x)  
+  ..$ minor_breaks:function (b, limits, n)  
+  ..$ format      :function (x)  
+  ..$ domain      : num [1:2] -Inf Inf
+  ..- attr(*, "class")= chr "transform"
+ $ BUV615-A:List of 9
+  ..$ name        : chr "flowJo_biexp"
+  ..$ transform   :function (x, deriv = 0)  
+  .. ..- attr(*, "type")= chr "biexp"
+  .. ..- attr(*, "parameters")=List of 5
+  .. .. ..$ channelRange: int 4096
+  .. .. ..$ maxValue    : num 262144
+  .. .. ..$ neg         : num 0
+  .. .. ..$ pos         : num 4.5
+  .. .. ..$ widthBasis  : num -10
+  ..$ inverse     :function (x, deriv = 0)  
+  .. ..- attr(*, "type")= chr "biexp"
+  .. ..- attr(*, "parameters")=List of 5
+  .. .. ..$ channelRange: int 4096
+  .. .. ..$ maxValue    : num 262144
+  .. .. ..$ neg         : num 0
+  .. .. ..$ pos         : num 4.5
+  .. .. ..$ widthBasis  : num -10
+  ..$ d_transform : NULL
+  ..$ d_inverse   : NULL
+  ..$ breaks      :function (x)  
+  ..$ minor_breaks:function (b, limits, n)  
+  ..$ format      :function (x)  
+  ..$ domain      : num [1:2] -Inf Inf
+  ..- attr(*, "class")= chr "transform"
+
+```{r}
+str(MyBiexTransform$`APC-A`)
+```
+List of 9
+ $ name        : chr "flowJo_biexp"
+ $ transform   :function (x, deriv = 0)  
+  ..- attr(*, "type")= chr "biexp"
+  ..- attr(*, "parameters")=List of 5
+  .. ..$ channelRange: int 4096
+  .. ..$ maxValue    : num 262144
+  .. ..$ neg         : num 0
+  .. ..$ pos         : num 4.5
+  .. ..$ widthBasis  : num -10
+ $ inverse     :function (x, deriv = 0)  
+  ..- attr(*, "type")= chr "biexp"
+  ..- attr(*, "parameters")=List of 5
+  .. ..$ channelRange: int 4096
+  .. ..$ maxValue    : num 262144
+  .. ..$ neg         : num 0
+  .. ..$ pos         : num 4.5
+  .. ..$ widthBasis  : num -10
+ $ d_transform : NULL
+ $ d_inverse   : NULL
+ $ breaks      :function (x)  
+ $ minor_breaks:function (b, limits, n)  
+ $ format      :function (x)  
+ $ domain      : num [1:2] -Inf Inf
+ - attr(*, "class")= chr "transform"
+
+ As you can notice, for each of the fluorophores we specified, the transformer object with the desired parameters has now been added as its own list entry.
+ The final step is to then apply it to the GatingSet.
+ 
+ ```{r}
+ transform(SFC_GatingSet, MyBiexTransform)
+ ```
+ A GatingSet with 6 samples
+
+ If we now replot without having provided any arguments, we get the following:
+ 
+ ```{r}
+ ggcyto(SFC_GatingSet[6], subset="root",
+ aes(x="BUV805-A", y="BV650-A")) + geom_hex(bins=100)
+ ```
+ ![]("C:/Users/Macarena/MacarenaLM/notes/week7 Applying Transformations/ggplot2 3.png")
+
+ As we can see, applying a default transformation to a random .fcs file is not quite the way to go. We will need to look up some of the specific parameter arguments that need to be provided. Going back to our transformer function:
+ 
+ ```{r}
+ ?flowjo_biexp_trans
+ ```
+ to see the help documentation. In this case, the help documentation doesn’t provide much immediately. Part of this is that flowjo_biexp_trans() appears to be a wrapper function, which passes arguments on to the flowJoTrans() function. If we look this one up:
+
+ ```{r}
+ ?flowJoTrans
+ ```
+ Under usage, we can see what the default options and arguments are.
+
+ # Transformation Arguments
+ Lets evaluate what effect changing each of these arguments in has on visualizing our .fcs file. Our current visual is:
+ 
+ ```{r}
+ SFC_cytoset <- load_cytoset_from_fcs(SFC_files,
+ truncate_max_range = FALSE, transformation = FALSE)
+SFC_GatingSet <- GatingSet(SFC_cytoset)
+Biexponential <- flowjo_biexp_trans(channelRange=4096, maxValue=262144,
+     pos=4.5, neg=0, widthBasis=-10)
+MyBiexTransform <- transformerList(FluorophoresOnly, Biexponential)
+transform(SFC_GatingSet, MyBiexTransform)
+ ```
+ A GatingSet with 6 samples
+ 
+ ```{r}
+ ggcyto(SFC_GatingSet[6], subset="root",
+ aes(x="BUV805-A", y="BV650-A")) + geom_hex(bins=100)
+ ```
+ ![]("C:/Users/Macarena/MacarenaLM/notes/week7 Applying Transformations/ggplot2 4.png")
+
+ We will also need a way to validate whether they are being updated in the background. We can revisit the output of gh_get_transformations() function from earlier, and specify just the first specimen, and the BUV805 fluorophore:
+ 
+ ```{r}
+ gh_get_transformations(SFC_GatingSet[[1]])$`BUV805-A`
+ ```
+ function (x, deriv = 0) 
+{
+    deriv <- as.integer(deriv)
+    if (deriv < 0 || deriv > 3) 
+        stop("'deriv' must be between 0 and 3")
+    if (deriv > 0) {
+        z0 <- double(z$n)
+        z[c("y", "b", "c")] <- switch(deriv, list(y = z$b, b = 2 * 
+            z$c, c = 3 * z$d), list(y = 2 * z$c, b = 6 * z$d, 
+            c = z0), list(y = 6 * z$d, b = z0, c = z0))
+        z[["d"]] <- z0
+    }
+    res <- stats:::.splinefun(x, z)
+    if (deriv > 0 && z$method == 2 && any(ind <- x <= z$x[1L])) 
+        res[ind] <- ifelse(deriv == 1, z$y[1L], 0)
+    res
+}
+<bytecode: 0x000001f3ea1dbe20>
+<environment: 0x000001f3ed0237e0>
+attr(,"type")
+[1] "biexp"
+attr(,"parameters")
+attr(,"parameters")$channelRange
+[1] 4096
+
+attr(,"parameters")$maxValue
+[1] 262144
+
+attr(,"parameters")$neg
+[1] 0
+
+attr(,"parameters")$pos
+[1] 4.5
+
+attr(,"parameters")$widthBasis
+[1] -10
+
+## width
+Before we go messing with any of the other setting, let’s tackle width, which tends to be the one that gets missed by the default most often. Normally, in FlowJo most of my plots are set with biexponential transform width of around -1000, so lets go ahead and switch in that value.
+
+```{r}
+SFC_cytoset <- load_cytoset_from_fcs(SFC_files,
+ truncate_max_range = FALSE, transformation = FALSE)
+SFC_GatingSet <- GatingSet(SFC_cytoset)
+Biexponential <- flowjo_biexp_trans(channelRange=4096, maxValue=262144,
+     pos=4.5, neg=0, widthBasis=-1000)
+MyBiexTransform <- transformerList(FluorophoresOnly, Biexponential)
+transform(SFC_GatingSet, MyBiexTransform)
+```
+A GatingSet with 6 samples
+
+```{r}
+ggcyto(SFC_GatingSet[6], subset="root",
+ aes(x="BUV805-A", y="BV650-A")) + geom_hex(bins=100)
+```
+ ![]("C:/Users/Macarena/MacarenaLM/notes/week7 Applying Transformations/ggplot2 5.png")
+ 
+ Boom! That is more in line with what we were looking for. Let’s still check a couple other values.
+
+ ```{r}
+ SFC_cytoset <- load_cytoset_from_fcs(SFC_files,
+ truncate_max_range = FALSE, transformation = FALSE)
+SFC_GatingSet <- GatingSet(SFC_cytoset)
+Biexponential <- flowjo_biexp_trans(channelRange=4096, maxValue=262144,
+     pos=4.5, neg=0, widthBasis=-500)
+MyBiexTransform <- transformerList(FluorophoresOnly, Biexponential)
+transform(SFC_GatingSet, MyBiexTransform)
+ ```
+ A GatingSet with 6 samples
+ 
+ ```{r}
+ ggcyto(SFC_GatingSet[6], subset="root",
+ aes(x="BUV805-A", y="BV650-A")) + geom_hex(bins=100)
+ ```
+ ![]("C:/Users/Macarena/MacarenaLM/notes/week7 Applying Transformations/ggplot2 6.png")
+
+ A width value of -500 still has the negavite population relative condensed, with the CD4+ cells into a more circular format. Lets try -100 next
+ 
+ ```{r}
+ SFC_cytoset <- load_cytoset_from_fcs(SFC_files,
+ truncate_max_range = FALSE, transformation = FALSE)
+SFC_GatingSet <- GatingSet(SFC_cytoset)
+Biexponential <- flowjo_biexp_trans(channelRange=4096, maxValue=262144,
+     pos=4.5, neg=0, widthBasis=-100)
+MyBiexTransform <- transformerList(FluorophoresOnly, Biexponential)
+transform(SFC_GatingSet, MyBiexTransform)
+ ```
+ A GatingSet with 6 samples
+ 
+ ```{r}
+ ggcyto(SFC_GatingSet[6], subset="root",
+ aes(x="BUV805-A", y="BV650-A")) + geom_hex(bins=100)
+ ```
+ ![]("C:/Users/Macarena/MacarenaLM/notes/week7 Applying Transformations/ggplot2 7.png")
+
+ And nope, too far. Let’s keep -500 for now.
+
+ ## channelRange
+ 
