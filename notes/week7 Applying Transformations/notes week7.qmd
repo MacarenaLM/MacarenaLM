@@ -1451,3 +1451,159 @@ Asinh <- flowjo_fasinh_trans(m = 4, t = 12000, a = 0.7, length = 256)
 MyAsinhTransform <- transformerList(InterestingMetalsOnly, Asinh)
 transform(MC_GatingSet, MyAsinhTransform)
 ```
+A GatingSet with 3 samples
+
+```{r}
+ggcyto(MC_GatingSet[1], subset="root",
+ aes( x="Nd145Di", y="Nd146Di")) + geom_hex(bins=100)
+```
+![]("C:/Users/Macarena/MacarenaLM/notes/week7 Applying Transformations/ggplot2 18.png")
+
+ Lets set it to 5!
+ 
+ ```{r}
+ MC_cytoset <- load_cytoset_from_fcs(MC_files,
+ truncate_max_range = FALSE, transformation = FALSE)
+MC_GatingSet <- GatingSet(MC_cytoset)
+Asinh <- flowjo_fasinh_trans(m = 5, t = 12000, a = 0.7, length = 256)
+MyAsinhTransform <- transformerList(InterestingMetalsOnly, Asinh)
+transform(MC_GatingSet, MyAsinhTransform)
+ ```
+ A GatingSet with 3 samples
+ 
+ ```{r}
+ ggcyto(MC_GatingSet[1], subset="root",
+ aes( x="Nd145Di", y="Nd146Di")) + geom_hex(bins=100)
+ ```
+![]("C:/Users/Macarena/MacarenaLM/notes/week7 Applying Transformations/ggplot2 19.png")
+
+Vs. when we set it to 3
+
+```{r}
+MC_cytoset <- load_cytoset_from_fcs(MC_files,
+ truncate_max_range = FALSE, transformation = FALSE)
+MC_GatingSet <- GatingSet(MC_cytoset)
+Asinh <- flowjo_fasinh_trans(m = 3, t = 12000, a = 0.7, length = 256)
+MyAsinhTransform <- transformerList(InterestingMetalsOnly, Asinh)
+transform(MC_GatingSet, MyAsinhTransform)
+```
+A GatingSet with 3 samples
+
+```{r}
+ggcyto(MC_GatingSet[1], subset="root",
+ aes( x="Nd145Di", y="Nd146Di")) + geom_hex(bins=100)
+```
+![]("C:/Users/Macarena/MacarenaLM/notes/week7 Applying Transformations/ggplot2 20.png")
+
+## t
+Increase t to 24000
+
+```{r}
+MC_cytoset <- load_cytoset_from_fcs(MC_files,
+ truncate_max_range = FALSE, transformation = FALSE)
+MC_GatingSet <- GatingSet(MC_cytoset)
+Asinh <- flowjo_fasinh_trans(m = 4, t = 24000, a = 0.7, length = 256)
+MyAsinhTransform <- transformerList(InterestingMetalsOnly, Asinh)
+transform(MC_GatingSet, MyAsinhTransform)
+```
+A GatingSet with 3 samples
+
+```{r}
+ggcyto(MC_GatingSet[1], subset="root",
+ aes( x="Nd145Di", y="Nd146Di")) + geom_hex(bins=100)
+```
+![]("C:/Users/Macarena/MacarenaLM/notes/week7 Applying Transformations/ggplot2 21.png")
+
+Decrease t to 6000
+
+```{r}
+MC_cytoset <- load_cytoset_from_fcs(MC_files,
+ truncate_max_range = FALSE, transformation = FALSE)
+MC_GatingSet <- GatingSet(MC_cytoset)
+Asinh <- flowjo_fasinh_trans(m = 4, t = 6000, a = 0.7, length = 256)
+MyAsinhTransform <- transformerList(InterestingMetalsOnly, Asinh)
+transform(MC_GatingSet, MyAsinhTransform)
+```
+A GatingSet with 3 samples
+
+```{r}
+ggcyto(MC_GatingSet[1], subset="root",
+ aes( x="Nd145Di", y="Nd146Di")) + geom_hex(bins=100)
+```
+![]("C:/Users/Macarena/MacarenaLM/notes/week7 Applying Transformations/ggplot2 22.png")
+
+## a
+Increase negative decade to 1
+
+```{r}
+MC_cytoset <- load_cytoset_from_fcs(MC_files,
+ truncate_max_range = FALSE, transformation = FALSE)
+MC_GatingSet <- GatingSet(MC_cytoset)
+Asinh <- flowjo_fasinh_trans(m = 4, t = 12000, a = 1, length = 256)
+MyAsinhTransform <- transformerList(InterestingMetalsOnly, Asinh)
+transform(MC_GatingSet, MyAsinhTransform)
+```
+A GatingSet with 3 samples
+
+```{r}
+ggcyto(MC_GatingSet[1], subset="root",
+ aes( x="Nd145Di", y="Nd146Di")) + geom_hex(bins=100)
+```
+![]("C:/Users/Macarena/MacarenaLM/notes/week7 Applying Transformations/ggplot2 23.png")
+
+Vs. set to 0
+
+```{r}
+MC_cytoset <- load_cytoset_from_fcs(MC_files,
+ truncate_max_range = FALSE, transformation = FALSE)
+MC_GatingSet <- GatingSet(MC_cytoset)
+Asinh <- flowjo_fasinh_trans(m = 4, t = 12000, a = 0, length = 256)
+MyAsinhTransform <- transformerList(InterestingMetalsOnly, Asinh)
+transform(MC_GatingSet, MyAsinhTransform)
+```
+A GatingSet with 3 samples
+
+```{r}
+ggcyto(MC_GatingSet[1], subset="root",
+ aes( x="Nd145Di", y="Nd146Di")) + geom_hex(bins=100)
+```
+![]("C:/Users/Macarena/MacarenaLM/notes/week7 Applying Transformations/ggplot2 24.png")
+
+## length
+Doubling numeric max value of transformed data to 512
+
+```{r}
+MC_cytoset <- load_cytoset_from_fcs(MC_files,
+ truncate_max_range = FALSE, transformation = FALSE)
+MC_GatingSet <- GatingSet(MC_cytoset)
+Asinh <- flowjo_fasinh_trans(m = 4, t = 12000, a = 1, length = 512)
+MyAsinhTransform <- transformerList(InterestingMetalsOnly, Asinh)
+transform(MC_GatingSet, MyAsinhTransform)
+```
+A GatingSet with 3 samples
+
+```{r}
+ggcyto(MC_GatingSet[1], subset="root",
+ aes( x="Nd145Di", y="Nd146Di")) + geom_hex(bins=100)
+```
+![]("C:/Users/Macarena/MacarenaLM/notes/week7 Applying Transformations/ggplot2 25.png")
+
+Vs. reducing it to 128
+
+```{r}
+MC_cytoset <- load_cytoset_from_fcs(MC_files,
+ truncate_max_range = FALSE, transformation = FALSE)
+MC_GatingSet <- GatingSet(MC_cytoset)
+Asinh <- flowjo_fasinh_trans(m = 4, t = 12000, a = 1, length = 128)
+MyAsinhTransform <- transformerList(InterestingMetalsOnly, Asinh)
+transform(MC_GatingSet, MyAsinhTransform)
+```
+A GatingSet with 3 samples
+
+```{r}
+ggcyto(MC_GatingSet[1], subset="root",
+ aes( x="Nd145Di", y="Nd146Di")) + geom_hex(bins=100)
+```
+![]("C:/Users/Macarena/MacarenaLM/notes/week7 Applying Transformations/ggplot2 26.png")
+
+# Extracting Data
