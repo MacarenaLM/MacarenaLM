@@ -1,18 +1,20 @@
 ---
-title: "week6_Visualizing with ggplot2"
+title: "week7-Applying_Transformations"
 author: "Macarena López-Mayorga"
-date: 2026-05-05
+date: 2026-05-11
 format: pdf
 ---
 First, we attach flowWorkspace and ggcyto to our local environment:
 
 ```{r}
+#| eval: false
 library(flowWorkspace)
 library(ggcyto)
 ```
 
 
 ```{r}
+#| eval: false
 StorageLocation <- file.path("C:/Users/Macarena/CytometryInR/course/07_Transformations/data")
 fcs_files <- list.files(StorageLocation, ".fcs", full.names=TRUE)
 SFC_files <- fcs_files[stringr::str_detect(fcs_files, "2025")]
@@ -22,19 +24,22 @@ MC_files <- fcs_files[stringr::str_detect(fcs_files, "G1_2")]
 Lets start by working with the SFC dataset. First off, let’s double check that we have just the SFC files (as flowWorkspace will throw an error if the .fcs files passed contain different number of fluorophore/metal columns)
 
 ```{r}
+#| eval: false
 SFC_files
 ```
-[1] "C:/Users/Macarena/CytometryInR/course/07_Transformations/data/2025_07_26_AB_02_INF052_00_Ctrl.fcs"
-[2] "C:/Users/Macarena/CytometryInR/course/07_Transformations/data/2025_07_26_AB_02_INF052_00_SEB.fcs" 
-[3] "C:/Users/Macarena/CytometryInR/course/07_Transformations/data/2025_07_26_AB_02_INF100_00_Ctrl.fcs"
-[4] "C:/Users/Macarena/CytometryInR/course/07_Transformations/data/2025_07_26_AB_02_INF100_00_SEB.fcs" 
-[5] "C:/Users/Macarena/CytometryInR/course/07_Transformations/data/2025_07_26_AB_02_INF179_00_Ctrl.fcs"
-[6] "C:/Users/Macarena/CytometryInR/course/07_Transformations/data/2025_07_26_AB_02_INF179_00_SEB.fcs" 
+1_C:/Users/Macarena/CytometryInR/course/07_Transformations/data/2025_07_26_AB_02_INF052_00_Ctrl.fcs
+2_C:/Users/Macarena/CytometryInR/course/07_Transformations/data/2025_07_26_AB_02_INF052_00_SEB.fcs
+3_C:/Users/Macarena/CytometryInR/course/07_Transformations/data/2025_07_26_AB_02_INF100_00_Ctrl.fcs
+4_C:/Users/Macarena/CytometryInR/course/07_Transformations/data/2025_07_26_AB_02_INF100_00_SEB.fcs
+5_C:/Users/Macarena/CytometryInR/course/07_Transformations/data/2025_07_26_AB_02_INF179_00_Ctrl.fcs
+6_C:/Users/Macarena/CytometryInR/course/07_Transformations/data/2025_07_26_AB_02_INF179_00_SEB.fcs
 
 Circling back to where we left off during Week 05, we will pass these file path locations to load_cytoset_from_fcs() to load them into a GatingSet object.
 
 ```{r}
-SFC_cytoset <- load_cytoset_from_fcs(SFC_files, truncate_max_range=FALSE, transformation=FALSE)
+#| eval: false
+SFC_cytoset <- load_cytoset_from_fcs(SFC_files, truncate_max_range=FALSE, 
+transformation=FALSE)
 SFC_GatingSet <- GatingSet(SFC_cytoset)
 SFC_GatingSet
 ```
@@ -43,6 +48,7 @@ A GatingSet with 6 samples
 One worthwile thing when first starting is to check the metadata for the GatingSet, using the pData() function.
 
 ```{r}
+#| eval: false
 pData(SFC_GatingSet)
 ```
                                                                    name
@@ -58,6 +64,7 @@ In the current form, the metadata is kinda empty, only containing rownames and t
 Lets first off retrieve the metadata by assigning to its own object/variable:
 
 ```{r}
+#| eval: false
 Metadata <- pData(SFC_GatingSet)
 str(Metadata)
 ```
@@ -67,41 +74,49 @@ str(Metadata)
  As you can see, it is just a data.frame style object that we have encountered in the past. We can therefore use dplyr package functions to help us tidy the metadata to extract the additional information that we may need in the future. Let’s go ahead and load in dplyr
 
  ```{r}
+ #| eval: false
  library(dplyr)
  ```
  
  ```{r}
+ #| eval: false
  library(stringr)
  ```
  And then create a new column for Condition so that we can better evaluate how the various extraction functions work, and also not risk messing up the underlying data while testing out how to use several new functions.
 
  ```{r}
+ #| eval: false
  Testing <- Metadata |> mutate(Condition=name)
  ```
  Glancing at the current names, we can notice that if we wanted to extract the Condition (Ctrl, PPD, SEB), we would need to remove all character values up the final underscore (_), and before the “.fcs”.
  
  ```{r}
+ #| eval: false
  Testing |> pull(Condition)
  ```
- [1] "2025_07_26_AB_02_INF052_00_Ctrl.fcs"
-[2] "2025_07_26_AB_02_INF052_00_SEB.fcs" 
-[3] "2025_07_26_AB_02_INF100_00_Ctrl.fcs"
-[4] "2025_07_26_AB_02_INF100_00_SEB.fcs" 
-[5] "2025_07_26_AB_02_INF179_00_Ctrl.fcs"
-[6] "2025_07_26_AB_02_INF179_00_SEB.fcs" 
+1_2025_07_26_AB_02_INF052_00_Ctrl.fcs
+2_2025_07_26_AB_02_INF052_00_SEB.fcs
+3_2025_07_26_AB_02_INF100_00_Ctrl.fcs
+4_2025_07_26_AB_02_INF100_00_SEB.fcs
+5_2025_07_26_AB_02_INF179_00_Ctrl.fcs
+6_2025_07_26_AB_02_INF179_00_SEB.fcs
+
 Within base R, two functions, sub() and gsub() are most frequently encountered when attempting to extract out a particular pattern. These rely on providing a regular expression (RegEx) pattern to match, and a replacement value to swap in its place (which can be left empty by providing a ““).
 
 Consequently, if we were using sub(), our first step to replace everything up through the last underscore would be the RegEx expression “.*_”
 
 ```{r}
+#| eval: false
 sub(".*_", "", Testing$Condition)
 ```
+
 [1] "Ctrl.fcs" "SEB.fcs"  "Ctrl.fcs" "SEB.fcs"  "Ctrl.fcs"
 [6] "SEB.fcs" 
 
 And we could follow up by matching the “.fcs” pattern and leaving the replacement value as “” as well.
 
 ```{r}
+#| eval: false
 Intermediate <- sub(".*_", "", Testing$Condition)
 sub(".fcs", "", Intermediate)
 ```
@@ -114,6 +129,7 @@ IMPORTANT NOTE: Please be advised, even with years of practice, I still will str
 In addition to sub() and gsub() in base R, we can also achieve a similar outcome using the stringr package from the tidyverse, using the str_extract() function (after investigating the correct RegEx style syntax). To interpret this RegEx-inspired hieroglyphic, note that “^” is used for the start of a string, and “$” for the end of the string. So we are extracting the pattern after the underscore “^_“, but keeping the contents before the final .fcs
 
 ```{r}
+#| eval: false
 str_extract(Testing$Condition, "[^_]+(?=\\.fcs$)")
 ```
 [1] "Ctrl" "SEB"  "Ctrl" "SEB"  "Ctrl" "SEB"
@@ -121,8 +137,11 @@ str_extract(Testing$Condition, "[^_]+(?=\\.fcs$)")
 So, wrapping it all together, we could write the following to create a Condition column
 
 ```{r}
-Metadata |> mutate(Condition = name) |> mutate(Condition=str_extract(Condition, "[^_]+(?=\\.fcs$)"))
+#| eval: false
+Metadata |> mutate(Condition = name) |> 
+mutate(Condition=str_extract(Condition, "[^_]+(?=\\.fcs$)"))
 ```
+   
                                                                    name
 2025_07_26_AB_02_INF052_00_Ctrl.fcs 2025_07_26_AB_02_INF052_00_Ctrl.fcs
 2025_07_26_AB_02_INF052_00_SEB.fcs   2025_07_26_AB_02_INF052_00_SEB.fcs
@@ -141,11 +160,14 @@ Metadata |> mutate(Condition = name) |> mutate(Condition=str_extract(Condition, 
 Fortunately, extracting an actual pattern is a bit simpler, so we can similarly grab the specimen ID number.
 
 ```{r}
+#| eval: false
 TwoExtraColumns <- Metadata |> mutate(Condition = name) |>
-     mutate(Condition=str_extract(Condition, "[^_]+(?=\\.fcs$)")) |>
-     mutate(Specimen=str_extract(name, "INF\\d{3}")) |> select(Condition, Specimen)
+ mutate(Condition=str_extract(Condition, "[^_]+(?=\\.fcs$)")) |>
+mutate(Specimen=str_extract(name, "INF\\d{3}")) |> 
+select(Condition, Specimen)
 TwoExtraColumns
 ```
+
                                     Condition
 2025_07_26_AB_02_INF052_00_Ctrl.fcs      Ctrl
 2025_07_26_AB_02_INF052_00_SEB.fcs        SEB
@@ -165,9 +187,11 @@ TwoExtraColumns
 When binding columns from two separate data.frame objects in R, we can use the cbind() base R function.
 
 ```{r}
+#| eval: false
 UpdatedMetadata <- cbind(Metadata, TwoExtraColumns)
 UpdatedMetadata
 ```
+
                                                                    name
 2025_07_26_AB_02_INF052_00_Ctrl.fcs 2025_07_26_AB_02_INF052_00_Ctrl.fcs
 2025_07_26_AB_02_INF052_00_SEB.fcs   2025_07_26_AB_02_INF052_00_SEB.fcs
@@ -193,9 +217,11 @@ UpdatedMetadata
 Which we can then use to overwrite the existing metadata present for the GatingSet.
 
 ```{r}
+#| eval: false
 pData(SFC_GatingSet) <- UpdatedMetadata
 pData(SFC_GatingSet)
 ```
+
                                                                    name
 2025_07_26_AB_02_INF052_00_Ctrl.fcs 2025_07_26_AB_02_INF052_00_Ctrl.fcs
 2025_07_26_AB_02_INF052_00_SEB.fcs   2025_07_26_AB_02_INF052_00_SEB.fcs
@@ -222,6 +248,7 @@ pData(SFC_GatingSet)
 Having emerged from the metadata, let’s return to focusing on our SFC dataset.
 
 ```{r}
+#| eval: false
 SFC_GatingSet
 ```
 A GatingSet with 6 samples
@@ -230,8 +257,10 @@ A GatingSet with 6 samples
  When working with .fcs files that we have not worked with recently, it is often good to go ahead and check to see what fluorophores/markers are present at the start. This is also useful as different cytometer platforms have slightly different naming conventions. We can use colnames()
  
  ```{r}
+ #| eval: false
  colnames(SFC_GatingSet)
  ```
+
   [1] "Time"              "SSC-W"            
  [3] "SSC-H"             "SSC-A"            
  [5] "FSC-W"             "FSC-H"            
@@ -261,8 +290,10 @@ As we can see from the output, most of the fluorophores have an “-A” appende
 If we wanted to retrieve the markers corresponding to the individual fluorophores, rather than attempting the breaking into the S4 object as we did during Week 03, we can take advantage of the markernames() function provided by the developers.
 
 ```{r}
+#| eval: false
 markernames(SFC_GatingSet)
 ```
+
          BUV395-A          BUV563-A 
           "CD62L"            "CD69" 
          BUV615-A          BUV661-A 
@@ -300,16 +331,20 @@ Alexa Fluor 488-A  Spark Blue 550-A
 At this point, we can then use what we have learned about the ggcyto package to make sure that the FSC x SSC plotting is working correctly.
 
 ```{r}
+#| eval: false
 ggcyto(SFC_GatingSet[1], subset="root",
  aes(x="FSC-A", y="SSC-A")) + geom_hex(bins=100)
 ```
-![]("C:/Users/Macarena/MacarenaLM/notes/week7 Applying Transformations/ggplot2 1.png")
+
+![](C:/Users/Macarena/MacarenaLM/notes/week7-Applying_Transformations/ggplot2 1.png)
 
 Please note, that for ggcyto it’s just one set of [] after the GatingSet name to subset for plotting.
 
 ```{r}
+#| eval: false
 str(SFC_GatingSet[1])
 ```
+
 Formal class 'GatingSet' [package "flowWorkspace"] with 2 slots
   ..@ pointer       :<externalptr> 
   ..@ transformation: list()
@@ -318,18 +353,21 @@ Formal class 'GatingSet' [package "flowWorkspace"] with 2 slots
 Let’s go ahead and plot a couple of the fluorophores, to see what untransformed data in R looks like.
 
 ```{r}
+#| eval: false
 ggcyto(SFC_GatingSet[6], subset="root",
  aes(x="BUV805-A", y="BV650-A")) + geom_hex(bins=100)
 ```
-![]("C:/Users/Macarena/MacarenaLM/notes/week7 Applying Transformations/ggplot2 2.png")
+
+![](C:/Users/Macarena/MacarenaLM/notes/week7-Applying_Transformations/ggplot2 2.png)
 
 As we can see, the scale currently appears linear, with a wide stretch of positive values for both CD4 and CD8 T cells. By contrast, you may remember the transformed version brought for this same .fcs file brought in from FlowJo via CytoML resembled the following
 
-![]("C:/Users/Macarena/MacarenaLM/notes/week7 Applying Transformations/00_Transformed.png")
+![](C:/Users/Macarena/MacarenaLM/notes/week7-Applying_Transformations/00_Transformed.png)
 
 If we use the gh_get_transformations function, we can see that there are currently no transformations applied to the GatingSet.
 
 ```{r}
+#| eval: false
 gh_get_transformations(SFC_GatingSet[[1]])
 ```
 list()
@@ -338,9 +376,11 @@ list()
 flowWorkspace provides several default transforms (with the option to create your own). The functions in question return transformer objects, which are list that collect the required information for the transformations that are subsequently applied.
 
 ```{r}
+#| eval: false
 Logicle <- logicle_trans()
 str(Logicle)
 ```
+
 List of 9
  $ name        : chr "logicle"
  $ transform   :function (x)  
@@ -354,9 +394,11 @@ List of 9
  - attr(*, "class")= chr "transform"
 
  ```{r}
+ #| eval: false
  Biexponential <- flowjo_biexp_trans()
 str(Biexponential)
  ```
+
  List of 9
  $ name        : chr "flowJo_biexp"
  $ transform   :function (x, deriv = 0)  
@@ -384,9 +426,11 @@ str(Biexponential)
  - attr(*, "class")= chr "transform"
  
  ```{r}
+ #| eval: false
  Asinh <- flowjo_fasinh_trans()
 str(Asinh)
  ```
+
  List of 9
  $ name        : chr "flowJo_fasinh"
  $ transform   :function (x)  
@@ -400,9 +444,11 @@ str(Asinh)
  - attr(*, "class")= chr "transform"
  
  ```{r}
+ #| eval: false
  AsinhGML <- asinhtGml2_trans()
 str(AsinhGML)
  ```
+
  List of 9
  $ name        : chr "asinhtGml2"
  $ transform   :function (x)  
@@ -421,9 +467,11 @@ str(AsinhGML)
  While having the transformation parameters is one component, the other is the fluorophores that are to be transformed. Recalling the colnames() function, we can see we have the following fluorophores for this panel.
  
  ```{r}
- SFC_Parameters <- colnames(SFC_GatingSet)
+ #| eval: false
+SFC_Parameters <- colnames(SFC_GatingSet)
 SFC_Parameters
  ```
+
   [1] "Time"              "SSC-W"            
  [3] "SSC-H"             "SSC-A"            
  [5] "FSC-W"             "FSC-H"            
@@ -450,9 +498,12 @@ SFC_Parameters
 We will only need to apply transformations to fluorophores, not to FSC, SSC or Time parameters. We will therefore need to remove these from the list. One way would be to use [] index method, combining a ! and stringr str_detect() to remove for values that would be shared by those parameters
 
 ```{r}
-FluorophoresOnly <- SFC_Parameters[!stringr::str_detect(SFC_Parameters, "FSC|SSC|Time")]
+#| eval: false
+FluorophoresOnly <- SFC_Parameters[!stringr::str_detect
+(SFC_Parameters, "FSC|SSC|Time")]
 FluorophoresOnly
 ```
+
  [1] "BUV395-A"          "BUV563-A"         
  [3] "BUV615-A"          "BUV661-A"         
  [5] "BUV737-A"          "BUV805-A"         
@@ -475,9 +526,11 @@ FluorophoresOnly
 Now that we have the fluorophore columns identified, using the transformerList() function we can combine them with the Transformer object we previously created.
 
 ```{r}
+#| eval: false
 MyBiexTransform <- transformerList(FluorophoresOnly, Biexponential)
 MyBiexTransform
 ```
+
 $`BUV395-A`
 Transformer: flowJo_biexp [-Inf, Inf]
 
@@ -581,6 +634,7 @@ attr(,"class")
 [1] "transformerList" "list"   
 
 ```{r}
+#| eval: false
 str(MyBiexTransform[1:3])
 ```
 List of 3
@@ -661,8 +715,10 @@ List of 3
   ..- attr(*, "class")= chr "transform"
 
 ```{r}
+#| eval: false
 str(MyBiexTransform$`APC-A`)
 ```
+
 List of 9
  $ name        : chr "flowJo_biexp"
  $ transform   :function (x, deriv = 0)  
@@ -693,6 +749,7 @@ List of 9
  The final step is to then apply it to the GatingSet.
  
  ```{r}
+ #| eval: false
  transform(SFC_GatingSet, MyBiexTransform)
  ```
  A GatingSet with 6 samples
@@ -700,19 +757,22 @@ List of 9
  If we now replot without having provided any arguments, we get the following:
  
  ```{r}
+ #| eval: false
  ggcyto(SFC_GatingSet[6], subset="root",
  aes(x="BUV805-A", y="BV650-A")) + geom_hex(bins=100)
  ```
- ![]("C:/Users/Macarena/MacarenaLM/notes/week7 Applying Transformations/ggplot2 3.png")
+ ![](C:/Users/Macarena/MacarenaLM/notes/week7-Applying_Transformations/ggplot2 3.png)
 
  As we can see, applying a default transformation to a random .fcs file is not quite the way to go. We will need to look up some of the specific parameter arguments that need to be provided. Going back to our transformer function:
  
  ```{r}
+ #| eval: false
  ?flowjo_biexp_trans
  ```
  to see the help documentation. In this case, the help documentation doesn’t provide much immediately. Part of this is that flowjo_biexp_trans() appears to be a wrapper function, which passes arguments on to the flowJoTrans() function. If we look this one up:
 
  ```{r}
+ #| eval: false
  ?flowJoTrans
  ```
  Under usage, we can see what the default options and arguments are.
@@ -721,44 +781,33 @@ List of 9
  Lets evaluate what effect changing each of these arguments in has on visualizing our .fcs file. Our current visual is:
  
  ```{r}
- SFC_cytoset <- load_cytoset_from_fcs(SFC_files,
- truncate_max_range = FALSE, transformation = FALSE)
+ #| eval: false
+SFC_cytoset <- load_cytoset_from_fcs(SFC_files,
+truncate_max_range = FALSE, transformation = FALSE)
 SFC_GatingSet <- GatingSet(SFC_cytoset)
 Biexponential <- flowjo_biexp_trans(channelRange=4096, maxValue=262144,
-     pos=4.5, neg=0, widthBasis=-10)
+pos=4.5, neg=0, widthBasis=-10)
 MyBiexTransform <- transformerList(FluorophoresOnly, Biexponential)
 transform(SFC_GatingSet, MyBiexTransform)
  ```
  A GatingSet with 6 samples
  
  ```{r}
+ #| eval: false
  ggcyto(SFC_GatingSet[6], subset="root",
  aes(x="BUV805-A", y="BV650-A")) + geom_hex(bins=100)
  ```
- ![]("C:/Users/Macarena/MacarenaLM/notes/week7 Applying Transformations/ggplot2 4.png")
+ ![](C:/Users/Macarena/MacarenaLM/notes/week7-Applying_Transformations/ggplot2 4.png)
 
  We will also need a way to validate whether they are being updated in the background. We can revisit the output of gh_get_transformations() function from earlier, and specify just the first specimen, and the BUV805 fluorophore:
  
  ```{r}
+ #| eval: false
  gh_get_transformations(SFC_GatingSet[[1]])$`BUV805-A`
  ```
- function (x, deriv = 0) 
-{
-    deriv <- as.integer(deriv)
-    if (deriv < 0 || deriv > 3) 
-        stop("'deriv' must be between 0 and 3")
-    if (deriv > 0) {
-        z0 <- double(z$n)
-        z[c("y", "b", "c")] <- switch(deriv, list(y = z$b, b = 2 * 
-            z$c, c = 3 * z$d), list(y = 2 * z$c, b = 6 * z$d, 
-            c = z0), list(y = 6 * z$d, b = z0, c = z0))
-        z[["d"]] <- z0
-    }
-    res <- stats:::.splinefun(x, z)
-    if (deriv > 0 && z$method == 2 && any(ind <- x <= z$x[1L])) 
-        res[ind] <- ifelse(deriv == 1, z$y[1L], 0)
-    res
-}
+
+(a serial of codes that I erased because of problems rendering with latex)
+
 <bytecode: 0x000001f3ea1dbe20>
 <environment: 0x000001f3ed0237e0>
 attr(,"type")
@@ -783,59 +832,65 @@ attr(,"parameters")$widthBasis
 Before we go messing with any of the other setting, let’s tackle width, which tends to be the one that gets missed by the default most often. Normally, in FlowJo most of my plots are set with biexponential transform width of around -1000, so lets go ahead and switch in that value.
 
 ```{r}
+#| eval: false
 SFC_cytoset <- load_cytoset_from_fcs(SFC_files,
- truncate_max_range = FALSE, transformation = FALSE)
+truncate_max_range = FALSE, transformation = FALSE)
 SFC_GatingSet <- GatingSet(SFC_cytoset)
 Biexponential <- flowjo_biexp_trans(channelRange=4096, maxValue=262144,
-     pos=4.5, neg=0, widthBasis=-1000)
+pos=4.5, neg=0, widthBasis=-1000)
 MyBiexTransform <- transformerList(FluorophoresOnly, Biexponential)
 transform(SFC_GatingSet, MyBiexTransform)
 ```
 A GatingSet with 6 samples
 
 ```{r}
+#| eval: false
 ggcyto(SFC_GatingSet[6], subset="root",
  aes(x="BUV805-A", y="BV650-A")) + geom_hex(bins=100)
 ```
- ![]("C:/Users/Macarena/MacarenaLM/notes/week7 Applying Transformations/ggplot2 5.png")
+ ![](C:/Users/Macarena/MacarenaLM/notes/week7-Applying_Transformations/ggplot2 5.png)
  
  Boom! That is more in line with what we were looking for. Let’s still check a couple other values.
 
  ```{r}
- SFC_cytoset <- load_cytoset_from_fcs(SFC_files,
- truncate_max_range = FALSE, transformation = FALSE)
+ #| eval: false
+SFC_cytoset <- load_cytoset_from_fcs(SFC_files,
+truncate_max_range = FALSE, transformation = FALSE)
 SFC_GatingSet <- GatingSet(SFC_cytoset)
 Biexponential <- flowjo_biexp_trans(channelRange=4096, maxValue=262144,
-     pos=4.5, neg=0, widthBasis=-500)
+pos=4.5, neg=0, widthBasis=-500)
 MyBiexTransform <- transformerList(FluorophoresOnly, Biexponential)
 transform(SFC_GatingSet, MyBiexTransform)
  ```
  A GatingSet with 6 samples
  
  ```{r}
+ #| eval: false
  ggcyto(SFC_GatingSet[6], subset="root",
  aes(x="BUV805-A", y="BV650-A")) + geom_hex(bins=100)
  ```
- ![]("C:/Users/Macarena/MacarenaLM/notes/week7 Applying Transformations/ggplot2 6.png")
+ ![](C:/Users/Macarena/MacarenaLM/notes/week7-Applying_Transformations/ggplot2 6.png)
 
  A width value of -500 still has the negavite population relative condensed, with the CD4+ cells into a more circular format. Lets try -100 next
  
  ```{r}
- SFC_cytoset <- load_cytoset_from_fcs(SFC_files,
- truncate_max_range = FALSE, transformation = FALSE)
+ #| eval: false
+SFC_cytoset <- load_cytoset_from_fcs(SFC_files,
+truncate_max_range = FALSE, transformation = FALSE)
 SFC_GatingSet <- GatingSet(SFC_cytoset)
 Biexponential <- flowjo_biexp_trans(channelRange=4096, maxValue=262144,
-     pos=4.5, neg=0, widthBasis=-100)
+pos=4.5, neg=0, widthBasis=-100)
 MyBiexTransform <- transformerList(FluorophoresOnly, Biexponential)
 transform(SFC_GatingSet, MyBiexTransform)
  ```
  A GatingSet with 6 samples
  
  ```{r}
+ #| eval: false
  ggcyto(SFC_GatingSet[6], subset="root",
  aes(x="BUV805-A", y="BV650-A")) + geom_hex(bins=100)
  ```
- ![]("C:/Users/Macarena/MacarenaLM/notes/week7 Applying Transformations/ggplot2 7.png")
+ ![](C:/Users/Macarena/MacarenaLM/notes/week7-Applying_Transformations/ggplot2 7.png)
 
  And nope, too far. Let’s keep -500 for now.
 
@@ -843,42 +898,30 @@ transform(SFC_GatingSet, MyBiexTransform)
  Now that width is set closer to what we would expect, lets alter the next couple arguments and see if they have any effect. The argument channelRange is currently set for 4096. Lets double it:
  
  ```{r}
- SFC_cytoset <- load_cytoset_from_fcs(SFC_files,
- truncate_max_range = FALSE, transformation = FALSE)
+ #| eval: false
+SFC_cytoset <- load_cytoset_from_fcs(SFC_files,
+truncate_max_range = FALSE, transformation = FALSE)
 SFC_GatingSet <- GatingSet(SFC_cytoset)
 Biexponential <- flowjo_biexp_trans(channelRange=8192, maxValue=262144,
-     pos=4.5, neg=0, widthBasis=-500)
+pos=4.5, neg=0, widthBasis=-500)
 MyBiexTransform <- transformerList(FluorophoresOnly, Biexponential)
 transform(SFC_GatingSet, MyBiexTransform)
  ```
  A GatingSet with 6 samples
  
  ```{r}
+ #| eval: false
  ggcyto(SFC_GatingSet[6], subset="root",
  aes(x="BUV805-A", y="BV650-A")) + geom_hex(bins=100)
  ```
- ![]("C:/Users/Macarena/MacarenaLM/notes/week7 Applying Transformations/ggplot2 8.png")
+ ![](C:/Users/Macarena/MacarenaLM/notes/week7-Applying_Transformations/ggplot2 8.png)
  
  ```{r}
+ #| eval: false
  gh_get_transformations(SFC_GatingSet[[1]])$`BUV805-A`
  ```
- function (x, deriv = 0) 
-{
-    deriv <- as.integer(deriv)
-    if (deriv < 0 || deriv > 3) 
-        stop("'deriv' must be between 0 and 3")
-    if (deriv > 0) {
-        z0 <- double(z$n)
-        z[c("y", "b", "c")] <- switch(deriv, list(y = z$b, b = 2 * 
-            z$c, c = 3 * z$d), list(y = 2 * z$c, b = 6 * z$d, 
-            c = z0), list(y = 6 * z$d, b = z0, c = z0))
-        z[["d"]] <- z0
-    }
-    res <- stats:::.splinefun(x, z)
-    if (deriv > 0 && z$method == 2 && any(ind <- x <= z$x[1L])) 
-        res[ind] <- ifelse(deriv == 1, z$y[1L], 0)
-    res
-}
+(a serial of codes that I erased because of problems rendering with latex)
+
 <bytecode: 0x0000021b85a6b6f0>
 <environment: 0x0000021bf5f7ff40>
 attr(,"type")
@@ -902,42 +945,31 @@ attr(,"parameters")$widthBasis
 Not much apparent change, so lets go the opposite direction and reduce the original value by half.
 
 ```{r}
+#| eval: false
 SFC_cytoset <- load_cytoset_from_fcs(SFC_files,
- truncate_max_range = FALSE, transformation = FALSE)
+truncate_max_range = FALSE, transformation = FALSE)
 SFC_GatingSet <- GatingSet(SFC_cytoset)
 Biexponential <- flowjo_biexp_trans(channelRange=2048, maxValue=262144,
-     pos=4.5, neg=0, widthBasis=-500)
+pos=4.5, neg=0, widthBasis=-500)
 MyBiexTransform <- transformerList(FluorophoresOnly, Biexponential)
 transform(SFC_GatingSet, MyBiexTransform)
 ```
 A GatingSet with 6 samples
 
 ```{r}
+#| eval: false
 ggcyto(SFC_GatingSet[6], subset="root",
  aes(x="BUV805-A", y="BV650-A")) + geom_hex(bins=100)
 ```
-![]("C:/Users/Macarena/MacarenaLM/notes/week7 Applying Transformations/ggplot2 9.png")
+![](C:/Users/Macarena/MacarenaLM/notes/week7-Applying_Transformations/ggplot2 9.png)
 
 ```{r}
+#| eval: false
 gh_get_transformations(SFC_GatingSet[[1]])$`BUV805-A`
 ```
-function (x, deriv = 0) 
-{
-    deriv <- as.integer(deriv)
-    if (deriv < 0 || deriv > 3) 
-        stop("'deriv' must be between 0 and 3")
-    if (deriv > 0) {
-        z0 <- double(z$n)
-        z[c("y", "b", "c")] <- switch(deriv, list(y = z$b, b = 2 * 
-            z$c, c = 3 * z$d), list(y = 2 * z$c, b = 6 * z$d, 
-            c = z0), list(y = 6 * z$d, b = z0, c = z0))
-        z[["d"]] <- z0
-    }
-    res <- stats:::.splinefun(x, z)
-    if (deriv > 0 && z$method == 2 && any(ind <- x <= z$x[1L])) 
-        res[ind] <- ifelse(deriv == 1, z$y[1L], 0)
-    res
-}
+
+(a serial of codes that I erased because of problems rendering with latex)
+
 <bytecode: 0x0000021b85a6b6f0>
 <environment: 0x0000021b8be63d18>
 attr(,"type")
@@ -964,40 +996,44 @@ Few minor changes, but not much otherwise. So lets proceed on to the next argume
 Same procedure, the current maxValue is 262144, lets double it and see what happens!
 
 ```{r}
+#| eval: false
 SFC_cytoset <- load_cytoset_from_fcs(SFC_files,
- truncate_max_range = FALSE, transformation = FALSE)
+truncate_max_range = FALSE, transformation = FALSE)
 SFC_GatingSet <- GatingSet(SFC_cytoset)
 Biexponential <- flowjo_biexp_trans(channelRange=4096, maxValue=524288,
-     pos=4.5, neg=0, widthBasis=-500)
+pos=4.5, neg=0, widthBasis=-500)
 MyBiexTransform <- transformerList(FluorophoresOnly, Biexponential)
 transform(SFC_GatingSet, MyBiexTransform)
 ```
 A GatingSet with 6 samples
 
 ```{r}
+#| eval: false
 ggcyto(SFC_GatingSet[6], subset="root",
  aes(x="BUV805-A", y="BV650-A")) + geom_hex(bins=100)
 ```
-![]("C:/Users/Macarena/MacarenaLM/notes/week7 Applying Transformations/ggplot2 10.png")
+![](C:/Users/Macarena/MacarenaLM/notes/week7-Applying_Transformations/ggplot2 10.png)
 
 You will notice, that when we doubled the maxValue, we are phenocopying the result we got when we had width set to -1000, with the CD4 population. This is worth noting. Lets now try instead to reduce it!
 
 ```{r}
+#| eval: false
 SFC_cytoset <- load_cytoset_from_fcs(SFC_files,
- truncate_max_range = FALSE, transformation = FALSE)
+truncate_max_range = FALSE, transformation = FALSE)
 SFC_GatingSet <- GatingSet(SFC_cytoset)
 Biexponential <- flowjo_biexp_trans(channelRange=4096, maxValue=131072,
-     pos=4.5, neg=0, widthBasis=-500)
+pos=4.5, neg=0, widthBasis=-500)
 MyBiexTransform <- transformerList(FluorophoresOnly, Biexponential)
 transform(SFC_GatingSet, MyBiexTransform)
 ```
 A GatingSet with 6 samples
 
 ```{r}
+#| eval: false
 ggcyto(SFC_GatingSet[6], subset="root",
  aes(x="BUV805-A", y="BV650-A")) + geom_hex(bins=100)
 ```
-![]("C:/Users/Macarena/MacarenaLM/notes/week7 Applying Transformations/ggplot2 11.png")
+![](C:/Users/Macarena/MacarenaLM/notes/week7-Applying_Transformations/ggplot2 11.png)
 
 And likewise, we are going the opposite to our intended effect. As maxValue can in part be determined by our instrument settings (as well as individual fluorophores), this is an argument we should keep an eye on. Let’s leave it at its current default for now.
 
@@ -1005,79 +1041,88 @@ And likewise, we are going the opposite to our intended effect. As maxValue can 
  The next argument pos corresponds to the number of positive decades (this expression should be wrong... or not, but I don't understand). It is currently set at 4.5. Although this can be increased on some instrument settings. Let’s walk it up to 5!
  
  ```{r}
- SFC_cytoset <- load_cytoset_from_fcs(SFC_files,
- truncate_max_range = FALSE, transformation = FALSE)
+ #| eval: false
+SFC_cytoset <- load_cytoset_from_fcs(SFC_files,
+truncate_max_range = FALSE, transformation = FALSE)
 SFC_GatingSet <- GatingSet(SFC_cytoset)
 Biexponential <- flowjo_biexp_trans(channelRange=4096, maxValue=262144,
-     pos=5, neg=0, widthBasis=-500)
+pos=5, neg=0, widthBasis=-500)
 MyBiexTransform <- transformerList(FluorophoresOnly, Biexponential)
 transform(SFC_GatingSet, MyBiexTransform)
  ```
  A GatingSet with 6 samples
  
  ```{r}
+ #| eval: false
  ggcyto(SFC_GatingSet[6], subset="root",
  aes(x="BUV805-A", y="BV650-A")) + geom_hex(bins=100)
  ```
- ![]("C:/Users/Macarena/MacarenaLM/notes/week7 Applying Transformations/ggplot2 12.png")
+ ![](C:/Users/Macarena/MacarenaLM/notes/week7-Applying_Transformations/ggplot2 12.png)
 
 And on first glance no. If we had our settings for 5 positive decades, we would need to adjust both the maxValue and widthBasis to return to a closer to expected shape.
 
 ```{r}
+#| eval: false
 SFC_cytoset <- load_cytoset_from_fcs(SFC_files,
- truncate_max_range = FALSE, transformation = FALSE)
+truncate_max_range = FALSE, transformation = FALSE)
 SFC_GatingSet <- GatingSet(SFC_cytoset)
 Biexponential <- flowjo_biexp_trans(channelRange=4096, maxValue=524288,
-     pos=5, neg=0, widthBasis=-1000)
+pos=5, neg=0, widthBasis=-1000)
 MyBiexTransform <- transformerList(FluorophoresOnly, Biexponential)
 transform(SFC_GatingSet, MyBiexTransform)
 ```
 A GatingSet with 6 samples
 
 ```{r}
+#| eval: false
 ggcyto(SFC_GatingSet[6], subset="root",
  aes(x="BUV805-A", y="BV650-A")) + geom_hex(bins=100)
 ```
- ![]("C:/Users/Macarena/MacarenaLM/notes/week7 Applying Transformations/ggplot2 13.png")
+ ![](C:/Users/Macarena/MacarenaLM/notes/week7-Applying_Transformations/ggplot2 13.png)
 
  ## neg
  We have a similar story for adding negative decades. Adding an extra negative decade doesn’t seem to noticiblt affect these two fluorophores.
  
  ```{r}
- SFC_cytoset <- load_cytoset_from_fcs(SFC_files,
- truncate_max_range = FALSE, transformation = FALSE)
+ #| eval: false
+SFC_cytoset <- load_cytoset_from_fcs(SFC_files,
+truncate_max_range = FALSE, transformation = FALSE)
 SFC_GatingSet <- GatingSet(SFC_cytoset)
 Biexponential <- flowjo_biexp_trans(channelRange=4096, maxValue=262144,
-     pos=4.5, neg=1, widthBasis=-500)
+pos=4.5, neg=1, widthBasis=-500)
 MyBiexTransform <- transformerList(FluorophoresOnly, Biexponential)
 transform(SFC_GatingSet, MyBiexTransform)
  ```
  A GatingSet with 6 samples
  
  ```{r}
+ #| eval: false
  ggcyto(SFC_GatingSet[6], subset="root",
  aes(x="BUV805-A", y="BV650-A")) + geom_hex(bins=100)
  ```
- ![]("C:/Users/Macarena/MacarenaLM/notes/week7 Applying Transformations/ggplot2 14.png")
+ ![](C:/Users/Macarena/MacarenaLM/notes/week7-Applying_Transformations/ggplot2 14.png)
 
  It is only when we increase to 2 (i.e. -2 decades) that we start to see a spreading effect.
  
  ```{r}
- SFC_cytoset <- load_cytoset_from_fcs(SFC_files,
- truncate_max_range = FALSE, transformation = FALSE)
+ #| eval: false
+SFC_cytoset <- load_cytoset_from_fcs(SFC_files,
+truncate_max_range = FALSE, transformation = FALSE)
 SFC_GatingSet <- GatingSet(SFC_cytoset)
 Biexponential <- flowjo_biexp_trans(channelRange=4096, maxValue=262144,
-     pos=4.5, neg=2, widthBasis=-500)
+pos=4.5, neg=2, widthBasis=-500)
 MyBiexTransform <- transformerList(FluorophoresOnly, Biexponential)
 transform(SFC_GatingSet, MyBiexTransform)
  ```
  A GatingSet with 6 samples
  
  ```{r}
+ #| eval: false
  ggcyto(SFC_GatingSet[6], subset="root",
  aes(x="BUV805-A", y="BV650-A")) + geom_hex(bins=100)
  ```
- ![]("C:/Users/Macarena/MacarenaLM/notes/week7 Applying Transformations/ggplot2 15.png")
+
+![](C:/Users/Macarena/MacarenaLM/notes/week7-Applying_Transformations/ggplot2 15.png)
 
  ## Recap: summary
 We have looked at how the various arguments can affect the overall visualization, and seen how some of these are interconnected. It might be worthwhile to verify what your own instrument settings are at first (especially in context of maxValue and positive decades), and then use these when starting in R for the first time.
@@ -1086,16 +1131,20 @@ We have looked at how the various arguments can affect the overall visualization
 Having now had some experience applying transformations to SFC data, let’s turn and look at how to apply arsinh to our mass cytometry (CyTOF) dataset. Lets once again make sure we have the correct .fcs files
 
 ```{r}
+#| eval: false
 MC_files
 ```
-[1] "C:/Users/Macarena/CytometryInR/course/07_Transformations/data/G1_2_concatenated.txt_m039A.1147901.fcs"
-[2] "C:/Users/Macarena/CytometryInR/course/07_Transformations/data/G1_2_concatenated.txt_m039B.1147889.fcs"
-[3] "C:/Users/Macarena/CytometryInR/course/07_Transformations/data/G1_2_concatenated.txt_m039C.1147913.fcs"
+
+1_C:/Users/Macarena/CytometryInR/course/07_Transformations/data/G1_2_concatenated.txt_m039A.1147901.fcs
+2_C:/Users/Macarena/CytometryInR/course/07_Transformations/data/G1_2_concatenated.txt_m039B.1147889.fcs
+3_C:/Users/Macarena/CytometryInR/course/07_Transformations/data/G1_2_concatenated.txt_m039C.1147913.fcs
 
 And modify the steps from Week 05 to load them into a GatingSet object.
 
 ```{r}
-MC_cytoset <- load_cytoset_from_fcs(MC_files, truncate_max_range = FALSE, transformation = FALSE)
+#| eval: false
+MC_cytoset <- load_cytoset_from_fcs(MC_files, truncate_max_range = FALSE, 
+transformation = FALSE)
 MC_GatingSet <- GatingSet(MC_cytoset)
 
 MC_GatingSet
@@ -1105,6 +1154,7 @@ A GatingSet with 3 samples
 Let’s examine the names for the metal tags
 
 ```{r}
+#| eval: false
 colnames(MC_GatingSet)
 ```
  [1] "Ce140Di"      "Ce142Di"     
@@ -1136,6 +1186,7 @@ colnames(MC_GatingSet)
 And the corresponding markers associated with each
 
 ```{r}
+#| eval: false
 markernames(MC_GatingSet)
 ```
                Ce140Di 
@@ -1238,15 +1289,17 @@ markernames(MC_GatingSet)
 And lets go ahead and visualize the CD4 x CD8 plot for the first specimen.
 
 ```{r}
+#| eval: false
 ggcyto(MC_GatingSet[1], subset="root",
  aes( x="Nd145Di", y="Nd146Di")) + geom_hex(bins=100)
 ```
- ![]("C:/Users/Macarena/MacarenaLM/notes/week7 Applying Transformations/ggplot2 16.png")
+ ![](C:/Users/Macarena/MacarenaLM/notes/week7-Applying_Transformations/ggplot2 16.png)
 
  We can then select the particular markers we are interested, that we want to end up transforming. For this example, lets say we wanted to remove the multiple Barcode and Beads entries
  
  ```{r}
- MC_Parameters <- markernames(MC_GatingSet)
+ #| eval: false
+MC_Parameters <- markernames(MC_GatingSet)
 MC_MarkersInterest <- MC_Parameters[!str_detect("Barcode|Beads", MC_Parameters)]
 MC_MarkersInterest
  ```
@@ -1334,6 +1387,7 @@ MC_MarkersInterest
 Of which, we want the names for this named list. So….
 
 ```{r}
+#| eval: false
 InterestingMetalsOnly <- names(MC_MarkersInterest)
 InterestingMetalsOnly
 ```
@@ -1351,6 +1405,7 @@ InterestingMetalsOnly
 With these, we can then combine them with our transformer of interest to create the transformerList() that we can then apply to the samples.
 
 ```{r}
+#| eval: false
 Asinh <- flowjo_fasinh_trans()
 MyAsinhTransform <- transformerList(InterestingMetalsOnly, Asinh)
 str(MyAsinhTransform[1:3])
@@ -1392,6 +1447,7 @@ List of 3
   ..- attr(*, "class")= chr "transform"
   
   ```{r}
+  #| eval: false
   transform(MC_GatingSet, MyAsinhTransform)
   ```
   A GatingSet with 3 samples
@@ -1399,25 +1455,29 @@ List of 3
 With this done, let’s try replotting the previous CD4 by CD8 plot
 
 ```{r}
+#| eval: false
 ggcyto(MC_GatingSet[1], subset="root",
  aes( x="Nd145Di", y="Nd146Di")) + geom_hex(bins=100)
 ```
- ![]("C:/Users/Macarena/MacarenaLM/notes/week7 Applying Transformations/ggplot2 17.png")
+ ![](C:/Users/Macarena/MacarenaLM/notes/week7-Applying_Transformations/ggplot2 17.png)
 
  ## Asinh Arguments
  Similar to the case with SFC, we may need to revise some of the values provided to the individual arguments. Lets similarly investigate what we can do.
  
  ```{r}
+ #| eval: false
  ?flowjo_fasinh_trans
  ```
  Which turns out to be another wrapper. Lets try the similarly named function
  
  ```{r}
+ #| eval: false
  ?flowjo_fasinh
  ```
  As we may remember, our current setting are the following
  
  ```{r}
+ #| eval: false
  MC_cytoset <- load_cytoset_from_fcs(MC_files,
  truncate_max_range = FALSE, transformation = FALSE)
 MC_GatingSet <- GatingSet(MC_cytoset)
@@ -1428,13 +1488,12 @@ transform(MC_GatingSet, MyAsinhTransform)
  A GatingSet with 3 samples
  
  ```{r}
+ #| eval: false
  gh_get_transformations(MC_GatingSet[[1]])$`Nd145Di`
  ```
- function (x) 
-{
-    length * ((asinh(x * sinh(m * log(10))/t) + a * log(10))/((m + 
-        a) * log(10)))
-}
+
+(a serial of codes that I erased because of problems rendering with latex)
+
 <bytecode: 0x000001d6fc828e28>
 <environment: 0x000001d6f7d23dd0>
 attr(,"type")
@@ -1444,6 +1503,7 @@ attr(,"type")
 Being completionist, lets change the MC arguments as well. M is width in asymptotic decades, currently set to 4.
 
 ```{r}
+#| eval: false
 MC_cytoset <- load_cytoset_from_fcs(MC_files,
  truncate_max_range = FALSE, transformation = FALSE)
 MC_GatingSet <- GatingSet(MC_cytoset)
@@ -1454,14 +1514,16 @@ transform(MC_GatingSet, MyAsinhTransform)
 A GatingSet with 3 samples
 
 ```{r}
+#| eval: false
 ggcyto(MC_GatingSet[1], subset="root",
  aes( x="Nd145Di", y="Nd146Di")) + geom_hex(bins=100)
 ```
-![]("C:/Users/Macarena/MacarenaLM/notes/week7 Applying Transformations/ggplot2 18.png")
+![](C:/Users/Macarena/MacarenaLM/notes/week7-Applying_Transformations/ggplot2 18.png)
 
  Lets set it to 5!
  
  ```{r}
+ #| eval: false
  MC_cytoset <- load_cytoset_from_fcs(MC_files,
  truncate_max_range = FALSE, transformation = FALSE)
 MC_GatingSet <- GatingSet(MC_cytoset)
@@ -1472,14 +1534,16 @@ transform(MC_GatingSet, MyAsinhTransform)
  A GatingSet with 3 samples
  
  ```{r}
+ #| eval: false
  ggcyto(MC_GatingSet[1], subset="root",
  aes( x="Nd145Di", y="Nd146Di")) + geom_hex(bins=100)
  ```
-![]("C:/Users/Macarena/MacarenaLM/notes/week7 Applying Transformations/ggplot2 19.png")
+![](C:/Users/Macarena/MacarenaLM/notes/week7-Applying_Transformations/ggplot2 19.png)
 
 Vs. when we set it to 3
 
 ```{r}
+#| eval: false
 MC_cytoset <- load_cytoset_from_fcs(MC_files,
  truncate_max_range = FALSE, transformation = FALSE)
 MC_GatingSet <- GatingSet(MC_cytoset)
@@ -1490,15 +1554,17 @@ transform(MC_GatingSet, MyAsinhTransform)
 A GatingSet with 3 samples
 
 ```{r}
+#| eval: false
 ggcyto(MC_GatingSet[1], subset="root",
  aes( x="Nd145Di", y="Nd146Di")) + geom_hex(bins=100)
 ```
-![]("C:/Users/Macarena/MacarenaLM/notes/week7 Applying Transformations/ggplot2 20.png")
+![](C:/Users/Macarena/MacarenaLM/notes/week7-Applying_Transformations/ggplot2 20.png)
 
 ## t
 Increase t to 24000
 
 ```{r}
+#| eval: false
 MC_cytoset <- load_cytoset_from_fcs(MC_files,
  truncate_max_range = FALSE, transformation = FALSE)
 MC_GatingSet <- GatingSet(MC_cytoset)
@@ -1509,14 +1575,16 @@ transform(MC_GatingSet, MyAsinhTransform)
 A GatingSet with 3 samples
 
 ```{r}
+#| eval: false
 ggcyto(MC_GatingSet[1], subset="root",
  aes( x="Nd145Di", y="Nd146Di")) + geom_hex(bins=100)
 ```
-![]("C:/Users/Macarena/MacarenaLM/notes/week7 Applying Transformations/ggplot2 21.png")
+![](C:/Users/Macarena/MacarenaLM/notes/week7-Applying_Transformations/ggplot2 21.png)
 
 Decrease t to 6000
 
 ```{r}
+#| eval: false
 MC_cytoset <- load_cytoset_from_fcs(MC_files,
  truncate_max_range = FALSE, transformation = FALSE)
 MC_GatingSet <- GatingSet(MC_cytoset)
@@ -1527,15 +1595,17 @@ transform(MC_GatingSet, MyAsinhTransform)
 A GatingSet with 3 samples
 
 ```{r}
+#| eval: false
 ggcyto(MC_GatingSet[1], subset="root",
  aes( x="Nd145Di", y="Nd146Di")) + geom_hex(bins=100)
 ```
-![]("C:/Users/Macarena/MacarenaLM/notes/week7 Applying Transformations/ggplot2 22.png")
+![](C:/Users/Macarena/MacarenaLM/notes/week7-Applying_Transformations/ggplot2 22.png)
 
 ## a
 Increase negative decade to 1
 
 ```{r}
+#| eval: false
 MC_cytoset <- load_cytoset_from_fcs(MC_files,
  truncate_max_range = FALSE, transformation = FALSE)
 MC_GatingSet <- GatingSet(MC_cytoset)
@@ -1546,14 +1616,16 @@ transform(MC_GatingSet, MyAsinhTransform)
 A GatingSet with 3 samples
 
 ```{r}
+#| eval: false
 ggcyto(MC_GatingSet[1], subset="root",
  aes( x="Nd145Di", y="Nd146Di")) + geom_hex(bins=100)
 ```
-![]("C:/Users/Macarena/MacarenaLM/notes/week7 Applying Transformations/ggplot2 23.png")
+![](C:/Users/Macarena/MacarenaLM/notes/week7-Applying_Transformations/ggplot2 23.png)
 
 Vs. set to 0
 
 ```{r}
+#| eval: false
 MC_cytoset <- load_cytoset_from_fcs(MC_files,
  truncate_max_range = FALSE, transformation = FALSE)
 MC_GatingSet <- GatingSet(MC_cytoset)
@@ -1564,15 +1636,17 @@ transform(MC_GatingSet, MyAsinhTransform)
 A GatingSet with 3 samples
 
 ```{r}
+#| eval: false
 ggcyto(MC_GatingSet[1], subset="root",
  aes( x="Nd145Di", y="Nd146Di")) + geom_hex(bins=100)
 ```
-![]("C:/Users/Macarena/MacarenaLM/notes/week7 Applying Transformations/ggplot2 24.png")
+![](C:/Users/Macarena/MacarenaLM/notes/week7-Applying_Transformations/ggplot2 24.png)
 
 ## length
 Doubling numeric max value of transformed data to 512
 
 ```{r}
+#| eval: false
 MC_cytoset <- load_cytoset_from_fcs(MC_files,
  truncate_max_range = FALSE, transformation = FALSE)
 MC_GatingSet <- GatingSet(MC_cytoset)
@@ -1583,14 +1657,16 @@ transform(MC_GatingSet, MyAsinhTransform)
 A GatingSet with 3 samples
 
 ```{r}
+#| eval: false
 ggcyto(MC_GatingSet[1], subset="root",
  aes( x="Nd145Di", y="Nd146Di")) + geom_hex(bins=100)
 ```
-![]("C:/Users/Macarena/MacarenaLM/notes/week7 Applying Transformations/ggplot2 25.png")
+![](C:/Users/Macarena/MacarenaLM/notes/week7-Applying_Transformations/ggplot2 25.png)
 
 Vs. reducing it to 128
 
 ```{r}
+#| eval: false
 MC_cytoset <- load_cytoset_from_fcs(MC_files,
  truncate_max_range = FALSE, transformation = FALSE)
 MC_GatingSet <- GatingSet(MC_cytoset)
@@ -1601,9 +1677,153 @@ transform(MC_GatingSet, MyAsinhTransform)
 A GatingSet with 3 samples
 
 ```{r}
+#| eval: false
 ggcyto(MC_GatingSet[1], subset="root",
  aes( x="Nd145Di", y="Nd146Di")) + geom_hex(bins=100)
 ```
-![]("C:/Users/Macarena/MacarenaLM/notes/week7 Applying Transformations/ggplot2 26.png")
+![](C:/Users/Macarena/MacarenaLM/notes/week7-Applying_Transformations/ggplot2 26.png)
 
 # Extracting Data
+One area where we will separately need to remember whether a transformation is applied or not is later on in the course, when we are trying to extract out the underlying exprs data for use in downstream analysis. If we wanted to do this for our current GatingSet, we first need to fetch the pointer contents to return a CytoSet object.
+
+```{r}
+#| eval: false
+MyCytoSet <- gs_pop_get_data(SFC_GatingSet[[1]], "root")
+MyCytoSet
+```
+A cytoset with 1 samples.
+
+  column names:
+    Time, SSC-W, SSC-H, SSC-A, FSC-W, FSC-H, FSC-A, SSC-B-W, SSC-B-H, SSC-B-A, BUV395-A, BUV563-A, BUV615-A, BUV661-A, BUV737-A, BUV805-A, Pacific Blue-A, BV480-A, BV570-A, BV605-A, BV650-A, BV711-A, BV750-A, BV786-A, Alexa Fluor 488-A, Spark Blue 550-A, Spark Blue 574-A, RB613-A, RB705-A, RB780-A, PE-A, PE-Dazzle594-A, PE-Cy5-A, PE-Fire 700-A, PE-Fire 744-A, PE-Vio770-A, APC-A, Alexa Fluor 647-A, APC-R700-A, Zombie NIR-A, APC-Fire 750-A, APC-Fire 810-A, AF-A
+
+cytoset has been subsetted and can be realized through 'realize_view()'.
+We can then extract our the underlying MFI data using the exprs() function.
+
+```{r}
+#| eval: false
+exprs(MyCytoSet[[1]])[1:3,]
+```
+         Time    SSC-W  SSC-H    SSC-A
+[1,] 396.1327 741155.4 495200 611700.2
+[2,] 539.4743 730091.3 504832 614289.1
+[3,] 590.1619 842852.1 267735 376101.7
+        FSC-W   FSC-H   FSC-A  SSC-B-W
+[1,] 735140.7 1398530 1713527 715626.7
+[2,] 714323.2 1607285 1913535 728604.2
+[3,] 715528.4  824483  983235 781794.9
+     SSC-B-H  SSC-B-A BUV395-A BUV563-A
+[1,]  416383 496624.7 3150.359 2315.777
+[2,]  385314 467902.4 2064.067 3614.399
+[3,]  309681 403511.7 3336.325 2874.082
+     BUV615-A BUV661-A BUV737-A BUV805-A
+[1,] 2182.396 2132.781 2889.922 3597.062
+[2,] 2124.969 1805.567 2639.037 1866.229
+[3,] 2627.830 2043.606 3079.823 3621.227
+     Pacific Blue-A  BV480-A  BV570-A
+[1,]       2228.710 1951.972 2101.419
+[2,]       1999.236 2086.402 2219.585
+[3,]       2317.032 2325.820 1490.307
+      BV605-A  BV650-A  BV711-A  BV750-A
+[1,] 3463.058 1927.428 2248.063 2060.087
+[2,] 2549.794 3716.182 2128.070 2092.538
+[3,] 3675.083 1788.000 1427.809 2477.396
+      BV786-A Alexa Fluor 488-A
+[1,] 2392.586          2060.505
+[2,] 2267.093          2243.353
+[3,] 1642.587          2500.961
+     Spark Blue 550-A Spark Blue 574-A
+[1,]         3532.579         3168.161
+[2,]         3402.286         3383.590
+[3,]         3638.622         3162.447
+      RB613-A  RB705-A  RB780-A     PE-A
+[1,] 2255.820 3850.380 2200.319 2602.714
+[2,] 1700.675 2149.019 1946.190 2252.872
+[3,] 1787.978 3751.768 2133.048 2754.971
+     PE-Dazzle594-A PE-Cy5-A PE-Fire 700-A
+[1,]       2087.706 2216.431      2843.651
+[2,]       2207.007 2933.298      3160.401
+[3,]       2474.266 2275.351      2759.448
+     PE-Fire 744-A PE-Vio770-A    APC-A
+[1,]      2187.363    2112.620 1965.414
+[2,]      2050.162    2190.069 2072.289
+[3,]      2239.013    1918.631 2536.166
+     Alexa Fluor 647-A APC-R700-A
+[1,]          2199.804   2264.987
+[2,]          2058.767   2266.735
+[3,]          1664.451   2332.929
+     Zombie NIR-A APC-Fire 750-A
+[1,]     2333.349       3265.242
+[2,]     2252.724       2853.149
+[3,]     2060.233       3339.516
+     APC-Fire 810-A     AF-A
+[1,]       3262.465 2913.750
+[2,]       2093.584 2897.793
+[3,]       3174.300 2227.430
+
+If you look at the data for a while, you may notice the MFI values seem abnormally abbreviated. This is because the values present were themselves transformed. If we had wanted to retrieve the raw, untransformed values, we would have needed to provide the inverse.transform = TRUE argument when fetching the CytoSet. This would have trigerred the inverse.transformation stored within the transformerList, reverting values back to the original.
+
+```{r}
+#| eval: false
+MyInversedCytoSet <- gs_pop_get_data(SFC_GatingSet[[1]], 
+"root", inverse.transform=TRUE)
+exprs(MyInversedCytoSet[[1]])[1:3,]
+```
+         Time    SSC-W  SSC-H    SSC-A
+[1,] 396.1327 741155.4 495200 611700.2
+[2,] 539.4743 730091.3 504832 614289.1
+[3,] 590.1619 842852.1 267735 376101.7
+        FSC-W   FSC-H   FSC-A  SSC-B-W
+[1,] 735140.7 1398530 1713527 715626.7
+[2,] 714323.2 1607285 1913535 728604.2
+[3,] 715528.4  824483  983235 781794.9
+     SSC-B-H  SSC-B-A    BUV395-A   BUV563-A
+[1,]  416383 496624.7  9453.96973   865.5593
+[2,]  385314 467902.4    50.15964 45181.5781
+[3,]  309681 403511.7 17222.40234  4243.2021
+      BUV615-A  BUV661-A BUV737-A   BUV805-A
+[1,]  422.8893  265.4719 4429.869 42471.6328
+[2,]  240.8778 -778.2961 2294.426  -576.0316
+[3,] 2228.7263  -13.7176 7624.175 46297.8867
+     Pacific Blue-A   BV480-A    BV570-A
+[1,]       572.5627 -300.9588   166.9555
+[2,]      -152.3773  119.9522   542.8082
+[3,]       869.9310  900.6817 -2103.8748
+       BV605-A    BV650-A    BV711-A
+[1,] 26514.346  -378.7812   636.1760
+[2,]  1814.396 65177.4258   250.6365
+[3,] 56177.691  -838.5793 -2473.9214
+        BV750-A    BV786-A Alexa Fluor 488-A
+[1,]   37.73475  1143.6769          39.03822
+[2,]  139.14844   699.4824         620.62848
+[3,] 1483.97839 -1383.3655        1586.81445
+     Spark Blue 550-A Spark Blue 574-A
+[1,]         33800.78         9992.747
+[2,]         21516.37        20191.494
+[3,]         49274.09         9816.074
+        RB613-A     RB705-A   RB780-A
+[1,]   661.8845 106387.0312  480.4331
+[2,] -1154.0510    316.7392 -319.2414
+[3,]  -838.6561  74171.4688  266.3120
+          PE-A PE-Dazzle594-A  PE-Cy5-A
+[1,] 2087.5488       124.0298  532.5582
+[2,]  652.0997       502.0220 4992.3154
+[3,] 3095.6575      1470.6257  727.2120
+     PE-Fire 700-A PE-Fire 744-A PE-Vio770-A
+[1,]      3909.615    438.796295    202.0780
+[2,]      9753.685      6.749563    447.4721
+[3,]      3131.895    606.339661   -406.8256
+          APC-A Alexa Fluor 647-A APC-R700-A
+[1,] -258.55743         478.77539   692.4367
+[2,]   75.84125          33.61102   698.2842
+[3,] 1748.74023       -1294.83301   925.7467
+     Zombie NIR-A APC-Fire 750-A
+[1,]    927.23083      13622.885
+[2,]    651.61072       4010.373
+[3,]     38.18906      17406.982
+     APC-Fire 810-A      AF-A
+[1,]     13500.3311 4729.0576
+[2,]       142.4233 4526.1870
+[3,]     10186.6602  568.3808
+
+Right now, this won’t affect much, but we will encounter where this matters in a couple weeks when we discuss how to visualize fluorescent signatures, and their subsequent use in unmixing.
+
