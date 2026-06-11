@@ -1,0 +1,71 @@
+---
+title: "Week8-Ways to gate"
+author: "Macarena López-Mayorga"
+date: 2026-06-11
+format: pdf
+---
+First, we have to check if we have all the necessary packages installed and the proper versions:
+
+```{r}
+packageVersion("ggplot2")
+```
+[1] ‘4.0.3’
+
+```{r}
+packageVersion("ggcyto")
+```
+[1] ‘1.39.4’
+
+```{r}
+packageVersion("openCyto")
+```
+[1] ‘2.22.0’
+
+```{r}
+packageVersion("flowGate")
+```
+[1] ‘1.10.0’
+
+This version of flowGate seems to have problems with shiny app because there are some bugs not resolved. David Rach and his colleagues have developed a forked version that fix the bug problems. So, I am going to remove flowGate package and install the version of David Rach and others:
+
+```{r}
+remove.packages("flowGate")
+```
+ Now, I have to call the remotes packages to install from the github repository
+
+```{r}
+library(remotes)
+```
+
+And install the forked version:
+```{r}
+install_github("DavidRach/flowGate")
+```
+Let's check now if we have the correct version:
+
+```{r}
+packageVersion("flowGate")
+```
+[1] ‘0.99.2’
+
+Yes! that is correct :) . Now, we have to load in several packages that will be necessary:
+
+```{r}
+library(flowWorkspace)
+library(ggplot2)
+library(ggcyto)
+library(flowGate)
+library(openCyto)
+```
+
+```{r}
+StorageLocation <- file.path("C:/Users/Macarena/CytometryInR/course/08_WaysToGate/data")
+fcs_files <- list.files(StorageLocation, pattern=".fcs", full.names=TRUE)
+fcs_files
+```
+[1] "C:/Users/Macarena/CytometryInR/course/08_WaysToGate/data/2025_07_26_AB_02_INF052_00_Ctrl.fcs"
+[2] "C:/Users/Macarena/CytometryInR/course/08_WaysToGate/data/2025_07_26_AB_02_INF052_00_SEB.fcs" 
+[3] "C:/Users/Macarena/CytometryInR/course/08_WaysToGate/data/2025_07_26_AB_02_INF100_00_Ctrl.fcs"
+[4] "C:/Users/Macarena/CytometryInR/course/08_WaysToGate/data/2025_07_26_AB_02_INF100_00_SEB.fcs" 
+[5] "C:/Users/Macarena/CytometryInR/course/08_WaysToGate/data/2025_07_26_AB_02_INF179_00_Ctrl.fcs"
+[6] "C:/Users/Macarena/CytometryInR/course/08_WaysToGate/data/2025_07_26_AB_02_INF179_00_SEB.fcs" 
