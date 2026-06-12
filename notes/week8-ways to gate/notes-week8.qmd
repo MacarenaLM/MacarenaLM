@@ -69,3 +69,90 @@ fcs_files
 [4] "C:/Users/Macarena/CytometryInR/course/08_WaysToGate/data/2025_07_26_AB_02_INF100_00_SEB.fcs" 
 [5] "C:/Users/Macarena/CytometryInR/course/08_WaysToGate/data/2025_07_26_AB_02_INF179_00_Ctrl.fcs"
 [6] "C:/Users/Macarena/CytometryInR/course/08_WaysToGate/data/2025_07_26_AB_02_INF179_00_SEB.fcs" 
+
+```{r}
+SFC_cytoset <- load_cytoset_from_fcs(fcs_files,
+ truncate_max_range = FALSE, transformation = FALSE)
+SFC_GatingSet <- GatingSet(SFC_cytoset)
+```
+
+```{r}
+SFC_Parameters <- colnames(SFC_GatingSet)
+FluorophoresOnly <- SFC_Parameters[!stringr::str_detect(SFC_Parameters, "FSC|SSC|Time")]
+
+Biexponential <- flowjo_biexp_trans(channelRange=4096, maxValue=262144,
+     pos=4.5, neg=2, widthBasis=-500)
+MyBiexTransform <- transformerList(FluorophoresOnly, Biexponential)
+transform(SFC_GatingSet, MyBiexTransform)
+```
+A GatingSet with 6 samples
+
+```{r}
+ggcyto(SFC_GatingSet[1], subset="root",
+ aes(x="BUV805-A", y="BV650-A")) + geom_hex(bins=100)
+```
+![]("C:/Users/Macarena/MacarenaLM/notes/week8-ways to gate/ggplot2 1.png")
+
+So far, we have stablished a set of files (cytoset), set a GatingSet and applied the necessary transformations. Now...
+# Manual-flowGate
+David Rach usually starts with singlets
+
+```{r}
+flowGate::gs_gate_interactive(gs=SFC_GatingSet, filterId="singlets", sample=1,
+dims=list("FSC-A", "FSC-H"), subset="root")
+```
+The main arguments we need to specify values for are: the name of our GatingSet (gs); provide a name for our new gate (filterId); designate which sample in the Gating Set to use for plotting (sample=1); provide the X and Y fluorophore within a list style argument (dims=list(“FSC-A”, “FSC-H”)); and finally the subset to be used as the parent gate. Given we haven’t drawn any gates at this point, we will specify the “root” gate.
+Once we run the chunk (or the codes, in the console), appears the shiny app. We have to select polygon and we should draw the gate of interest. We will see the line when we click for the second time. When we have finished, then, we have to click in "done". This should be the message that we will receive:
+
+Listening on http://127.0.0.1:6323
+done!
+$Gate
+Polygonal gate 'singlets' with 13 vertices in dimensions FSC-A and FSC-H
+
+$Bins
+[1] 256
+
+$Scaling
+[1] "unused"
+
+To check our gates within our GatingSet:
+```{r}
+plot(SFC_GatingSet)
+```
+![]("C:/Users/Macarena/MacarenaLM/notes/week8-ways to gate/plot gates.png")
+The gate has been created and applied to our GatingSet. A question that may arise, was this gate applied to just one specimen, or to all specimens in the GatingSet? Let’s go ahead and check!
+
+```{r}
+gs_pop_get_count_fast(SFC_GatingSet)
+```
+                                  name Population Parent Count ParentCount
+                                <char>     <char> <char> <int>       <int>
+1: 2025_07_26_AB_02_INF052_00_Ctrl.fcs  /singlets   root  9824       10000
+2:  2025_07_26_AB_02_INF052_00_SEB.fcs  /singlets   root  9862       10000
+3: 2025_07_26_AB_02_INF100_00_Ctrl.fcs  /singlets   root  9864       10000
+4:  2025_07_26_AB_02_INF100_00_SEB.fcs  /singlets   root  9755       10000
+5: 2025_07_26_AB_02_INF179_00_Ctrl.fcs  /singlets   root  9750       10000
+6:  2025_07_26_AB_02_INF179_00_SEB.fcs  /singlets   root  9790       10000
+
+The gate appears to have been applied across the board to all specimens, since we have counts for the respective gate for all the specimens.
+Let’s continue, and add another gate, this time for viability dye Zombie NIR, to determine what cells are alive. We will need to modify the arguments we provide, since this will be a new gate, based on new parameters, and placed under the singlets gate.
+
+```{r}
+flowGate::gs_gate_interactive(gs=SFC_GatingSet, filterId="live", sample=1,
+dims=list("FSC-A", "Zombie NIR-A"), subset="singlets")
+```
+As you might notice, the included .fcs files look to have already been pre-processed, as there are few dead cells. Glancing at the y-axis, based on what we saw during Week 06 we can also deduce that behind-the-scenes the ggcyto/ggplot2 plot is not using coords_cartesian(), as it has zoomed in to the full extent of the data that is present.
+This time, we use the rectangle. When you have done, you have to click in done.
+
+Listening on http://127.0.0.1:6323
+done!
+$Gate
+Rectangular gate 'live' with dimensions:
+  FSC-A: (887796.37385814,2359987.5)
+  Zombie NIR-A: (1534.1608886719,2727.4569994262)
+
+$Bins
+[1] 256
+
+$Scaling
+[1] "unused"
