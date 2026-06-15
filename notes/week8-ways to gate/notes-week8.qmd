@@ -156,3 +156,196 @@ $Bins
 
 $Scaling
 [1] "unused"
+
+```{r}
+plot(SFC_GatingSet)
+```
+![]("C:/Users/Macarena/MacarenaLM/notes/week8-ways to gate/plot gates 2.png")
+
+And validate by checking to see if the statistics output has changed
+
+```{r}
+gs_pop_get_count_fast(SFC_GatingSet) |> 
+    dplyr::filter(Population %in% "/singlets/live")
+```
+                                  name     Population    Parent Count ParentCount
+                                <char>         <char>    <char> <int>       <int>
+1: 2025_07_26_AB_02_INF052_00_Ctrl.fcs /singlets/live /singlets  9421        9848
+2:  2025_07_26_AB_02_INF052_00_SEB.fcs /singlets/live /singlets  9709        9899
+3: 2025_07_26_AB_02_INF100_00_Ctrl.fcs /singlets/live /singlets  9203        9870
+4:  2025_07_26_AB_02_INF100_00_SEB.fcs /singlets/live /singlets  9159        9778
+5: 2025_07_26_AB_02_INF179_00_Ctrl.fcs /singlets/live /singlets  9610        9838
+6:  2025_07_26_AB_02_INF179_00_SEB.fcs /singlets/live /singlets  9677        9841
+
+To use the span tool, we are going to gate live T cells.
+
+```{r}
+flowGate::gs_gate_interactive(gs=SFC_GatingSet, filterId="Tcells", sample=1,
+dims=list("Spark Blue 550-A", "Spark Blue 574-A"), subset="live")
+```
+Listening on http://127.0.0.1:6482
+done!
+$Gate
+Rectangular gate 'Tcells' with dimensions:
+  Spark Blue 550-A: (3025.2558319391,3789.8569335938)
+
+$Bins
+[1] 256
+
+$Scaling
+[1] "unused"
+
+```{r}
+plot(SFC_GatingSet)
+```
+![]("C:/Users/Macarena/MacarenaLM/notes/week8-ways to gate/plot gates 3.png")
+
+```{r}
+gs_pop_get_count_fast(SFC_GatingSet) |> 
+    dplyr::filter(Population %in% "/singlets/live/Tcells")
+```
+
+                                  name            Population         Parent Count ParentCount
+                                <char>                <char>         <char> <int>       <int>
+1: 2025_07_26_AB_02_INF052_00_Ctrl.fcs /singlets/live/Tcells /singlets/live  9416        9421
+2:  2025_07_26_AB_02_INF052_00_SEB.fcs /singlets/live/Tcells /singlets/live  8867        9709
+3: 2025_07_26_AB_02_INF100_00_Ctrl.fcs /singlets/live/Tcells /singlets/live  9132        9203
+4:  2025_07_26_AB_02_INF100_00_SEB.fcs /singlets/live/Tcells /singlets/live  8509        9159
+5: 2025_07_26_AB_02_INF179_00_Ctrl.fcs /singlets/live/Tcells /singlets/live  9330        9610
+6:  2025_07_26_AB_02_INF179_00_SEB.fcs /singlets/live/Tcells /singlets/live  8337        9677
+
+Having gated down to T cells, lets go ahead and add a few gates for the individual T cell populations. Let’s start by drawing a polygon gate around CD4+ T cells.
+
+```{r}
+flowGate::gs_gate_interactive(gs=SFC_GatingSet, filterId="CD4+", sample=1,
+dims=list("BV650-A", "BUV805-A"), subset="Tcells")
+```
+Listening on http://127.0.0.1:6482
+done!
+$Gate
+Polygonal gate 'CD4+' with 15 vertices in dimensions BV650-A and BUV805-A
+
+$Bins
+[1] 256
+
+$Scaling
+[1] "unused"
+
+Also, in case anyone was curious, flowGate retains ggcyto arguments, so if we wanted to, instead of fluorophore names, we could use alternatively use the marker names when specifying the axis for the flow cytometry plots. 
+For example: 
+flowGate::gs_gate_interactive(gs=SFC_GatingSet, filterId="CD4+", sample=1,
+dims=list("CD8", "CD4"), subset="Tcells")
+We can also modify the setting to overlay already existing gates when we are drawing new gates for the other two T cell subsets. This is done by providing the gate name to the overlayGates argument.
+
+```{r}
+flowGate::gs_gate_interactive(gs=SFC_GatingSet, filterId="CD8+", sample=1,
+dims=list("CD8", "CD4"), subset="Tcells", overlayGates="CD4+")
+```
+Listening on http://127.0.0.1:6482
+done!
+$Gate
+Polygonal gate 'CD8+' with 14 vertices in dimensions BV650-A and BUV805-A
+
+$Bins
+[1] 256
+
+$Scaling
+[1] "unused"
+
+And we can repeat this for CD4-CD8- (Double Negative (DN)) T cells.
+
+```{r}
+flowGate::gs_gate_interactive(gs=SFC_GatingSet, filterId="DN", sample=1,
+dims=list("CD8", "CD4"), subset="Tcells", overlayGates=c("CD4+", "CD8+"))
+```
+Listening on http://127.0.0.1:6482
+done!
+$Gate
+Polygonal gate 'DN' with 14 vertices in dimensions BV650-A and BUV805-A
+
+$Bins
+[1] 256
+
+$Scaling
+[1] "unused"
+
+And a final-check to make sure the gates for the T cell subsets were added
+
+```{r}
+plot(SFC_GatingSet)
+```
+![]("C:/Users/Macarena/MacarenaLM/notes/week8-ways to gate/plot gates 4.png")
+
+And a quick check for the statistics
+
+```{r}
+gs_pop_get_count_fast(SFC_GatingSet) |> 
+    dplyr::filter(Population %in% "/singlets/live/Tcells/DN")
+```
+                                  name               Population                Parent Count ParentCount
+                                <char>                   <char>                <char> <int>       <int>
+1: 2025_07_26_AB_02_INF052_00_Ctrl.fcs /singlets/live/Tcells/DN /singlets/live/Tcells   593        9416
+2:  2025_07_26_AB_02_INF052_00_SEB.fcs /singlets/live/Tcells/DN /singlets/live/Tcells   625        8867
+3: 2025_07_26_AB_02_INF100_00_Ctrl.fcs /singlets/live/Tcells/DN /singlets/live/Tcells   244        9132
+4:  2025_07_26_AB_02_INF100_00_SEB.fcs /singlets/live/Tcells/DN /singlets/live/Tcells   231        8509
+5: 2025_07_26_AB_02_INF179_00_Ctrl.fcs /singlets/live/Tcells/DN /singlets/live/Tcells   265        9330
+6:  2025_07_26_AB_02_INF179_00_SEB.fcs /singlets/live/Tcells/DN /singlets/live/Tcells   275        8337
+
+The last type of manual gate that we can implement with flowGate is a quadrant gate, in this case, let’s use it to create a quadrant for our two cytokines (TNFa and IFNg). We should ideally use one of the SEB-stimulated specimens for this if we want to visualize the cytokine-expressing cells, so I have switched over to the 6th sample in the GatingSet.
+
+```{r}
+flowGate::gs_gate_interactive(gs=SFC_GatingSet, filterId="Cytokines", sample=6,
+dims=list("TNFa", "IFNg"), subset="CD4+")
+```
+Listening on http://127.0.0.1:6482
+done!
+$Gate
+Quadrant gate 'Cytokines' with dimensions:
+  PE-Dazzle594-A: 2833.933
+  BV750-A: 2898.905
+
+$Bins
+[1] 256
+
+$Scaling
+[1] "unused"
+
+```{r}
+plot(SFC_GatingSet)
+```
+![]("C:/Users/Macarena/MacarenaLM/notes/week8-ways to gate/plot gates 5.png")
+
+## Redraw Gate
+
+But what happens if we misdraw a gate and need to correct it? If you are in the process of actively drawing, you can hit the reset button and try again. But what if you had already created the gate?
+
+```{r}
+flowGate::gs_gate_interactive(gs=SFC_GatingSet, filterId="CD161+", sample=1,
+dims=list("CD161"), subset="CD8+")
+```
+Listening on http://127.0.0.1:6482
+done!
+$Gate
+Rectangular gate 'CD161+' with dimensions:
+  BV480-A: (2141.1587347718,3679.5215289787)
+
+$Bins
+[1] 256
+
+$Scaling
+[1] "unused"
+
+![]("C:/Users/Macarena/MacarenaLM/notes/week8-ways to gate/regate 1.png")
+![]("C:/Users/Macarena/MacarenaLM/notes/week8-ways to gate/regate 2.png")
+
+To completely redraw an existing gate, you would need to add the “regate” argument and set it to TRUE. This will delete the existing gate, and allow you to draw a new one in its place.
+
+```{r}
+flowGate::gs_gate_interactive(gs=SFC_GatingSet, filterId="CD161+", sample=1,
+dims=list("CD161"), subset="CD8+", regate=TRUE)
+```
+
+ Select the new gate:
+![]("C:/Users/Macarena/MacarenaLM/notes/week8-ways to gate/regate 2.png")
+
+
