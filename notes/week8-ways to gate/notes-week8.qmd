@@ -348,4 +348,66 @@ dims=list("CD161"), subset="CD8+", regate=TRUE)
  Select the new gate:
 ![]("C:/Users/Macarena/MacarenaLM/notes/week8-ways to gate/regate 2.png")
 
+## Saving Gates
 
+Alright, so we have put effort and drawn all our gates. But what happens if we close Positron? Well, we loose all our effort and have to redraw them again. Which doesn’t sound like a particularly good use of our time.
+
+```{r}
+plot(SFC_GatingSet)
+```
+![]("C:/Users/Macarena/MacarenaLM/notes/week8-ways to gate/plot gates 6.png")
+
+Fortunately, there is a way to save our existing GatingSet objet using flowWorkspace save_gs() function, allowing us to load back in the GatingSet object later on.
+
+```{r}
+StorageLocationAndName <- file.path("C:/Users/Macarena/MacarenaLM/notes/week8-ways to gate", "flowGateExampleGS.gs")
+save_gs(SFC_GatingSet, StorageLocationAndName)
+```
+Done
+To reload it, use 'load_gs' function
+
+Our GatingSet ends up being stored as its own folder with various h5 and pb objects inside. Please note, re-loading them in successfully can be file.path sensitive, so avoid messing with the folder as much as possible.
+
+To reload back into R, we would use the load_gs() function, as the message that we receive back from R says.
+
+```{r}
+StorageLocationAndName <- file.path("C:/Users/Macarena/MacarenaLM/notes/week8-ways to gate", "flowGateExampleGS.gs")
+SFC_GatingSet <- load_gs(StorageLocationAndName)
+```
+
+```{r}
+plot(SFC_GatingSet)
+```
+![]("C:/Users/Macarena/MacarenaLM/notes/week8-ways to gate/plot gates 6.png")
+
+```{r}
+gs_pop_get_count_fast(SFC_GatingSet) |> 
+    dplyr::filter(Population %in% "/singlets/live/Tcells/DN")
+```
+                             name               Population                Parent Count ParentCount
+                                <char>                   <char>                <char> <int>       <int>
+1: 2025_07_26_AB_02_INF052_00_Ctrl.fcs /singlets/live/Tcells/DN /singlets/live/Tcells   535        9068
+2:  2025_07_26_AB_02_INF052_00_SEB.fcs /singlets/live/Tcells/DN /singlets/live/Tcells   551        6640
+3: 2025_07_26_AB_02_INF100_00_Ctrl.fcs /singlets/live/Tcells/DN /singlets/live/Tcells   230        8609
+4:  2025_07_26_AB_02_INF100_00_SEB.fcs /singlets/live/Tcells/DN /singlets/live/Tcells   206        6094
+5: 2025_07_26_AB_02_INF179_00_Ctrl.fcs /singlets/live/Tcells/DN /singlets/live/Tcells   162        8900
+6:  2025_07_26_AB_02_INF179_00_SEB.fcs /singlets/live/Tcells/DN /singlets/live/Tcells   149        5913
+
+## Rapid Gate Deployment
+In the examples above, we created separate gates by running individual chunks of code. There is an alternative method in flowGate to allow you to draw all your gates immediately after each other.
+
+```{r}
+GatingTable <- tibble::tribble(
+  ~filterId,    ~dims,                          ~subset,      
+  "singlets",   list("FSC-A", "FSC-H"),          "root",      
+  "live",       list("FSC-A", "Zombie NIR-A"),   "singlets",  
+  "Tcells",     list("CD3", "CD45"),              "live",     
+  "CD4+",       list("CD8", "CD4"),               "Tcells",   
+  "CD8+",       list("CD8", "CD4"),               "Tcells",   
+  "DN",         list("CD8", "CD4"),                "Tcells",  
+) 
+```
+
+```{r}
+GatingTable
+```
