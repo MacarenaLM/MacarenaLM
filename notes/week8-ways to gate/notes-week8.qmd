@@ -411,3 +411,122 @@ GatingTable <- tibble::tribble(
 ```{r}
 GatingTable
 ```
+# A tibble: 6 × 3
+  filterId dims       subset  
+  <chr>    <list>     <chr>   
+1 singlets <list [2]> root    
+2 live     <list [2]> singlets
+3 Tcells   <list [2]> live    
+4 CD4+     <list [2]> Tcells  
+5 CD8+     <list [2]> Tcells  
+6 DN       <list [2]> Tcells
+
+Lets recreate our GatingSet object:
+
+```{r}
+SFC_cytoset <- load_cytoset_from_fcs(fcs_files,
+ truncate_max_range = FALSE, transformation = FALSE)
+SFC_GatingSet <- GatingSet(SFC_cytoset)
+
+SFC_Parameters <- colnames(SFC_GatingSet)
+FluorophoresOnly <- SFC_Parameters[!stringr::str_detect(SFC_Parameters, "FSC|SSC|Time")]
+
+Biexponential <- flowjo_biexp_trans(channelRange=4096, maxValue=262144,
+     pos=4.5, neg=2, widthBasis=-500)
+MyBiexTransform <- transformerList(FluorophoresOnly, Biexponential)
+transform(SFC_GatingSet, MyBiexTransform)
+```
+And now, let’s apply the GatingTable scheme. As we create and click done, the next gate will automatically pop up in the Shiny App.
+
+```{r}
+gs_apply_gating_strategy(SFC_GatingSet, gating_strategy = GatingTable)
+```
+Listening on http://127.0.0.1:6834
+done!
+
+Listening on http://127.0.0.1:6834
+done!
+
+Listening on http://127.0.0.1:6834
+done!
+
+Listening on http://127.0.0.1:6834
+done!
+
+Listening on http://127.0.0.1:6834
+done!
+
+Listening on http://127.0.0.1:6834
+done!
+[[1]]
+[[1]]$Gate
+Polygonal gate 'singlets' with 11 vertices in dimensions FSC-A and FSC-H
+
+[[1]]$Bins
+[1] 256
+
+[[1]]$Scaling
+[1] "unused"
+
+
+[[2]]
+[[2]]$Gate
+Rectangular gate 'live' with dimensions:
+  FSC-A: (915533.625,2359987.5)
+  Zombie NIR-A: (1535.2846546855,2655.7673484062)
+
+[[2]]$Bins
+[1] 256
+
+[[2]]$Scaling
+[1] "unused"
+
+
+[[3]]
+[[3]]$Gate
+Rectangular gate 'Tcells' with dimensions:
+  Spark Blue 550-A: (3405.9055686318,3768.5561058662)
+
+[[3]]$Bins
+[1] 256
+
+[[3]]$Scaling
+[1] "unused"
+
+
+[[4]]
+[[4]]$Gate
+Polygonal gate 'CD4+' with 12 vertices in dimensions BV650-A and BUV805-A
+
+[[4]]$Bins
+[1] 256
+
+[[4]]$Scaling
+[1] "unused"
+
+
+[[5]]
+[[5]]$Gate
+Polygonal gate 'CD8+' with 9 vertices in dimensions BV650-A and BUV805-A
+
+[[5]]$Bins
+[1] 256
+
+[[5]]$Scaling
+[1] "unused"
+
+
+[[6]]
+[[6]]$Gate
+Polygonal gate 'DN' with 12 vertices in dimensions BV650-A and BUV805-A
+
+[[6]]$Bins
+[1] 256
+
+[[6]]$Scaling
+[1] "unused"
+
+## Visualizing Gates
+As you may have noticed, using flowGate, the gates are applied generally to all specimens, and we are limited in our ability to customize to individual specimens. Consequently, being able to visualize each specimen, and regate as necessary is important if we want to have confidence in our data.
+
+For now, the simplest way to do so is using the autoplot() function from the ggcyto() package, repeating it for every specimen in the GatingSet. As we go further into the course, we will learn how to iterate through the specimens, and send the plot outputs to pdf files, reducing the need to write out individual lines of code for every specimen. We will also look at how to use other visualization tools to compare individual gates across multiple specimens.
