@@ -530,3 +530,46 @@ Polygonal gate 'DN' with 12 vertices in dimensions BV650-A and BUV805-A
 As you may have noticed, using flowGate, the gates are applied generally to all specimens, and we are limited in our ability to customize to individual specimens. Consequently, being able to visualize each specimen, and regate as necessary is important if we want to have confidence in our data.
 
 For now, the simplest way to do so is using the autoplot() function from the ggcyto() package, repeating it for every specimen in the GatingSet. As we go further into the course, we will learn how to iterate through the specimens, and send the plot outputs to pdf files, reducing the need to write out individual lines of code for every specimen. We will also look at how to use other visualization tools to compare individual gates across multiple specimens.
+
+```{r}
+ggcyto::autoplot(SFC_GatingSet[[1]]) + theme_bw()
+ggcyto::autoplot(SFC_GatingSet[[2]]) + theme_bw()
+ggcyto::autoplot(SFC_GatingSet[[3]]) + theme_bw()
+# ggcyto::autoplot(SFC_GatingSet[[4]]) + theme_bw()
+# ggcyto::autoplot(SFC_GatingSet[[5]]) + theme_bw()
+# ggcyto::autoplot(SFC_GatingSet[[6]]) + theme_bw()
+```
+![]("C:/Users/Macarena/MacarenaLM/notes/week8-ways to gate/plot autogates.png")
+
+![]("C:/Users/Macarena/MacarenaLM/notes/week8-ways to gate/plot autogates 2.png")
+
+![]("C:/Users/Macarena/MacarenaLM/notes/week8-ways to gate/plot autogates 3.png")
+
+# Automated-openCyto
+The other gating approach that we will be learning today is implemented by the openCyto package from Bioconductor, which is a sister package to both flowWorkspace and CytoML. It works through the use of gating template .csv files, which can be customized with various algorithmic gating functions and arguments, allowing for substantial flexibility in creating and implementing automated gating schemes.
+
+One of the advantages of this approach (in theory), is when properly constrained, it can “better” handle some of the inter-specimen variability differences that we may encounter due to batch effects, that might otherwise throw off a fixed-manual gate applied equally acrooss specimens.
+However, remember: always always always check the outputs visually.
+
+## GatingTemplate
+Lets go ahead and locate an already assembled GatingTemplate for our particular dataset. This is also in the data folder, so we can separate it from our .fcs files by switching out the pattern argument
+
+```{r}
+OurGateTemplate <- list.files(StorageLocation, pattern=".csv", full.names=TRUE)
+Example <- read.csv(OurGateTemplate, check.names=FALSE)
+Example
+```
+        alias pop      parent             dims   gating_method             gating_args collapseDataForGating groupBy preprocessing_method preprocessing_args
+1    singlets   +        root      FSC-A,FSC-H     singletGate                                         FALSE      NA                   NA                 NA
+2 lymphocytes   +    singlets     FSC-A, SSC-A       flowClust K=2, target=c(2e6, 5e5)                 FALSE      NA                   NA                 NA
+3        live   - lymphocytes     Zombie NIR-A gate_mindensity   gate_range=c(1e4,2e4)                 FALSE      NA                   NA                 NA
+4      Tcells   +        live Spark Blue 550-A gate_mindensity                                         FALSE      NA                   NA                 NA
+5         CD4   +      Tcells              CD4 gate_mindensity                                         FALSE      NA                   NA                 NA
+6         CD8   +      Tcells              CD8 gate_mindensity                                         FALSE      NA                   NA                 NA
+
+Each gate is represented by an individual row. "Dims" means X and Y dimensions. The gating_method defines what kind of gate is being created, in singlets context, a singlet gating polygon. The other columns are not as easy to interpret at first glance. pop designates whether you want to keep the cells within the gate (+) or those outside the gate (-). Gating_args are specific to the gating_method, we will be using these later on when specifying gate constraints. The last four arguments are rather niche and won’t be the main focus of today, and I will refer you to the openCyto vignettes for how to use them for more specialized projects.
+
+## singletGate
+
+For the first example, we are gating for singlets. Later on after running the code, this will generate a gate that resembles the following:
+
