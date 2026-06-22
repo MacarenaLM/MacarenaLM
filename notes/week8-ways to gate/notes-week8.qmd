@@ -571,5 +571,36 @@ Each gate is represented by an individual row. "Dims" means X and Y dimensions. 
 
 ## singletGate
 
-For the first example, we are gating for singlets. Later on after running the code, this will generate a gate that resembles the following:
+For the first example, we are gating for singlets. 
+
+## flowClust
+Looking at the entire gatingTemplate .csv, we can see we will be implementing automated gating for 6 gates (singlets, lymphocytes, live, Tcells, CD4 and CD8). Similar to what we saw with the singlets gate, each of these gates also has corresponding parent gate and (axis) dimension information provided.
+
+```{r}
+Example |> dplyr::select(alias, pop, parent, dims, gating_method)
+```
+        alias pop      parent             dims   gating_method
+1    singlets   +        root      FSC-A,FSC-H     singletGate
+2 lymphocytes   +    singlets     FSC-A, SSC-A       flowClust
+3        live   - lymphocytes     Zombie NIR-A gate_mindensity
+4      Tcells   +        live Spark Blue 550-A gate_mindensity
+5         CD4   +      Tcells              CD4 gate_mindensity
+6         CD8   +      Tcells              CD8 gate_mindensity
+
+One thing we can notice is the second gate (lymphocytes), uses the flowClust gating_method.
+
+```{r}
+Example[2,]
+```
+alias pop   parent         dims gating_method             gating_args collapseDataForGating groupBy preprocessing_method preprocessing_args
+2 lymphocytes   + singlets FSC-A, SSC-A     flowClust K=2, target=c(2e6, 5e5)                 FALSE      NA                   NA                 NA
+
+One thing that is different compared to the singlets gate, is that the gating_args column has values. Behind the scenes, gating_method “flowClust” is reaching out to an R package of the same name to identify populations based on density.
+Especially when working with FSC-SSC (where multiple populations may be present, including lymphocytes, monocytes, granulocytes, debris, etc). having the ability to specify arguments to denote the region we are interested in can be important.
+In this case, target specifies the x and y coordinate we expect our population center to be roughly at. Since we are gating for lymphocytes, x is around 2e6, while the y is between 5e5 and 1e6. If we wanted a different population (ex. monocytes), we would modify the values provided accordingly to match that population.
+
+```{r}
+Example[2,] |> dplyr::pull(gating_args)
+```
+[1] "K=2, target=c(2e6, 5e5)"
 
