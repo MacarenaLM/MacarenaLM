@@ -604,3 +604,246 @@ Example[2,] |> dplyr::pull(gating_args)
 ```
 [1] "K=2, target=c(2e6, 5e5)"
 
+## gate_mindensity
+The last several gates are all gate_mindensity gates
+
+```{r}
+Example |> dplyr::select(alias, pop, parent, dims, gating_method, gating_args)
+```
+        alias pop      parent             dims   gating_method             gating_args
+1    singlets   +        root      FSC-A,FSC-H     singletGate                        
+2 lymphocytes   +    singlets     FSC-A, SSC-A       flowClust K=2, target=c(2e6, 5e5)
+3        live   - lymphocytes     Zombie NIR-A gate_mindensity   gate_range=c(1e4,2e4)
+4      Tcells   +        live Spark Blue 550-A gate_mindensity                        
+5         CD4   +      Tcells              CD4 gate_mindensity                        
+6         CD8   +      Tcells              CD8 gate_mindensity  
+
+A good example of these is our CD4 gate
+
+```{r}
+Example[5,]
+```
+alias pop parent dims   gating_method gating_args collapseDataForGating groupBy preprocessing_method preprocessing_args
+5   CD4   + Tcells  CD4 gate_mindensity                             FALSE      NA                   NA                 NA
+
+In this case, since we are specifying pop is +, we will be keeping the positive cells (landing to the right of the gate line). Gate_mindensity is a fast calculation, finding the point with the fewest cells. It can however mistrigger, ending up with gates placed before any cell is present, or after every cell. When this occurs, we can constrain the search area by providing a gate_range to the gating_args, as we can see here for the viability gate.
+
+```{r}
+Example[3,]
+```
+alias pop      parent         dims   gating_method           gating_args collapseDataForGating groupBy preprocessing_method preprocessing_args
+3  live   - lymphocytes Zombie NIR-A gate_mindensity gate_range=c(1e4,2e4)                 FALSE      NA                   NA                 NA
+
+## Creating a GatingTemplate
+With this broad overview of the gatingtemplate, we can now proceed with loading it in. To do so, openCyto recommends reading in the .csv file using the data.table package’s fread function, to ensure the formatting is correctly retained.
+
+```{r}
+GatesToApply <- data.table::fread(OurGateTemplate)
+```
+Once this is done, we can pass it to the gatingTemplate() function, which will wrap it with the required information layer needed for openCyto to add the gates to the GatingSet.
+
+```{r}
+TheFullTemplate <- gatingTemplate(GatesToApply)
+```
+Adding population:singlets
+Adding population:lymphocytes
+Adding population:live
+Adding population:Tcells
+Adding population:CD4
+Adding population:CD8
+
+```{r}
+TheFullTemplate
+```
+--- Gating Template: default
+	with  7  populations defined
+  
+  ```{r}
+str(TheFullTemplate)
+  ```
+  Formal class 'gatingTemplate' [package "openCyto"] with 7 slots
+  ..@ name      : chr "default"
+  ..@ nodes     : chr [1:7] "root" "/singlets" "/singlets/lymphocytes" "/singlets/lymphocytes/live" ...
+  ..@ edgeL     :List of 7
+  .. ..$ root                                 :List of 1
+  .. .. ..$ edges: int 2
+  .. ..$ /singlets                            :List of 1
+  .. .. ..$ edges: num 3
+  .. ..$ /singlets/lymphocytes                :List of 1
+  .. .. ..$ edges: num 4
+  .. ..$ /singlets/lymphocytes/live           :List of 1
+  .. .. ..$ edges: num 5
+  .. ..$ /singlets/lymphocytes/live/Tcells    :List of 1
+  .. .. ..$ edges: num [1:2] 6 7
+  .. ..$ /singlets/lymphocytes/live/Tcells/CD4:List of 1
+  .. .. ..$ edges: num(0) 
+  .. ..$ /singlets/lymphocytes/live/Tcells/CD8:List of 1
+  .. .. ..$ edges: num(0) 
+  ..@ edgeData  :Formal class 'attrData' [package "graph"] with 2 slots
+  .. .. ..@ data    :List of 6
+  .. .. .. ..$ root|/singlets                                                         :List of 2
+  .. .. .. .. ..$ gtMethod   :Formal class 'gtMethod' [package "openCyto"] with 5 slots
+  .. .. .. .. .. .. ..@ name    : chr "singletGate"
+  .. .. .. .. .. .. ..@ dims    : chr "FSC-A,FSC-H"
+  .. .. .. .. .. .. ..@ args    : list()
+  .. .. .. .. .. .. ..@ groupBy : chr ""
+  .. .. .. .. .. .. ..@ collapse: logi FALSE
+  .. .. .. .. ..$ isReference: logi FALSE
+  .. .. .. ..$ /singlets|/singlets/lymphocytes                                        :List of 2
+  .. .. .. .. ..$ gtMethod   :Formal class 'gtMethod' [package "openCyto"] with 5 slots
+  .. .. .. .. .. .. ..@ name    : chr "gate_flowclust_2d"
+  .. .. .. .. .. .. ..@ dims    : chr "FSC-A, SSC-A"
+  .. .. .. .. .. .. ..@ args    :List of 2
+  .. .. .. .. .. .. .. ..$ K     : num 2
+  .. .. .. .. .. .. .. ..$ target: language c(2e+06, 5e+05)
+  .. .. .. .. .. .. ..@ groupBy : chr ""
+  .. .. .. .. .. .. ..@ collapse: logi FALSE
+  .. .. .. .. ..$ isReference: logi FALSE
+  .. .. .. ..$ /singlets/lymphocytes|/singlets/lymphocytes/live                       :List of 2
+  .. .. .. .. ..$ gtMethod   :Formal class 'gtMethod' [package "openCyto"] with 5 slots
+  .. .. .. .. .. .. ..@ name    : chr "gate_mindensity"
+  .. .. .. .. .. .. ..@ dims    : chr "Zombie NIR-A"
+  .. .. .. .. .. .. ..@ args    :List of 1
+  .. .. .. .. .. .. .. ..$ gate_range: language c(10000, 20000)
+  .. .. .. .. .. .. ..@ groupBy : chr ""
+  .. .. .. .. .. .. ..@ collapse: logi FALSE
+  .. .. .. .. ..$ isReference: logi FALSE
+  .. .. .. ..$ /singlets/lymphocytes/live|/singlets/lymphocytes/live/Tcells           :List of 2
+  .. .. .. .. ..$ gtMethod   :Formal class 'gtMethod' [package "openCyto"] with 5 slots
+  .. .. .. .. .. .. ..@ name    : chr "gate_mindensity"
+  .. .. .. .. .. .. ..@ dims    : chr "Spark Blue 550-A"
+  .. .. .. .. .. .. ..@ args    : list()
+  .. .. .. .. .. .. ..@ groupBy : chr ""
+  .. .. .. .. .. .. ..@ collapse: logi FALSE
+  .. .. .. .. ..$ isReference: logi FALSE
+  .. .. .. ..$ /singlets/lymphocytes/live/Tcells|/singlets/lymphocytes/live/Tcells/CD4:List of 2
+  .. .. .. .. ..$ gtMethod   :Formal class 'gtMethod' [package "openCyto"] with 5 slots
+  .. .. .. .. .. .. ..@ name    : chr "gate_mindensity"
+  .. .. .. .. .. .. ..@ dims    : chr "CD4"
+  .. .. .. .. .. .. ..@ args    : list()
+  .. .. .. .. .. .. ..@ groupBy : chr ""
+  .. .. .. .. .. .. ..@ collapse: logi FALSE
+  .. .. .. .. ..$ isReference: logi FALSE
+  .. .. .. ..$ /singlets/lymphocytes/live/Tcells|/singlets/lymphocytes/live/Tcells/CD8:List of 2
+  .. .. .. .. ..$ gtMethod   :Formal class 'gtMethod' [package "openCyto"] with 5 slots
+  .. .. .. .. .. .. ..@ name    : chr "gate_mindensity"
+  .. .. .. .. .. .. ..@ dims    : chr "CD8"
+  .. .. .. .. .. .. ..@ args    : list()
+  .. .. .. .. .. .. ..@ groupBy : chr ""
+  .. .. .. .. .. .. ..@ collapse: logi FALSE
+  .. .. .. .. ..$ isReference: logi FALSE
+  .. .. ..@ defaults:List of 3
+  .. .. .. ..$ gtMethod   : chr ""
+  .. .. .. ..$ ppMethod   : chr ""
+  .. .. .. ..$ isReference: logi FALSE
+  ..@ nodeData  :Formal class 'attrData' [package "graph"] with 2 slots
+  .. .. ..@ data    :List of 7
+  .. .. .. ..$ root                                 :List of 1
+  .. .. .. .. ..$ pop:Formal class 'gtPopulation' [package "openCyto"] with 3 slots
+  .. .. .. .. .. .. ..@ id   : chr "root"
+  .. .. .. .. .. .. ..@ name : chr "root"
+  .. .. .. .. .. .. ..@ alias: chr "root"
+  .. .. .. ..$ /singlets                            :List of 1
+  .. .. .. .. ..$ pop:Formal class 'gtPopulation' [package "openCyto"] with 3 slots
+  .. .. .. .. .. .. ..@ id   : chr "/singlets"
+  .. .. .. .. .. .. ..@ name : chr "+"
+  .. .. .. .. .. .. ..@ alias: chr "singlets"
+  .. .. .. ..$ /singlets/lymphocytes                :List of 1
+  .. .. .. .. ..$ pop:Formal class 'gtPopulation' [package "openCyto"] with 3 slots
+  .. .. .. .. .. .. ..@ id   : chr "/singlets/lymphocytes"
+  .. .. .. .. .. .. ..@ name : chr "+"
+  .. .. .. .. .. .. ..@ alias: chr "lymphocytes"
+  .. .. .. ..$ /singlets/lymphocytes/live           :List of 1
+  .. .. .. .. ..$ pop:Formal class 'gtPopulation' [package "openCyto"] with 3 slots
+  .. .. .. .. .. .. ..@ id   : chr "/singlets/lymphocytes/live"
+  .. .. .. .. .. .. ..@ name : chr "-"
+  .. .. .. .. .. .. ..@ alias: chr "live"
+  .. .. .. ..$ /singlets/lymphocytes/live/Tcells    :List of 1
+  .. .. .. .. ..$ pop:Formal class 'gtPopulation' [package "openCyto"] with 3 slots
+  .. .. .. .. .. .. ..@ id   : chr "/singlets/lymphocytes/live/Tcells"
+  .. .. .. .. .. .. ..@ name : chr "+"
+  .. .. .. .. .. .. ..@ alias: chr "Tcells"
+  .. .. .. ..$ /singlets/lymphocytes/live/Tcells/CD4:List of 1
+  .. .. .. .. ..$ pop:Formal class 'gtPopulation' [package "openCyto"] with 3 slots
+  .. .. .. .. .. .. ..@ id   : chr "/singlets/lymphocytes/live/Tcells/CD4"
+  .. .. .. .. .. .. ..@ name : chr "+"
+  .. .. .. .. .. .. ..@ alias: chr "CD4"
+  .. .. .. ..$ /singlets/lymphocytes/live/Tcells/CD8:List of 1
+  .. .. .. .. ..$ pop:Formal class 'gtPopulation' [package "openCyto"] with 3 slots
+  .. .. .. .. .. .. ..@ id   : chr "/singlets/lymphocytes/live/Tcells/CD8"
+  .. .. .. .. .. .. ..@ name : chr "+"
+  .. .. .. .. .. .. ..@ alias: chr "CD8"
+  .. .. ..@ defaults:List of 1
+  .. .. .. ..$ pop: chr ""
+  ..@ renderInfo:Formal class 'renderInfo' [package "graph"] with 4 slots
+  .. .. ..@ nodes: list()
+  .. .. ..@ edges: list()
+  .. .. ..@ graph: list()
+  .. .. ..@ pars : list()
+  ..@ graphData :List of 1
+  .. ..$ edgemode: chr "directed"
+
+```{r}
+class(TheFullTemplate)
+```
+[1] "gatingTemplate"
+attr(,"package")
+[1] "openCyto"
+
+## Prepare your GatingSet
+With the gatingtemplate ready to go, we need to assemble our GatingSet object. We will repeat the code that we have already been working with today above.
+
+```{r}
+SFC_cytoset <- load_cytoset_from_fcs(fcs_files,
+ truncate_max_range = FALSE, transformation = FALSE)
+SFC_GatingSet <- GatingSet(SFC_cytoset)
+
+SFC_Parameters <- colnames(SFC_GatingSet)
+FluorophoresOnly <- SFC_Parameters[!stringr::str_detect(SFC_Parameters, "FSC|SSC|Time")]
+
+Biexponential <- flowjo_biexp_trans(channelRange=4096, maxValue=262144,
+     pos=4.5, neg=2, widthBasis=-500)
+MyBiexTransform <- transformerList(FluorophoresOnly, Biexponential)
+transform(SFC_GatingSet, MyBiexTransform)
+```
+A GatingSet with 6 samples
+
+## Run gt-gating
+The final step is applying the template to our GatingSet.
+
+```{r}
+gt_gating(TheFullTemplate, SFC_GatingSet)
+```
+Gating for 'singlets'
+done!
+done.
+Gating for 'lymphocytes'
+The prior specification has no effect when usePrior=no
+Using the serial version of flowClust
+The prior specification has no effect when usePrior=no
+Using the serial version of flowClust
+The prior specification has no effect when usePrior=no
+Using the serial version of flowClust
+The prior specification has no effect when usePrior=no
+Using the serial version of flowClust
+The prior specification has no effect when usePrior=no
+Using the serial version of flowClust
+The prior specification has no effect when usePrior=no
+Using the serial version of flowClust
+done!
+done.
+Gating for 'live'
+done!
+done.
+Gating for 'Tcells'
+done!
+done.
+Gating for 'CD8'
+done!
+done.
+Gating for 'CD4'
+done!
+done.
+finished.
+
+## Visualizing Gates
