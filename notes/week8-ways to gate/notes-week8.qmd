@@ -1,5 +1,5 @@
 ---
-title: "Week8-Ways to gate"
+title: "Week8 Ways to gate"
 author: "Macarena López-Mayorga"
 date: 2026-06-11
 format: pdf
@@ -7,21 +7,25 @@ format: pdf
 First, we have to check if we have all the necessary packages installed and the proper versions:
 
 ```{r}
+#| eval: false
 packageVersion("ggplot2")
 ```
 [1] ‘4.0.3’
 
 ```{r}
+#| eval: false
 packageVersion("ggcyto")
 ```
 [1] ‘1.39.4’
 
 ```{r}
+#| eval: false
 packageVersion("openCyto")
 ```
 [1] ‘2.22.0’
 
 ```{r}
+#| eval: false
 packageVersion("flowGate")
 ```
 [1] ‘1.10.0’
@@ -29,21 +33,25 @@ packageVersion("flowGate")
 This version of flowGate seems to have problems with shiny app because there are some bugs not resolved. David Rach and his colleagues have developed a forked version that fix the bug problems. So, I am going to remove flowGate package and install the version of David Rach and others:
 
 ```{r}
+#| eval: false
 remove.packages("flowGate")
 ```
  Now, I have to call the remotes packages to install from the github repository
 
 ```{r}
+#| eval: false
 library(remotes)
 ```
 
 And install the forked version:
 ```{r}
+#| eval: false
 install_github("DavidRach/flowGate")
 ```
 Let's check now if we have the correct version:
 
 ```{r}
+#| eval: false
 packageVersion("flowGate")
 ```
 [1] ‘0.99.2’
@@ -51,6 +59,7 @@ packageVersion("flowGate")
 Yes! that is correct :) . Now, we have to load in several packages that will be necessary:
 
 ```{r}
+#| eval: false
 library(flowWorkspace)
 library(ggplot2)
 library(ggcyto)
@@ -59,6 +68,7 @@ library(openCyto)
 ```
 
 ```{r}
+#| eval: false
 StorageLocation <- file.path("C:/Users/Macarena/CytometryInR/course/08_WaysToGate/data")
 fcs_files <- list.files(StorageLocation, pattern=".fcs", full.names=TRUE)
 fcs_files
@@ -71,12 +81,14 @@ fcs_files
 [6] "C:/Users/Macarena/CytometryInR/course/08_WaysToGate/data/2025_07_26_AB_02_INF179_00_SEB.fcs" 
 
 ```{r}
+#| eval: false
 SFC_cytoset <- load_cytoset_from_fcs(fcs_files,
  truncate_max_range = FALSE, transformation = FALSE)
 SFC_GatingSet <- GatingSet(SFC_cytoset)
 ```
 
 ```{r}
+#| eval: false
 SFC_Parameters <- colnames(SFC_GatingSet)
 FluorophoresOnly <- SFC_Parameters[!stringr::str_detect(SFC_Parameters, "FSC|SSC|Time")]
 
@@ -88,16 +100,19 @@ transform(SFC_GatingSet, MyBiexTransform)
 A GatingSet with 6 samples
 
 ```{r}
+#| eval: false
 ggcyto(SFC_GatingSet[1], subset="root",
  aes(x="BUV805-A", y="BV650-A")) + geom_hex(bins=100)
 ```
 ![]("C:/Users/Macarena/MacarenaLM/notes/week8-ways to gate/ggplot2 1.png")
 
 So far, we have stablished a set of files (cytoset), set a GatingSet and applied the necessary transformations. Now...
+
 # Manual-flowGate
 David Rach usually starts with singlets
 
 ```{r}
+#| eval: false
 flowGate::gs_gate_interactive(gs=SFC_GatingSet, filterId="singlets", sample=1,
 dims=list("FSC-A", "FSC-H"), subset="root")
 ```
@@ -117,12 +132,14 @@ $Scaling
 
 To check our gates within our GatingSet:
 ```{r}
+#| eval: false
 plot(SFC_GatingSet)
 ```
 ![]("C:/Users/Macarena/MacarenaLM/notes/week8-ways to gate/plot gates.png")
 The gate has been created and applied to our GatingSet. A question that may arise, was this gate applied to just one specimen, or to all specimens in the GatingSet? Let’s go ahead and check!
 
 ```{r}
+#| eval: false
 gs_pop_get_count_fast(SFC_GatingSet)
 ```
                                   name Population Parent Count ParentCount
@@ -138,6 +155,7 @@ The gate appears to have been applied across the board to all specimens, since w
 Let’s continue, and add another gate, this time for viability dye Zombie NIR, to determine what cells are alive. We will need to modify the arguments we provide, since this will be a new gate, based on new parameters, and placed under the singlets gate.
 
 ```{r}
+#| eval: false
 flowGate::gs_gate_interactive(gs=SFC_GatingSet, filterId="live", sample=1,
 dims=list("FSC-A", "Zombie NIR-A"), subset="singlets")
 ```
@@ -158,6 +176,7 @@ $Scaling
 [1] "unused"
 
 ```{r}
+#| eval: false
 plot(SFC_GatingSet)
 ```
 ![]("C:/Users/Macarena/MacarenaLM/notes/week8-ways to gate/plot gates 2.png")
@@ -165,6 +184,7 @@ plot(SFC_GatingSet)
 And validate by checking to see if the statistics output has changed
 
 ```{r}
+#| eval: false
 gs_pop_get_count_fast(SFC_GatingSet) |> 
     dplyr::filter(Population %in% "/singlets/live")
 ```
@@ -180,6 +200,7 @@ gs_pop_get_count_fast(SFC_GatingSet) |>
 To use the span tool, we are going to gate live T cells.
 
 ```{r}
+#| eval: false
 flowGate::gs_gate_interactive(gs=SFC_GatingSet, filterId="Tcells", sample=1,
 dims=list("Spark Blue 550-A", "Spark Blue 574-A"), subset="live")
 ```
@@ -196,11 +217,13 @@ $Scaling
 [1] "unused"
 
 ```{r}
+#| eval: false
 plot(SFC_GatingSet)
 ```
 ![]("C:/Users/Macarena/MacarenaLM/notes/week8-ways to gate/plot gates 3.png")
 
 ```{r}
+#| eval: false
 gs_pop_get_count_fast(SFC_GatingSet) |> 
     dplyr::filter(Population %in% "/singlets/live/Tcells")
 ```
@@ -217,6 +240,7 @@ gs_pop_get_count_fast(SFC_GatingSet) |>
 Having gated down to T cells, lets go ahead and add a few gates for the individual T cell populations. Let’s start by drawing a polygon gate around CD4+ T cells.
 
 ```{r}
+#| eval: false
 flowGate::gs_gate_interactive(gs=SFC_GatingSet, filterId="CD4+", sample=1,
 dims=list("BV650-A", "BUV805-A"), subset="Tcells")
 ```
@@ -238,6 +262,7 @@ dims=list("CD8", "CD4"), subset="Tcells")
 We can also modify the setting to overlay already existing gates when we are drawing new gates for the other two T cell subsets. This is done by providing the gate name to the overlayGates argument.
 
 ```{r}
+#| eval: false
 flowGate::gs_gate_interactive(gs=SFC_GatingSet, filterId="CD8+", sample=1,
 dims=list("CD8", "CD4"), subset="Tcells", overlayGates="CD4+")
 ```
@@ -255,6 +280,7 @@ $Scaling
 And we can repeat this for CD4-CD8- (Double Negative (DN)) T cells.
 
 ```{r}
+#| eval: false
 flowGate::gs_gate_interactive(gs=SFC_GatingSet, filterId="DN", sample=1,
 dims=list("CD8", "CD4"), subset="Tcells", overlayGates=c("CD4+", "CD8+"))
 ```
@@ -272,6 +298,7 @@ $Scaling
 And a final-check to make sure the gates for the T cell subsets were added
 
 ```{r}
+#| eval: false
 plot(SFC_GatingSet)
 ```
 ![]("C:/Users/Macarena/MacarenaLM/notes/week8-ways to gate/plot gates 4.png")
@@ -279,6 +306,7 @@ plot(SFC_GatingSet)
 And a quick check for the statistics
 
 ```{r}
+#| eval: false
 gs_pop_get_count_fast(SFC_GatingSet) |> 
     dplyr::filter(Population %in% "/singlets/live/Tcells/DN")
 ```
@@ -294,6 +322,7 @@ gs_pop_get_count_fast(SFC_GatingSet) |>
 The last type of manual gate that we can implement with flowGate is a quadrant gate, in this case, let’s use it to create a quadrant for our two cytokines (TNFa and IFNg). We should ideally use one of the SEB-stimulated specimens for this if we want to visualize the cytokine-expressing cells, so I have switched over to the 6th sample in the GatingSet.
 
 ```{r}
+#| eval: false
 flowGate::gs_gate_interactive(gs=SFC_GatingSet, filterId="Cytokines", sample=6,
 dims=list("TNFa", "IFNg"), subset="CD4+")
 ```
@@ -311,6 +340,7 @@ $Scaling
 [1] "unused"
 
 ```{r}
+#| eval: false
 plot(SFC_GatingSet)
 ```
 ![]("C:/Users/Macarena/MacarenaLM/notes/week8-ways to gate/plot gates 5.png")
@@ -320,6 +350,7 @@ plot(SFC_GatingSet)
 But what happens if we misdraw a gate and need to correct it? If you are in the process of actively drawing, you can hit the reset button and try again. But what if you had already created the gate?
 
 ```{r}
+#| eval: false
 flowGate::gs_gate_interactive(gs=SFC_GatingSet, filterId="CD161+", sample=1,
 dims=list("CD161"), subset="CD8+")
 ```
@@ -336,16 +367,18 @@ $Scaling
 [1] "unused"
 
 ![]("C:/Users/Macarena/MacarenaLM/notes/week8-ways to gate/regate 1.png")
-![]("C:/Users/Macarena/MacarenaLM/notes/week8-ways to gate/regate 2.png")
+
 
 To completely redraw an existing gate, you would need to add the “regate” argument and set it to TRUE. This will delete the existing gate, and allow you to draw a new one in its place.
 
 ```{r}
+#| eval: false
 flowGate::gs_gate_interactive(gs=SFC_GatingSet, filterId="CD161+", sample=1,
 dims=list("CD161"), subset="CD8+", regate=TRUE)
 ```
 
  Select the new gate:
+ 
 ![]("C:/Users/Macarena/MacarenaLM/notes/week8-ways to gate/regate 2.png")
 
 ## Saving Gates
@@ -353,6 +386,7 @@ dims=list("CD161"), subset="CD8+", regate=TRUE)
 Alright, so we have put effort and drawn all our gates. But what happens if we close Positron? Well, we loose all our effort and have to redraw them again. Which doesn’t sound like a particularly good use of our time.
 
 ```{r}
+#| eval: false
 plot(SFC_GatingSet)
 ```
 ![]("C:/Users/Macarena/MacarenaLM/notes/week8-ways to gate/plot gates 6.png")
@@ -360,6 +394,7 @@ plot(SFC_GatingSet)
 Fortunately, there is a way to save our existing GatingSet objet using flowWorkspace save_gs() function, allowing us to load back in the GatingSet object later on.
 
 ```{r}
+#| eval: false
 StorageLocationAndName <- file.path("C:/Users/Macarena/MacarenaLM/notes/week8-ways to gate", "flowGateExampleGS.gs")
 save_gs(SFC_GatingSet, StorageLocationAndName)
 ```
@@ -371,16 +406,19 @@ Our GatingSet ends up being stored as its own folder with various h5 and pb obje
 To reload back into R, we would use the load_gs() function, as the message that we receive back from R says.
 
 ```{r}
+#| eval: false
 StorageLocationAndName <- file.path("C:/Users/Macarena/MacarenaLM/notes/week8-ways to gate", "flowGateExampleGS.gs")
 SFC_GatingSet <- load_gs(StorageLocationAndName)
 ```
 
 ```{r}
+#| eval: false
 plot(SFC_GatingSet)
 ```
 ![]("C:/Users/Macarena/MacarenaLM/notes/week8-ways to gate/plot gates 6.png")
 
 ```{r}
+#| eval: false
 gs_pop_get_count_fast(SFC_GatingSet) |> 
     dplyr::filter(Population %in% "/singlets/live/Tcells/DN")
 ```
@@ -397,6 +435,7 @@ gs_pop_get_count_fast(SFC_GatingSet) |>
 In the examples above, we created separate gates by running individual chunks of code. There is an alternative method in flowGate to allow you to draw all your gates immediately after each other.
 
 ```{r}
+#| eval: false
 GatingTable <- tibble::tribble(
   ~filterId,    ~dims,                          ~subset,      
   "singlets",   list("FSC-A", "FSC-H"),          "root",      
@@ -409,6 +448,7 @@ GatingTable <- tibble::tribble(
 ```
 
 ```{r}
+#| eval: false
 GatingTable
 ```
 # A tibble: 6 × 3
@@ -424,6 +464,7 @@ GatingTable
 Lets recreate our GatingSet object:
 
 ```{r}
+#| eval: false
 SFC_cytoset <- load_cytoset_from_fcs(fcs_files,
  truncate_max_range = FALSE, transformation = FALSE)
 SFC_GatingSet <- GatingSet(SFC_cytoset)
@@ -436,9 +477,12 @@ Biexponential <- flowjo_biexp_trans(channelRange=4096, maxValue=262144,
 MyBiexTransform <- transformerList(FluorophoresOnly, Biexponential)
 transform(SFC_GatingSet, MyBiexTransform)
 ```
+A GatingSet with 6 samples
+
 And now, let’s apply the GatingTable scheme. As we create and click done, the next gate will automatically pop up in the Shiny App.
 
 ```{r}
+#| eval: false
 gs_apply_gating_strategy(SFC_GatingSet, gating_strategy = GatingTable)
 ```
 Listening on http://127.0.0.1:6834
@@ -532,6 +576,7 @@ As you may have noticed, using flowGate, the gates are applied generally to all 
 For now, the simplest way to do so is using the autoplot() function from the ggcyto() package, repeating it for every specimen in the GatingSet. As we go further into the course, we will learn how to iterate through the specimens, and send the plot outputs to pdf files, reducing the need to write out individual lines of code for every specimen. We will also look at how to use other visualization tools to compare individual gates across multiple specimens.
 
 ```{r}
+#| eval: false
 ggcyto::autoplot(SFC_GatingSet[[1]]) + theme_bw()
 ggcyto::autoplot(SFC_GatingSet[[2]]) + theme_bw()
 ggcyto::autoplot(SFC_GatingSet[[3]]) + theme_bw()
@@ -555,6 +600,7 @@ However, remember: always always always check the outputs visually.
 Lets go ahead and locate an already assembled GatingTemplate for our particular dataset. This is also in the data folder, so we can separate it from our .fcs files by switching out the pattern argument
 
 ```{r}
+#| eval: false
 OurGateTemplate <- list.files(StorageLocation, pattern=".csv", full.names=TRUE)
 Example <- read.csv(OurGateTemplate, check.names=FALSE)
 Example
@@ -577,6 +623,7 @@ For the first example, we are gating for singlets.
 Looking at the entire gatingTemplate .csv, we can see we will be implementing automated gating for 6 gates (singlets, lymphocytes, live, Tcells, CD4 and CD8). Similar to what we saw with the singlets gate, each of these gates also has corresponding parent gate and (axis) dimension information provided.
 
 ```{r}
+#| eval: false
 Example |> dplyr::select(alias, pop, parent, dims, gating_method)
 ```
         alias pop      parent             dims   gating_method
@@ -590,6 +637,7 @@ Example |> dplyr::select(alias, pop, parent, dims, gating_method)
 One thing we can notice is the second gate (lymphocytes), uses the flowClust gating_method.
 
 ```{r}
+#| eval: false
 Example[2,]
 ```
 alias pop   parent         dims gating_method             gating_args collapseDataForGating groupBy preprocessing_method preprocessing_args
@@ -600,6 +648,7 @@ Especially when working with FSC-SSC (where multiple populations may be present,
 In this case, target specifies the x and y coordinate we expect our population center to be roughly at. Since we are gating for lymphocytes, x is around 2e6, while the y is between 5e5 and 1e6. If we wanted a different population (ex. monocytes), we would modify the values provided accordingly to match that population.
 
 ```{r}
+#| eval: false
 Example[2,] |> dplyr::pull(gating_args)
 ```
 [1] "K=2, target=c(2e6, 5e5)"
@@ -608,6 +657,7 @@ Example[2,] |> dplyr::pull(gating_args)
 The last several gates are all gate_mindensity gates
 
 ```{r}
+#| eval: false
 Example |> dplyr::select(alias, pop, parent, dims, gating_method, gating_args)
 ```
         alias pop      parent             dims   gating_method             gating_args
@@ -621,6 +671,7 @@ Example |> dplyr::select(alias, pop, parent, dims, gating_method, gating_args)
 A good example of these is our CD4 gate
 
 ```{r}
+#| eval: false
 Example[5,]
 ```
 alias pop parent dims   gating_method gating_args collapseDataForGating groupBy preprocessing_method preprocessing_args
@@ -629,6 +680,7 @@ alias pop parent dims   gating_method gating_args collapseDataForGating groupBy 
 In this case, since we are specifying pop is +, we will be keeping the positive cells (landing to the right of the gate line). Gate_mindensity is a fast calculation, finding the point with the fewest cells. It can however mistrigger, ending up with gates placed before any cell is present, or after every cell. When this occurs, we can constrain the search area by providing a gate_range to the gating_args, as we can see here for the viability gate.
 
 ```{r}
+#| eval: false
 Example[3,]
 ```
 alias pop      parent         dims   gating_method           gating_args collapseDataForGating groupBy preprocessing_method preprocessing_args
@@ -638,11 +690,13 @@ alias pop      parent         dims   gating_method           gating_args collaps
 With this broad overview of the gatingtemplate, we can now proceed with loading it in. To do so, openCyto recommends reading in the .csv file using the data.table package’s fread function, to ensure the formatting is correctly retained.
 
 ```{r}
+#| eval: false
 GatesToApply <- data.table::fread(OurGateTemplate)
 ```
 Once this is done, we can pass it to the gatingTemplate() function, which will wrap it with the required information layer needed for openCyto to add the gates to the GatingSet.
 
 ```{r}
+#| eval: false
 TheFullTemplate <- gatingTemplate(GatesToApply)
 ```
 Adding population:singlets
@@ -653,12 +707,14 @@ Adding population:CD4
 Adding population:CD8
 
 ```{r}
+#| eval: false
 TheFullTemplate
 ```
 --- Gating Template: default
 	with  7  populations defined
   
   ```{r}
+  #| eval: false
 str(TheFullTemplate)
   ```
   Formal class 'gatingTemplate' [package "openCyto"] with 7 slots
@@ -784,6 +840,7 @@ str(TheFullTemplate)
   .. ..$ edgemode: chr "directed"
 
 ```{r}
+#| eval: false
 class(TheFullTemplate)
 ```
 [1] "gatingTemplate"
@@ -794,6 +851,7 @@ attr(,"package")
 With the gatingtemplate ready to go, we need to assemble our GatingSet object. We will repeat the code that we have already been working with today above.
 
 ```{r}
+#| eval: false
 SFC_cytoset <- load_cytoset_from_fcs(fcs_files,
  truncate_max_range = FALSE, transformation = FALSE)
 SFC_GatingSet <- GatingSet(SFC_cytoset)
@@ -812,6 +870,7 @@ A GatingSet with 6 samples
 The final step is applying the template to our GatingSet.
 
 ```{r}
+#| eval: false
 gt_gating(TheFullTemplate, SFC_GatingSet)
 ```
 Gating for 'singlets'
@@ -847,3 +906,23 @@ done.
 finished.
 
 ## Visualizing Gates
+And finally, similar to the process we did for flowGate, let’s go ahead and use ggcyto autoplot() function to see how we did.
+
+```{r}
+#| eval: false
+ggcyto::autoplot(SFC_GatingSet[[1]]) + theme_bw()
+ggcyto::autoplot(SFC_GatingSet[[2]]) + theme_bw()
+ggcyto::autoplot(SFC_GatingSet[[3]]) + theme_bw()
+# ggcyto::autoplot(SFC_GatingSet[[4]]) + theme_bw()
+# ggcyto::autoplot(SFC_GatingSet[[5]]) + theme_bw()
+# ggcyto::autoplot(SFC_GatingSet[[6]]) + theme_bw()
+```
+![]("C:/Users/Macarena/MacarenaLM/notes/week8-ways to gate/autogates 1.png")
+
+![]("C:/Users/Macarena/MacarenaLM/notes/week8-ways to gate/autogates 2.png")
+
+![]("C:/Users/Macarena/MacarenaLM/notes/week8-ways to gate/autogates 3.png")
+
+## Saving for later
+
+We can still save our openCyto-gated GatingSet using save_gs() (using the same steps as detailed in the flowGate section). However, depending on the complexity of your gating scheme, once validated and properly constrained, it is also possibly to just reload everything from scratch with similar results, especially when using gate_mindensity (as flowClust is stochastic and may vary a bit).
