@@ -7,6 +7,7 @@ format: pdf
 # Functions
 
 ## Structure
+
 At the most basic level, what makes up a function in R? Let’s take a look at a simple example:
 ```{r}
 MyFirstFunction <- function(){message("Always spin-down your antibodies!")}
@@ -183,3 +184,92 @@ So as you can see, for-loops are a bit complicated, but can be useful once you g
 ## purrr
 
 When iterating through a vector or list to pass the values to a function, a commonly used alternative to for-loops are higher-order functions like the walk() and map() functions from the purrr package. These are the tidyverse equivalents to base R apply(), lapply(), etc. but with less nuanced argument syntax. We will use these frequently throughout the rest of the course.
+
+```{r}
+library(dplyr)
+```
+
+```{r}
+library(purrr)
+```
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+Let’s first see how these two differ, starting with walk()
+
+```{r}
+walk(.x=Fluorophores, .f=MySecondFunction)
+```
+Unquestionably, the best fluorophore is BV421
+Unquestionably, the best fluorophore is FITC
+Unquestionably, the best fluorophore is PE
+Unquestionably, the best fluorophore is APC
+
+As you can see, unlike for-loops, the additional structural elements provided are minimal. Within the (), our Fluorophore vector we want to iterate through is provided to the “.x” argument, while to “.f” we designate the function we want to provide the iterated outputs.
+Let’s see how walk() differs from its counterpart map()
+
+```{r}
+Outputs <- map(.x=Fluorophores, .f=MySecondFunction)
+```
+Unquestionably, the best fluorophore is BV421
+Unquestionably, the best fluorophore is FITC
+Unquestionably, the best fluorophore is PE
+Unquestionably, the best fluorophore is APC
+
+```{r}
+Outputs
+```
+[[1]]
+NULL
+
+[[2]]
+NULL
+
+[[3]]
+NULL
+
+[[4]]
+NULL
+
+In this case, we can see we get both the messages to console, but also individual empty (NULL) entries to a list-style object. This is partly due to the message() use we specified above for SecondFunction (which we corrected for with SecondFunctionPartB)
+
+If we try to save walk() outputs using our modified PartB function, we quickly realize nothing is being saved, with only the input being recorded
+
+```{r}
+Outputs <- walk(.x=Fluorophores, .f=MySecondFunctionPartB)
+Outputs
+```
+[1] "BV421" "FITC"  "PE"    "APC"  
+
+The reason behind this is walk() is more behind the scenes, used under circumstances when you want something run, but don’t need the return. By contrast, returning things is the main focus of map().
+
+Let’s see how walk() differs from its counterpart map()
+
+```{r}
+Outputs <- map(.x=Fluorophores, .f=MySecondFunctionPartB)
+Outputs
+```
+[[1]]
+[1] "Unquestionably, the best fluorophore is BV421"
+
+[[2]]
+[1] "Unquestionably, the best fluorophore is FITC"
+
+[[3]]
+[1] "Unquestionably, the best fluorophore is PE"
+
+[[4]]
+[1] "Unquestionably, the best fluorophore is APC"
+
+We will explore how these can be used more extensively in a bit.
+
+# Building Functions
+
+## Background
