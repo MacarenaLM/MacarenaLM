@@ -1,0 +1,185 @@
+---
+title: "Week9-It's raining functions!"
+author: "Macarena López-Mayorga"
+date: 2026-07-03
+format: pdf
+---
+# Functions
+
+## Structure
+At the most basic level, what makes up a function in R? Let’s take a look at a simple example:
+```{r}
+MyFirstFunction <- function(){message("Always spin-down your antibodies!")}
+```
+The name of the function is defined by placing it on the left-side of the assignment arrow. To the right we place the function(), which conveys to R that it will be creating a function. Although currently empty, individual function arguments that will make up the inputs are placed within the parenthesis (). And finally, the actual code being run by the function is palced within the curly brackets {}.
+
+When we run this code-block, we end up creating a function. We can see this appear within our local environment, appearing under the variables tab in the right-secondary sidebar.
+
+Once we have created a function that is present in our environment, we are able to run/use it. In the case of the first function example, no inputs or arguments are needed (as there is nothing between the ()). For output, all that is present within the {} is code to send a message to console, which we will get back if we run the function by calling its name in our console.
+
+```{r}
+MyFirstFunction()
+```
+Always spin-down your antibodies!
+
+## Arguments
+In the case of our first function above, no input arguments were provided, meaning the function was entirely self-contained, allowing us to retrieve the code output by simply running the function name.
+
+Lets modify this initial self-contained argument to allow us to provide an input argument to change the output message. To modify our function to accept input arguments, we decide on our argument name, and place it within the parenthesis (). From there, we can modify our line of code within the {} to achieve our desired outcome.
+
+```{r}
+MySecondFunction <- function(BestFluorophore){message("Unquestionably, the best fluorophore is ", BestFluorophore)}
+```
+And we can check to make sure it is running correctly similar to how we would for any function we might encounter, by running the line of code
+
+```{r}
+MySecondFunction(BestFluorophore = "APC")
+```
+Unquestionably, the best fluorophore is APC
+
+Lets continue our roll and see if we can provide multiple arguments to our function. We can achieve this by separating individual function arguments within the () with commas. Don’t forget to also make sure the argument you specified within the () is also accounter for within the {}.
+
+```{r}
+MyThirdFunction <- function(BestFluorophore, WorstFluorophore){
+    message("Unquestionably, the best fluorophore is ", BestFluorophore)
+    message("And by far, the worst fluorophore is ", WorstFluorophore)
+}
+```
+
+```{r}
+MyThirdFunction(BestFluorophore = "APC", WorstFluorophore = "PerCP-Cy5.5")
+```
+Unquestionably, the best fluorophore is APC
+And by far, the worst fluorophore is PerCP-Cy5.5
+
+Once we have a function set up that accepts multiple arguments, what happens if we forget to provide an argument? Let’s intentionally forget “WorstFluorophore” and see.
+
+```{r}
+MyThirdFunction(BestFluorophore="APC")
+```
+Unquestionably, the best fluorophore is APC
+Error in `MyThirdFunction()`:
+! argument "WorstFluorophore" is missing, with no default
+
+Show Traceback
+
+As you see, we get back an error. The reason for this is that a function lives in relative isolation from the rest of our R session. It typically can only see what you provided as inputs, or what is spun up by the code within the function itself.
+We can also provide default values for our given arguments. For example, we could modify to provide WorstFluorophore default by setting a value equal to it within the ()
+
+```{r}
+MyFourthFunction <- function(BestFluorophore, WorstFluorophore="PerCP-Cy5.5"){
+    message("Unquestionably, the best fluorophore is ", BestFluorophore)
+    message("And by far, the worst fluorophore is ", WorstFluorophore)
+}
+```
+Which would then allow for the partially incomplete function to fall back on the default argument.
+
+```{r}
+MyFourthFunction(BestFluorophore="APC")
+```
+Unquestionably, the best fluorophore is APC
+And by far, the worst fluorophore is PerCP-Cy5.5
+
+However, you are not locked in on your default option, as if you provide an actual argument, it will take preference over the provided default.
+
+```{r}
+MyFourthFunction(BestFluorophore="APC", WorstFluorophore="Zombie Aqua")
+```
+Unquestionably, the best fluorophore is APC
+And by far, the worst fluorophore is Zombie Aqua
+
+## Iteration
+
+Recalling back to Week 02, we ended up creating our first vector, which contained a list of fluorophores.
+
+```{r}
+Fluorophores <- c("BV421", "FITC", "PE", "APC")
+str(Fluorophores)
+```
+ chr [1:4] "BV421" "FITC" "PE" "APC"
+
+ Individual fluorophores from this vector can be provided as arguments to our function, by specifying their index location within the vector. For example:
+ 
+ ```{r}
+ MySecondFunction(BestFluorophore = Fluorophores[1])
+ ```
+ Unquestionably, the best fluorophore is BV421
+ 
+ If we wanted to check the output message for each item in our vector, one approach would be to copy-and-paste the line of code, and swap out the vector index position for each new line.
+ 
+ ```{r}
+ MySecondFunction(BestFluorophore = Fluorophores[2])
+ ```
+ Unquestionably, the best fluorophore is FITC
+ 
+ ```{r}
+ MySecondFunction(BestFluorophore = Fluorophores[4])
+ ```
+ Unquestionably, the best fluorophore is APC
+
+ While achievable, this ends up producing several lines of code. As you get further into the course, and more code is written to tidy individual dataframes, generate individual plots, having to copy-and-paste repeated blocks of text that only change based on the input values can become a chore.
+ For this reason, there are a couple ways that we can sequentially pass through the objects within a vector or list to our function of interest, and retrieve the outputs that result.
+
+ ## For-loops
+ A for-loop is one way to iterate through a vector. The syntax can look quite startling when encountered for a first time.
+ 
+ ```{r}
+ for (Name in Fluorophores){
+    MySecondFunction(BestFluorophore=Name)
+}
+ ```
+Unquestionably, the best fluorophore is BV421
+Unquestionably, the best fluorophore is FITC
+Unquestionably, the best fluorophore is PE
+Unquestionably, the best fluorophore is APC
+
+In a way, it is similar to the “if” conditional we have encountered previously, with “for” being syntax highlighted. Immediately after for we find our parenthesis (), followed by {} that surround individual lines of code.
+
+Within the (), the vector or list is being iterated through is placed after “in” (which also ends up being syntax highlighted). So in this case, we place our vector Fluorophores.
+
+For what is placed before “in”, we basically provide an argument that will stand-in for the “i-nth” item in our vector. You will often see “i” used, but you can call it whatever you like, so we will use Name in this case. You will see this “i-nth” standin is then used in place of the value within our line of code present within the {}.
+
+Consequently, when we run the for-loop, we get the following outputs:
+Unquestionably, the best fluorophore is BV421
+Unquestionably, the best fluorophore is FITC
+Unquestionably, the best fluorophore is PE
+Unquestionably, the best fluorophore is APC
+
+Can these outputs be saved? Yes they can, but some modification will be needed. Messages in R are kind of ephemeral and not saved, we could modify our original function from using messsages()to a more permanent paste0 statement to show-case this in a for-loop.
+
+```{r}
+MySecondFunctionPartB <- function(BestFluorophore){
+    Message <- paste0("Unquestionably, the best fluorophore is ", BestFluorophore)
+    Message
+}
+```
+
+Secondly, we would need to save the output to something external that can be retrieved. This can be accomplished by setting up an external list using the list() function, and then adding the message to the list for each iteration within the for-loop brackets {}
+
+```{r}
+MyOutputList <- list()
+
+SavedOutputs <- for (Name in Fluorophores){
+    InthMessage <- MySecondFunctionPartB(BestFluorophore=Name)
+    MyOutputList[[Name]] <- InthMessage 
+}
+
+MyOutputList
+```
+$BV421
+[1] "Unquestionably, the best fluorophore is BV421"
+
+$FITC
+[1] "Unquestionably, the best fluorophore is FITC"
+
+$PE
+[1] "Unquestionably, the best fluorophore is PE"
+
+$APC
+[1] "Unquestionably, the best fluorophore is APC"
+
+So as you can see, for-loops are a bit complicated, but can be useful once you get the hang of the structure and syntax. One thing to note, is that they can be slow (especially if you are haven’t predefined the list size), which is why opinions on their use will be contested by individual R developers.
+
+## purrr
+
+When iterating through a vector or list to pass the values to a function, a commonly used alternative to for-loops are higher-order functions like the walk() and map() functions from the purrr package. These are the tidyverse equivalents to base R apply(), lapply(), etc. but with less nuanced argument syntax. We will use these frequently throughout the rest of the course.
