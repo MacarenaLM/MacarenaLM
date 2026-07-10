@@ -188,10 +188,6 @@ When iterating through a vector or list to pass the values to a function, a comm
 ```{r}
 library(dplyr)
 ```
-
-```{r}
-library(purrr)
-```
 Attaching package: ‘dplyr’
 
 The following objects are masked from ‘package:stats’:
@@ -202,7 +198,13 @@ The following objects are masked from ‘package:base’:
 
     intersect, setdiff, setequal, union
 
-Let’s first see how these two differ, starting with walk()
+Warning message:
+package ‘dplyr’ was built under R version 4.5.3 
+```{r}
+library(purrr)
+```
+Warning message:
+package ‘purrr’ was built under R version 4.5.3 
 
 ```{r}
 walk(.x=Fluorophores, .f=MySecondFunction)
@@ -273,3 +275,224 @@ We will explore how these can be used more extensively in a bit.
 # Building Functions
 
 ## Background
+David Rach designed an automatic process of functions in R and we are going to work with these basis. So based on our initial idea, we know that we will need to get our .fcs files into a GatingSet, which we will then be able to iterate through.
+
+As we iterate through these files, we will need to retrieve the description/keyword for volume that was encoded by the instrument, as well as any other useful metadata.
+
+And we will need to apply gates (either through openCyto or flowGate), that would allow us to retrieve the counts for various cell populations we might be wanting to retrieve concentration info for.
+
+Let’s go ahead and tackle these in turn, re-using code that we have encountered over the last several weeks
+
+Getting started, as always, we will need to load any libraries we will be using extensively.
+
+```{r}
+library(flowWorkspace)
+```
+As part of improvements to flowWorkspace, some behavior of
+GatingSet objects has changed. For details, please read the section
+titled "The cytoframe and cytoset classes" in the package vignette:
+
+  vignette("flowWorkspace-Introduction", "flowWorkspace")
+
+```{r}
+library(flowGate)
+```
+Loading required package: ggcyto
+Loading required package: ggplot2
+Loading required package: flowCore
+Loading required package: ncdfFlow
+Loading required package: BH
+Warning message:
+package ‘ggplot2’ was built under R version 4.5.3 
+
+```{r}
+library(ggplot2)
+library(ggcyto)
+```
+
+And then we need to identify our fcs files
+
+```{r}
+StorageLocation <- file.path("C:/Users/Macarena/MacarenaLM/notes/Week9-It's raining functions!/data")
+fcs_files <- list.files(StorageLocation, pattern=".fcs", full.names=TRUE)
+```
+
+```{r}
+fcs_files
+```
+[1] "C:/Users/Macarena/MacarenaLM/notes/Week9-It's raining functions!/data/CellCounts4L_AB_04-INF124-7-00_01.fcs"
+[2] "C:/Users/Macarena/MacarenaLM/notes/Week9-It's raining functions!/data/CellCounts4L_AB_04-INF149-4-00_01.fcs"
+[3] "C:/Users/Macarena/MacarenaLM/notes/Week9-It's raining functions!/data/CellCounts4L_AB_04-INF169-6-00_01.fcs"
+[4] "C:/Users/Macarena/MacarenaLM/notes/Week9-It's raining functions!/data/CellCounts4L_AB_05-INF019-0-00_01.fcs"
+[5] "C:/Users/Macarena/MacarenaLM/notes/Week9-It's raining functions!/data/CellCounts4L_AB_05-INF032-5-00_01.fcs"
+[6] "C:/Users/Macarena/MacarenaLM/notes/Week9-It's raining functions!/data/CellCounts4L_AB_05-INF180-9-00_01.fcs"
+[7] "C:/Users/Macarena/MacarenaLM/notes/Week9-It's raining functions!/data/CellCounts4L_AB_06-INF155-1-00_01.fcs"
+[8] "C:/Users/Macarena/MacarenaLM/notes/Week9-It's raining functions!/data/CellCounts4L_AB_06-INF158-4-00_01.fcs"
+[9] "C:/Users/Macarena/MacarenaLM/notes/Week9-It's raining functions!/data/CellCounts4L_AB_06-INF159-5-00_01.fcs"
+
+Before proceeding to add them into a GatingSet
+
+```{r}
+MyCytoset <- load_cytoset_from_fcs(fcs_files, transformation=FALSE, truncate_max_range=FALSE)
+MyGatingSet <- GatingSet(MyCytoset)
+```
+For this particular counting fluorophore panel, only 3 antibodies were used. Since the goal was to quickly acquire the .fcs files before passing off to R, the files were never unmixed, and are still in a raw. fcs format. So we will need to figure out the peak detectors for APC, PE, and Pacific Blue on a 4-laser Cytek Aurora.
+
+```{r}
+remotes::install_github("DavidRach/Luciernaga")
+```
+
+```{r}
+install.packages("plotly")
+```
+
+```{r}
+Plots <- Luciernaga::QC_ReferenceLibrary(FluorNameContains="APC$|PE$|Pacific Blue", 
+    NumberDetectors=54, returnPlots=TRUE)[[2]]
+plotly::ggplotly(Plots)
+```
+![]("C:/Users/Macarena/MacarenaLM/notes/Week9-It's raining functions!/fluorophores.png")
+
+So the equivalent raw detectors we should be paying attention to are going to be V3 (CD19+), B4 (CD45+), and R1 (CD14+) (not possible to see in the picture)
+Since scale can vary dramatically for individual fluorophores, we might as well and go ahead and transform those three detectors while we are here.
+
+```{r}
+MainDetectorsOnly <- c("V3-A", "B4-A", "R1-A")
+
+Biexponential <- flowjo_biexp_trans(channelRange=4096, maxValue=262144,
+     pos=4.5, neg=2, widthBasis=-500)
+MyBiexTransform <- transformerList(MainDetectorsOnly, Biexponential)
+transform(MyGatingSet, MyBiexTransform)
+```
+And a quick-plot check to make sure the transformation looks reasonable enough
+
+```{r}
+ggcyto(MyGatingSet[[1]], subset="root",
+ aes(x="V3-A", y="R1-A")) + geom_hex(bins=100)
+```
+![]("C:/Users/Macarena/MacarenaLM/notes/Week9-It's raining functions!/ggplot2 1.png")
+
+```{r}
+ggcyto(MyGatingSet[[1]], subset="root",
+ aes(x="V3-A", y="B4-A")) + geom_hex(bins=100)
+```
+![]("C:/Users/Macarena/MacarenaLM/notes/Week9-It's raining functions!/ggplot2 2.png")
+
+```{r}
+ggcyto(MyGatingSet[[1]], subset="root",
+ aes(x="R1-A", y="B4-A")) + geom_hex(bins=100)
+```
+![]("C:/Users/Macarena/MacarenaLM/notes/Week9-It's raining functions!/ggplot2 3.png")
+
+With that done, let’s add some gates to separate out CD45+ cells, and below those cells identify CD14+ (mainly monocytes), CD19+ (B cells), and CD14-CD19- (mostly T cells and NK cells for cord blood). My automated version uses openCyto with gate constraints to handle the variability, but for this example, lets reuse the flowGate approach using tribble function for quicker setup.
+
+```{r}
+GatingTable <- tibble::tribble(
+  ~filterId,    ~dims,                          ~subset,           
+  "CD45",       list("B4-A", "SSC-A"),            "root",     
+  "CD19",       list("V3-A", "SSC-A"),            "CD45",   
+  "CD14",       list("R1-A", "SSC-A"),            "CD45", 
+  "TandNKcells",  list("V3-A", "SSC-A"),            "CD45",
+)
+```
+
+
+```{r}
+flowGate::gs_apply_gating_strategy(MyGatingSet, gating_strategy = GatingTable)
+```
+Listening on http://127.0.0.1:6900
+done!
+
+Listening on http://127.0.0.1:6900
+done!
+
+Listening on http://127.0.0.1:6900
+Warning: Error in if: argument is of length zero
+  151: getDims
+  150: catch
+  149: value[[3L]]
+  148: tryCatchOne
+  147: tryCatchList
+  146: tryCatch
+  145: do
+  144: hybrid_chain
+  143: <reactive:plotObj>
+  121: drawReactive
+  108: renderFunc
+  106: output$plot1
+    8: shiny::runApp
+    7: .f
+    3: pmap_
+    2: purrr::pmap
+    1: flowGate::gs_apply_gating_strategy
+done!
+
+Listening on http://127.0.0.1:6900
+done!
+[[1]]
+[[1]]$Gate
+Polygonal gate 'CD45' with 22 vertices in dimensions B4-A and SSC-A
+
+[[1]]$Bins
+[1] 256
+
+[[1]]$Scaling
+[1] "unused"
+
+
+[[2]]
+[[2]]$Gate
+Polygonal gate 'CD19' with 11 vertices in dimensions V3-A and SSC-A
+
+[[2]]$Bins
+[1] 256
+
+[[2]]$Scaling
+[1] "unused"
+
+
+[[3]]
+[[3]]$Gate
+Polygonal gate 'CD14' with 12 vertices in dimensions R1-A and SSC-A
+
+[[3]]$Bins
+[1] 256
+
+[[3]]$Scaling
+[1] "unused"
+
+
+[[4]]
+[[4]]$Gate
+Polygonal gate 'TandNKcells' with 15 vertices in dimensions V3-A and SSC-A
+
+[[4]]$Bins
+[1] 256
+
+[[4]]$Scaling
+[1] "unused"
+
+We have add a general CD45+ gate (i.e. those that I need actual concentration for), a general CD19+ gate (B cells), a general CD14+ (Monocytes), and a general gate for likely T and NK cells (one after the other, in this exact order).
+
+Ending up with a GatingSet that looks like this.
+
+```{r}
+plot(MyGatingSet)
+```
+![]("C:/Users/Macarena/MacarenaLM/notes/Week9-It's raining functions!/plot gates.png")
+
+And with that done, let’s quickly check the gates using ggcyto autoplot() function, switching between specimen index values to double check.
+
+```{r}
+StorageGatingSet <- file.path("C:/Users/Macarena/MacarenaLM/notes/Week9-It's raining functions!/save GatingSet")
+save_gs(MyGatingSet, StorageGatingSet)
+```
+Done
+To reload it, use 'load_gs' function
+
+And with that done, let’s quickly check the gates using ggcyto autoplot() function, switching between specimen index values to double check.
+
+```{r}
+ggcyto::autoplot(MyGatingSet[[6]]) + theme_bw()
+```
+![]("C:/Users/Macarena/MacarenaLM/notes/Week9-It's raining functions!/plots gating.png")
