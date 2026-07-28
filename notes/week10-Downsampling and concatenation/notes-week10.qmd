@@ -1,0 +1,275 @@
+---
+title: "Week10-Downsampling and concatenation"
+author: "Macarena López-Mayorga"
+date: 2026-07-28
+format: pdf
+---
+# Why Downsample?
+There are various reasons why we might want to downsample (subset our .fcs files to a certain number or percentage of cells), especially in context of unsupervised analysis.
+
+Traditionally, one of the main ones is limited computational resources. Rapid Access Memory (RAM) was often in limited quantity, especially compared to the size of .fcs files. When working with a large dataset, downsampling allowed for more equal representation across all acquired files to be accounted for in the subsequent analysis phase, without maxing out the available RAM and triggering the software to crash out due to lack of memory. This is particularly the case for some unsupervised clustering and dimensionality reduction algorithms, that are trying to differentiate how similar or different all the cells within the analysis are from each other.
+
+Separately, some statistical analysis methods primarily rely on counts. Unlike frequency, which partially standardizes the comparison by leveraging against the parent gate, methods that rely on counts for their statistic may be similarly assisted when a defined number of cells at a designated gate are utilized.
+
+Regardless of reason, we will need to figure out a few logistics when implementing a down-sampling strategy in R. We will first figure out the process using a single specimen, leveraging what we learned within the GatingSet lesson to be able to specify our gate of interest, and then leverage the resulting code to implement a function that can be used to iterate through all the files within the gating set.
+
+# Setup
+## Load fcs files
+Before we can downsample, we will need to have our .fcs files brought into R. We consequently repeat the loading in process that we have been seeing fairly regularly throughout the first section. This week, we will be working with some “larger” spectral .fcs files (since we will need to downsample). We are still limited by GitHub’s cap on max file size (5 MB), so if you want to use your own data, please feel free to substitute in the file path to your own .fcs files storage location.
+
+```{r}
+StorageLocation <- file.path("C:/Users/Macarena/MacarenaLM/notes/week10-Downsampling and concatenation/data")
+fcs_files <- list.files(StorageLocation, pattern=".fcs", full.names = TRUE)
+fcs_files
+```
+[1] "C:/Users/Macarena/MacarenaLM/notes/week10-Downsampling and concatenation/data/2025_07_26_AB_02-INF052-00_Ctrl_Unmixed__Tcells.fcs"
+[2] "C:/Users/Macarena/MacarenaLM/notes/week10-Downsampling and concatenation/data/2025_07_26_AB_02-INF100-00_Ctrl_Unmixed__Tcells.fcs"
+[3] "C:/Users/Macarena/MacarenaLM/notes/week10-Downsampling and concatenation/data/2025_07_26_AB_02-INF179-00_Ctrl_Unmixed__Tcells.fcs"
+
+```{r}
+library(flowWorkspace)
+library(flowGate)
+library(dplyr)
+library(ggplot2)
+library(purrr)
+```
+
+```{r}
+SFC_cytoset <- load_cytoset_from_fcs(fcs_files, truncate_max_range = FALSE, transformation = FALSE)
+SFC_GatingSet <- GatingSet(SFC_cytoset)
+SFC_Parameters <- colnames(SFC_GatingSet)
+FluorophoresOnly <- SFC_Parameters[!stringr::str_detect(SFC_Parameters, "FSC|SSC|Time")]
+
+Biexponential <- flowjo_biexp_trans(channelRange=4096, maxValue=262144,
+     pos=4.5, neg=2, widthBasis=-500)
+MyBiexTransform <- transformerList(FluorophoresOnly, Biexponential)
+transform(SFC_GatingSet, MyBiexTransform)
+```
+A GatingSet with 3 samples
+
+## Gate
+Once our data is in a GatingSet, we can add some general gates for the subsets using the flowGate package
+
+```{r}
+GatingTable <- tibble::tribble(
+  ~filterId,    ~dims,                          ~subset,      
+  "singlets",   list("FSC-A", "FSC-H"),          "root",      
+  "live",       list("FSC-A", "Zombie NIR-A"),   "singlets",  
+  "Tcells",     list("CD3", "CD45"),             "live",     
+  "CD4+",       list("CD8", "CD4"),              "Tcells",   
+  "CD8+",       list("CD8", "CD4"),              "Tcells",   
+  "DN",         list("CD8", "CD4"),              "Tcells",  
+)
+```
+
+```{r}
+flowGate::gs_apply_gating_strategy(SFC_GatingSet, gating_strategy = GatingTable)
+```
+Listening on http://127.0.0.1:5082
+done!
+
+Listening on http://127.0.0.1:5082
+done!
+
+Listening on http://127.0.0.1:5082
+done!
+
+Listening on http://127.0.0.1:5082
+Warning: Error in if: argument is of length zero
+  151: getDims
+  150: catch
+  149: value[[3L]]
+  148: tryCatchOne
+  147: tryCatchList
+  146: tryCatch
+  145: do
+  144: hybrid_chain
+  143: <reactive:plotObj>
+  121: drawReactive
+  108: renderFunc
+  106: output$plot1
+    8: shiny::runApp
+    7: .f
+    3: pmap_
+    2: purrr::pmap
+    1: flowGate::gs_apply_gating_strategy
+Warning: Error in if: argument is of length zero
+  223: preparePlot
+  222: <reactive>
+  200: FPlot
+  199: renderPlot
+  106: output$plot1
+    8: shiny::runApp
+    7: .f
+    3: pmap_
+    2: purrr::pmap
+    1: flowGate::gs_apply_gating_strategy
+done!
+
+Listening on http://127.0.0.1:5082
+done!
+
+Listening on http://127.0.0.1:5082
+done!
+[[1]]
+[[1]]$Gate
+Polygonal gate 'singlets' with 25 vertices in dimensions FSC-A and FSC-H
+
+[[1]]$Bins
+[1] 256
+
+[[1]]$Scaling
+[1] "unused"
+
+
+[[2]]
+[[2]]$Gate
+Rectangular gate 'live' with dimensions:
+  FSC-A: (956353.75462107,3862903.5)
+  Zombie NIR-A: (1777.4200266594,2870.4400131676)
+
+[[2]]$Bins
+[1] 256
+
+[[2]]$Scaling
+[1] "unused"
+
+
+[[3]]
+[[3]]$Gate
+Polygonal gate 'Tcells' with 20 vertices in dimensions Spark Blue 550-A and Spark Blue 574-A
+
+[[3]]$Bins
+[1] 256
+
+[[3]]$Scaling
+[1] "unused"
+
+
+[[4]]
+[[4]]$Gate
+Polygonal gate 'CD4+' with 14 vertices in dimensions BV650-A and BUV805-A
+
+[[4]]$Bins
+[1] 256
+
+[[4]]$Scaling
+[1] "unused"
+
+
+[[5]]
+[[5]]$Gate
+Polygonal gate 'CD8+' with 17 vertices in dimensions BV650-A and BUV805-A
+
+[[5]]$Bins
+[1] 256
+
+[[5]]$Scaling
+[1] "unused"
+
+
+[[6]]
+[[6]]$Gate
+Polygonal gate 'DN' with 11 vertices in dimensions BV650-A and BUV805-A
+
+[[6]]$Bins
+[1] 256
+
+[[6]]$Scaling
+[1] "unused"
+
+```{r}
+plot(SFC_GatingSet)
+```
+![]("C:/Users/Macarena/MacarenaLM/notes/week10-Downsampling and concatenation/plot 1.png")
+
+## Retrieving counts
+Let’s quickly check to see what specimens we will be working with for this dataset.
+
+```{r}
+pData(SFC_GatingSet)
+```
+                                                                                                   name
+2025_07_26_AB_02-INF052-00_Ctrl_Unmixed__Tcells.fcs 2025_07_26_AB_02-INF052-00_Ctrl_Unmixed__Tcells.fcs
+2025_07_26_AB_02-INF100-00_Ctrl_Unmixed__Tcells.fcs 2025_07_26_AB_02-INF100-00_Ctrl_Unmixed__Tcells.fcs
+2025_07_26_AB_02-INF179-00_Ctrl_Unmixed__Tcells.fcs 2025_07_26_AB_02-INF179-00_Ctrl_Unmixed__Tcells.fcs
+
+We have so far gated for the three main T cell populations in cord blood (CD4+, CD8+ and Double-Negative (CD4-CD8-)). Considering that in cord blood mononuclear cells, the abundance of these subsets may vary a bit by donor, we want to make sure we downsample a number of cells that will result in each individual specimen providing a relatively similar contribution of cells to the final .fcs file we end up creating.
+
+To get better context before diving in, lets go ahead and retrieve, then plot the statistics data for our gates so that we have an idea of what we are working with (and get some additional dplyr and ggplot2 practice in, as it has been a while since Week 4 and Week 06).
+
+```{r}
+Data <- gs_pop_get_count_fast(SFC_GatingSet)
+```
+Looking at our retrieved data, the gate names are showing up as full file.paths.
+
+```{r}
+Data$Population
+```
+ [1] "/singlets"                  "/singlets/live"             "/singlets/live/Tcells"      "/singlets/live/Tcells/CD4+"
+ [5] "/singlets/live/Tcells/CD8+" "/singlets/live/Tcells/DN"   "/singlets"                  "/singlets/live"            
+ [9] "/singlets/live/Tcells"      "/singlets/live/Tcells/CD4+" "/singlets/live/Tcells/CD8+" "/singlets/live/Tcells/DN"  
+[13] "/singlets"                  "/singlets/live"             "/singlets/live/Tcells"      "/singlets/live/Tcells/CD4+"
+[17] "/singlets/live/Tcells/CD8+" "/singlets/live/Tcells/DN" 
+
+Let’s abbreviate them for simplicity using the basename() function.
+
+```{r}
+Data$Population <- basename(Data$Population)
+Data
+```
+                                                   name Population                Parent Count ParentCount
+                                                 <char>     <char>                <char> <int>       <int>
+ 1: 2025_07_26_AB_02-INF052-00_Ctrl_Unmixed__Tcells.fcs   singlets                  root  9764       10000
+ 2: 2025_07_26_AB_02-INF052-00_Ctrl_Unmixed__Tcells.fcs       live             /singlets  9552        9764
+ 3: 2025_07_26_AB_02-INF052-00_Ctrl_Unmixed__Tcells.fcs     Tcells        /singlets/live  9280        9552
+ 4: 2025_07_26_AB_02-INF052-00_Ctrl_Unmixed__Tcells.fcs       CD4+ /singlets/live/Tcells  5850        9280
+ 5: 2025_07_26_AB_02-INF052-00_Ctrl_Unmixed__Tcells.fcs       CD8+ /singlets/live/Tcells  2594        9280
+ 6: 2025_07_26_AB_02-INF052-00_Ctrl_Unmixed__Tcells.fcs         DN /singlets/live/Tcells   582        9280
+ 7: 2025_07_26_AB_02-INF100-00_Ctrl_Unmixed__Tcells.fcs   singlets                  root  9715       10000
+ 8: 2025_07_26_AB_02-INF100-00_Ctrl_Unmixed__Tcells.fcs       live             /singlets  9469        9715
+ 9: 2025_07_26_AB_02-INF100-00_Ctrl_Unmixed__Tcells.fcs     Tcells        /singlets/live  9059        9469
+10: 2025_07_26_AB_02-INF100-00_Ctrl_Unmixed__Tcells.fcs       CD4+ /singlets/live/Tcells  5440        9059
+11: 2025_07_26_AB_02-INF100-00_Ctrl_Unmixed__Tcells.fcs       CD8+ /singlets/live/Tcells  3191        9059
+12: 2025_07_26_AB_02-INF100-00_Ctrl_Unmixed__Tcells.fcs         DN /singlets/live/Tcells   248        9059
+13: 2025_07_26_AB_02-INF179-00_Ctrl_Unmixed__Tcells.fcs   singlets                  root  9744       10000
+14: 2025_07_26_AB_02-INF179-00_Ctrl_Unmixed__Tcells.fcs       live             /singlets  9516        9744
+15: 2025_07_26_AB_02-INF179-00_Ctrl_Unmixed__Tcells.fcs     Tcells        /singlets/live  9072        9516
+16: 2025_07_26_AB_02-INF179-00_Ctrl_Unmixed__Tcells.fcs       CD4+ /singlets/live/Tcells  7030        9072
+17: 2025_07_26_AB_02-INF179-00_Ctrl_Unmixed__Tcells.fcs       CD8+ /singlets/live/Tcells  1742        9072
+18: 2025_07_26_AB_02-INF179-00_Ctrl_Unmixed__Tcells.fcs         DN /singlets/live/Tcells   141        9072
+
+With this bit of cleanup done, lets plot them with ggplot2
+
+```{r}
+Plot <- ggplot(Data, aes(x = Population, y = Count, color = name)) +
+  geom_point(size = 4) +
+  labs(
+    title = "Cell Counts by Gate",
+    x = "Population",
+    y = "Count",
+    color = "Sample"
+  ) +
+  theme_bw(base_size = 13) +
+  theme(
+    plot.title = element_text(face = "bold"),
+    legend.position = "bottom",
+    legend.text = element_text(size = 8),
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor = element_blank()
+  )
+
+Plot
+```
+![]("C:/Users/Macarena/MacarenaLM/notes/week10-Downsampling and concatenation/ggplot2 scatter plot 1.png")
+
+As we have encountered on a couple of the prior sessions, we can use the plotly package ggplotly() function to convert our static ggplot2 plots into interactive ones, which are useful in this context.
+
+```{r}
+plotly::ggplotly(Plot)
+```
+Looking at our gated T cell populations across specimens, we can see that in general, while each specimen has similar number of live T cells, there is a little more variability when it comes to the individual T cell subsets. We will revisit this later on as we build out the function logic.
+
+# Building Downsample
+
+## Broad Idea Sketch
