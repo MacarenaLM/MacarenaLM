@@ -183,6 +183,18 @@ plot(SFC_GatingSet)
 ```
 ![]("C:/Users/Macarena/MacarenaLM/notes/week10-Downsampling and concatenation/plot 1.png")
 
+```{r}
+StorageLocation <- file.path("C:/Users/Macarena/MacarenaLM/notes/week10-Downsampling and concatenation/data/saving GatingSet")
+save_gs(SFC_GatingSet, StorageLocation)
+```
+Done
+To reload it, use 'load_gs' function
+
+```{r}
+StorageLocation <- file.path("C:/Users/Macarena/MacarenaLM/notes/week10-Downsampling and concatenation/data/saving GatingSet")
+SFC_GatingSet <- load_gs(StorageLocation)
+```
+
 ## Retrieving counts
 Let’s quickly check to see what specimens we will be working with for this dataset.
 
@@ -273,3 +285,72 @@ Looking at our gated T cell populations across specimens, we can see that in gen
 # Building Downsample
 
 ## Broad Idea Sketch
+Now that we have our dataset pre-requisites assembled within our local environment, lets start by planning out what we will need in order to assemble a downsampling function, at least in terms of inputs and what it will ideally return as outputs.
+
+We are going to be starting off with our gated GatingSet, and similar to what we did during Week 09 with the CellConcentration() function, iterate through the individual GatingHierarchies using the purrr packages map() function.
+
+Once an individual .fcs file ends up within our new function, we will need to extract out the exprs data (where measurements for individual cells are stored). From this original data, we will need to downsample (i.e. subset) a designated number of cells which correspond to individual rows (while also accounting for several possible exceptions we might encounter).
+
+This modified exprs data then needs to be returned to the .fcs file, maintaining the rest of the parameter and description metadata intact so that it remains recognizable as a standard .fcs file. We would also want to be able to export out the .fcs file with modified name parameters so that we can distinguish the downsampled version from the original .fcs file, to avoid accidentally overwriting our original.
+
+So, visualizing ahead, at the end of the iteration, we would end up with three new .fcs files, containing our target number of downsampled cells originating for our respective gate of interest.
+
+With this rough sketch worked out, lets dive in.
+
+## Initial Skeleton
+Getting started, lets go ahead and establish our initial function, as well as add elements of the roxygen2 skeleton for documentation. We will provide our first argument as “x”, which will serve as our standin for the individual .fcs file being iterated in via purrr.
+
+```{r}
+#' This function downsamples from a designated gate to our desired number
+#' of cells, returning as a new .fcs file
+#' 
+#' @param x A GatingSet object, typically iterated in. 
+#' 
+Downsampling <- function(x){
+  # Our code will go here
+}
+```
+When function building, highlighting and running (via Ctrl/Command + Enter) individual arguments being provided to the function can be helpful as you are writing it. These variables end up being created as objects in your environment (appearing under the variables tab in the right-secondary side-bar), and are available for use in troubleshooting and debugging. Here is an example of how highlight lines within the function that you want to run/troubleshoot would appear as.
+
+![](""C:/Users/Macarena/Desktop/citometria/Cytometry in R/week10/Troubleshooting.png")
+
+Remembering back to last week, we remember that when we iterate a GatingSet object, we end up with a GatingHierarchy containing a single .fcs file, similar to if we had used [[]] on the GatingSet.
+
+```{r}
+x <- SFC_GatingSet[[1]]
+x
+```
+Sample:  2025_07_26_AB_02-INF052-00_Ctrl_Unmixed__Tcells.fcs 
+GatingHierarchy with  7  gates
+
+```{r}
+#' This function downsamples from a designated gate to our desired number
+#' of cells, returning as a new .fcs file
+#' 
+#' @param x A GatingSet object, typically iterated in. 
+#' 
+Downsampling <- function(x){class(x)}
+```
+
+```{r}
+class(x)
+```
+[1] "GatingHierarchy"
+attr(,"package")
+[1] "flowWorkspace"
+
+In this case, both are returning the same class of object, so we have correctly set up our function and outside argument standins correctly. Lets proceed to modify our the internals.
+
+From the entire .fcs file, we will need to subset out the underlying data corresponding to our gated population of interest. This is similar to the code we used last time for CellConcentration, so we can quickly relocate that code from the respective lesson, then copy-and-paste it into our new function within the {}.
+
+```{r}
+#' This function downsamples from a designated gate to our desired number
+#' of cells, returning as a new .fcs file
+#' 
+#' @param x A GatingSet object, typically iterated in. 
+#' 
+Downsampling <- function(x){
+  EventsInTheGate <- gs_pop_get_data(x, subset)
+}
+```
+One thing to remember, the code within the function is only able to see variables that we pass in to it, which is done via arguments (that are present within the “()” ). So to get gs_pop_get_data() to run successfully, we will need to add “subset” as Downsampling’s second argument, or we will not be able to isolate the data associated for our respective gate.
