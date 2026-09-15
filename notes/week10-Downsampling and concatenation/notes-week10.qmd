@@ -440,3 +440,207 @@ head(Data[[1]], 3)
 [1,]       2167.108 2276.323      3108.547      2156.676    1954.386 2203.288          2097.104   2124.087     2319.684       3290.837       3289.486 2878.465
 [2,]       2391.270 2032.860      2862.195      2188.545    2107.110 2056.971          2252.323   2084.971     2145.456       3337.221       3100.115 2868.599
 [3,]       2305.990 2083.745      2462.668      2227.207    1976.180 2335.905          2157.208   2105.890     2191.646       3302.940       2974.669 2720.577
+
+Success, we have successfully retrieved the underlying data for T cells! (finally!)
+But let’s quickly do a sanity check, and make sure that the numbers we are retrieving make sense. We can do this by adding summary() function to summarize the distribution for each of our MeasurementData columns.
+
+```{r}
+#' This function downsamples from a designated gate to our desired number
+#' of cells, returning as a new .fcs file
+#' 
+#' @param x A GatingSet object, typically iterated in.
+#' @param subset The gate from which to retrieve cell counts from 
+#' 
+Downsampling <- function(x, subset){
+  EventsInTheGate <- gs_pop_get_data(x, subset)
+  MeasurementData <- exprs(EventsInTheGate[[1]])
+  summary(MeasurementData)
+}
+```
+
+```{r}
+map(.x=SFC_GatingSet[1], subset="Tcells", .f=Downsampling)
+```
+[[1]]
+      Time            SSC-W             SSC-H             SSC-A             FSC-W            FSC-H             FSC-A            SSC-B-W           SSC-B-H       
+ Min.   :    19   Min.   : 650411   Min.   :  99153   Min.   : 149656   Min.   :617511   Min.   : 775895   Min.   : 940884   Min.   : 626911   Min.   : 104214  
+ 1st Qu.:223170   1st Qu.: 746861   1st Qu.: 376063   1st Qu.: 484396   1st Qu.:712088   1st Qu.:1161711   1st Qu.:1400395   1st Qu.: 728517   1st Qu.: 311299  
+ Median :445908   Median : 766409   Median : 445912   Median : 571694   Median :725497   Median :1308198   Median :1590182   Median : 748431   Median : 363094  
+ Mean   :443520   Mean   : 774832   Mean   : 456002   Mean   : 588302   Mean   :727769   Mean   :1300039   Mean   :1578574   Mean   : 757485   Mean   : 373550  
+ 3rd Qu.:664009   3rd Qu.: 789017   3rd Qu.: 517820   3rd Qu.: 663263   3rd Qu.:739876   3rd Qu.:1438212   3rd Qu.:1756559   3rd Qu.: 773541   3rd Qu.: 420458  
+ Max.   :896504   Max.   :1430309   Max.   :2688042   Max.   :3487913   Max.   :911656   Max.   :2107301   Max.   :2513021   Max.   :1430571   Max.   :2591438  
+    SSC-B-A           BUV395-A       BUV563-A       BUV615-A         BUV661-A       BUV737-A       BUV805-A    Pacific Blue-A    BV480-A        BV570-A      
+ Min.   : 149874   Min.   :1488   Min.   :1049   Min.   : 900.2   Min.   :1349   Min.   :1589   Min.   :1413   Min.   :1066   Min.   :1369   Min.   : 931.4  
+ 1st Qu.: 390511   1st Qu.:2558   1st Qu.:2735   1st Qu.:1898.4   1st Qu.:1965   1st Qu.:2781   1st Qu.:2155   1st Qu.:2113   1st Qu.:2001   1st Qu.:1910.5  
+ Median : 456485   Median :2926   Median :3001   Median :2031.4   Median :2058   Median :3027   Median :3442   Median :2199   Median :2115   Median :2062.2  
+ Mean   : 471655   Mean   :2848   Mean   :2969   Mean   :2057.7   Mean   :2069   Mean   :2922   Mean   :2982   Mean   :2196   Mean   :2162   Mean   :2066.5  
+ 3rd Qu.: 528192   3rd Qu.:3177   3rd Qu.:3229   3rd Qu.:2178.2   3rd Qu.:2154   3rd Qu.:3181   3rd Qu.:3525   3rd Qu.:2284   3rd Qu.:2241   3rd Qu.:2210.3  
+ Max.   :3461185   Max.   :3729   Max.   :4049   Max.   :3471.2   Max.   :3805   Max.   :3574   Max.   :3786   Max.   :3612   Max.   :7532   Max.   :3673.6  
+    BV605-A        BV650-A        BV711-A        BV750-A        BV786-A     Alexa Fluor 488-A Spark Blue 550-A Spark Blue 574-A    RB613-A        RB705-A    
+ Min.   :1287   Min.   :1185   Min.   :1201   Min.   :1531   Min.   :1234   Min.   : 831.2    Min.   :3232     Min.   :2996     Min.   :1209   Min.   :1566  
+ 1st Qu.:3201   1st Qu.:2026   1st Qu.:1886   1st Qu.:2127   1st Qu.:1869   1st Qu.:2076.1    1st Qu.:3430     1st Qu.:3162     1st Qu.:1949   1st Qu.:3269  
+ Median :3413   Median :2172   Median :2065   Median :2284   Median :2064   Median :2171.9    Median :3495     Median :3224     Median :2140   Median :3576  
+ Mean   :3361   Mean   :2563   Mean   :2058   Mean   :2287   Mean   :2069   Mean   :2188.4    Mean   :3491     Mean   :3219     Mean   :2238   Mean   :3329  
+ 3rd Qu.:3578   3rd Qu.:3553   3rd Qu.:2227   3rd Qu.:2439   3rd Qu.:2265   3rd Qu.:2281.4    3rd Qu.:3555     3rd Qu.:3278     3rd Qu.:2382   3rd Qu.:3705  
+ Max.   :4025   Max.   :4044   Max.   :3571   Max.   :3187   Max.   :3631   Max.   :3333.9    Max.   :3732     Max.   :3477     Max.   :3877   Max.   :4085  
+    RB780-A          PE-A        PE-Dazzle594-A    PE-Cy5-A    PE-Fire 700-A  PE-Fire 744-A   PE-Vio770-A       APC-A      Alexa Fluor 647-A   APC-R700-A  
+ Min.   :1270   Min.   : 771.5   Min.   :1451   Min.   :1635   Min.   :1695   Min.   :1382   Min.   :1559   Min.   :1097   Min.   :1333      Min.   :1468  
+ 1st Qu.:1948   1st Qu.:2265.0   1st Qu.:2098   1st Qu.:2074   1st Qu.:2688   1st Qu.:1969   1st Qu.:2061   1st Qu.:2042   1st Qu.:1928      1st Qu.:2024  
+ Median :2080   Median :2498.5   Median :2225   Median :2177   Median :2890   Median :2076   Median :2188   Median :2180   Median :2065      Median :2129  
+ Mean   :2086   Mean   :2473.1   Mean   :2226   Mean   :2292   Mean   :2836   Mean   :2121   Mean   :2220   Mean   :2188   Mean   :2059      Mean   :2135  
+ 3rd Qu.:2217   3rd Qu.:2695.7   3rd Qu.:2354   3rd Qu.:2409   3rd Qu.:3044   3rd Qu.:2185   3rd Qu.:2334   3rd Qu.:2317   3rd Qu.:2195      3rd Qu.:2237  
+ Max.   :3613   Max.   :3391.4   Max.   :3762   Max.   :3661   Max.   :3532   Max.   :3894   Max.   :4261   Max.   :3838   Max.   :3086      Max.   :3229  
+  Zombie NIR-A  APC-Fire 750-A APC-Fire 810-A      AF-A       
+ Min.   :1808   Min.   :1079   Min.   :1692   Min.   : 648.6  
+ 1st Qu.:2179   1st Qu.:3171   1st Qu.:2966   1st Qu.:2792.7  
+ Median :2302   Median :3266   Median :3151   Median :2878.0  
+ Mean   :2303   Mean   :3224   Mean   :3042   Mean   :2846.6  
+ 3rd Qu.:2427   3rd Qu.:3339   3rd Qu.:3250   3rd Qu.:2938.4  
+ Max.   :2808   Max.   :3609   Max.   :3594   Max.   :3389.5 
+
+ Looking at the distribution of the values for individual fluorophores, everything seems rather suspiciously in the same linear-style range to each other than what we would normally anticipate for spectral flow cytometry data.
+
+We recall back to Week 07 that unlike many commerical softwares, transformations in R are applied directly to the underlying values. When we ran gs_pop_get_data, we did not specify that this transformation should be reversed, so we ended up retrieving the transformed data values.
+
+We can correct this by setting the “inverse.transform” argument to “TRUE” within gs_pop_get_data(). After re-running the function, we get back
+
+```{r}
+#' This function downsamples from a designated gate to our desired number
+#' of cells, returning as a new .fcs file
+#' 
+#' @param x A GatingSet object, typically iterated in.
+#' @param subset The gate from which to retrieve cell counts from 
+#' 
+Downsampling <- function(x, subset){
+  EventsInTheGate <- gs_pop_get_data(x, subset, inverse.transform=TRUE)
+  MeasurementData <- exprs(EventsInTheGate[[1]])
+  summary(MeasurementData)
+}
+```
+
+```{r}
+map(.x=SFC_GatingSet[1], subset="Tcells", .f=Downsampling)
+```
+      Time            SSC-W             SSC-H             SSC-A             FSC-W            FSC-H             FSC-A            SSC-B-W           SSC-B-H       
+ Min.   :    19   Min.   : 650411   Min.   :  99153   Min.   : 149656   Min.   :617511   Min.   : 775895   Min.   : 940884   Min.   : 626911   Min.   : 104214  
+ 1st Qu.:223170   1st Qu.: 746861   1st Qu.: 376063   1st Qu.: 484396   1st Qu.:712088   1st Qu.:1161711   1st Qu.:1400395   1st Qu.: 728517   1st Qu.: 311299  
+ Median :445908   Median : 766409   Median : 445912   Median : 571694   Median :725497   Median :1308198   Median :1590182   Median : 748431   Median : 363094  
+ Mean   :443520   Mean   : 774832   Mean   : 456002   Mean   : 588302   Mean   :727769   Mean   :1300039   Mean   :1578574   Mean   : 757485   Mean   : 373550  
+ 3rd Qu.:664009   3rd Qu.: 789017   3rd Qu.: 517820   3rd Qu.: 663263   3rd Qu.:739876   3rd Qu.:1438212   3rd Qu.:1756559   3rd Qu.: 773541   3rd Qu.: 420458  
+ Max.   :896504   Max.   :1430309   Max.   :2688042   Max.   :3487913   Max.   :911656   Max.   :2107301   Max.   :2513021   Max.   :1430571   Max.   :2591438  
+    SSC-B-A           BUV395-A        BUV563-A         BUV615-A            BUV661-A           BUV737-A        BUV805-A       Pacific Blue-A   
+ Min.   : 149874   Min.   :-2119   Min.   : -6924   Min.   :-10901.65   Min.   :-3033.63   Min.   :-1613   Min.   :-2572.1   Min.   :-6585.3  
+ 1st Qu.: 390511   1st Qu.: 1856   1st Qu.:  2938   1st Qu.:  -471.83   1st Qu.: -258.53   1st Qu.: 3311   1st Qu.:  335.6   1st Qu.:  203.2  
+ Median : 456485   Median : 4887   Median :  6041   Median :   -51.77   Median :   31.72   Median : 6526   Median :24648.6   Median :  477.3  
+ Mean   : 471655   Mean   : 7112   Mean   :  9492   Mean   :   190.12   Mean   :  314.42   Mean   : 7416   Mean   :19845.4   Mean   :  508.5  
+ 3rd Qu.: 528192   3rd Qu.:10275   3rd Qu.: 12131   3rd Qu.:   409.62   3rd Qu.:  332.67   3rd Qu.:10415   3rd Qu.:32927.7   3rd Qu.:  755.7  
+ Max.   :3461185   Max.   :68245   Max.   :221842   Max.   : 27270.46   Max.   :90016.48   Max.   :39197   Max.   :84099.4   Max.   :44859.2  
+    BV480-A             BV570-A            BV605-A          BV650-A             BV711-A            BV750-A           BV786-A         Alexa Fluor 488-A  
+ Min.   :  -2878.1   Min.   :-9883.27   Min.   : -3565   Min.   : -4697.76   Min.   :-4487.03   Min.   :-1888.3   Min.   :-4111.13   Min.   :-13602.64  
+ 1st Qu.:   -148.2   1st Qu.: -432.71   1st Qu.: 11097   1st Qu.:   -69.55   1st Qu.: -511.18   1st Qu.:  247.7   1st Qu.: -567.39   1st Qu.:    87.62  
+ Median :    210.8   Median :   44.24   Median : 22284   Median :   388.91   Median :   52.05   Median :  754.8   Median :   51.38   Median :   389.27  
+ Mean   :   1620.6   Mean   :  135.69   Mean   : 29136   Mean   : 21920.07   Mean   :  130.00   Mean   :  872.5   Mean   :  132.75   Mean   :   503.87  
+ 3rd Qu.:    612.8   3rd Qu.:  512.64   3rd Qu.: 39745   3rd Qu.: 36322.99   3rd Qu.:  565.60   3rd Qu.: 1324.0   3rd Qu.:  692.11   3rd Qu.:   747.52  
+ Max.   :3641199.2   Max.   :55880.32   Max.   :202829   Max.   :217840.59   Max.   :38725.14   Max.   :10592.2   Max.   :47909.14   Max.   : 17081.65  
+ Spark Blue 550-A Spark Blue 574-A    RB613-A            RB705-A          RB780-A             PE-A          PE-Dazzle594-A       PE-Cy5-A        PE-Fire 700-A  
+ Min.   :12220    Min.   : 5962    Min.   : -4391.1   Min.   : -1719   Min.   :-3726.5   Min.   :-16555.3   Min.   :-2327.7   Min.   :-1413.16   Min.   :-1175  
+ 1st Qu.:23663    1st Qu.: 9809    1st Qu.:  -308.8   1st Qu.: 13788   1st Qu.: -314.5   1st Qu.:   692.4   1st Qu.:  155.6   1st Qu.:   80.22   1st Qu.: 2607  
+ Median :29622    Median :11941    Median :   287.3   Median : 39412   Median :  100.4   Median :  1575.8   Median :  560.1   Median :  405.26   Median : 4434  
+ Mean   :30892    Mean   :12259    Mean   :  2005.0   Mean   : 41475   Mean   :  154.4   Mean   :  1838.1   Mean   :  614.3   Mean   : 1320.70   Mean   : 5100  
+ 3rd Qu.:36548    3rd Qu.:14184    3rd Qu.:  1104.3   3rd Qu.: 62495   3rd Qu.:  534.9   3rd Qu.:  2655.6   3rd Qu.: 1001.1   3rd Qu.: 1205.39   3rd Qu.: 6848  
+ Max.   :68934    Max.   :27834    Max.   :117274.7   Max.   :253578   Max.   :44938.6   Max.   : 20731.3   Max.   :76953.5   Max.   :53463.78   Max.   :33774  
+ PE-Fire 744-A        PE-Vio770-A            APC-A           Alexa Fluor 647-A    APC-R700-A        Zombie NIR-A    APC-Fire 750-A  APC-Fire 810-A 
+ Min.   : -2785.91   Min.   : -1751.47   Min.   : -6016.86   Min.   :-3156.95   Min.   :-2228.60   Min.   :-771.6   Min.   :-6337   Min.   :-1188  
+ 1st Qu.:  -245.89   1st Qu.:    40.83   1st Qu.:   -17.61   1st Qu.: -376.49   1st Qu.:  -74.91   1st Qu.: 412.5   1st Qu.:10074   1st Qu.: 5480  
+ Median :    88.08   Median :   440.31   Median :   414.00   Median :   52.88   Median :  253.73   Median : 819.3   Median :13652   Median : 9477  
+ Mean   :   810.01   Mean   :  1123.58   Mean   :   646.52   Mean   :   35.59   Mean   :  297.63   Mean   : 880.4   Mean   :13846   Mean   : 9351  
+ 3rd Qu.:   432.54   3rd Qu.:   931.15   3rd Qu.:   868.62   3rd Qu.:  463.24   3rd Qu.:  600.46   3rd Qu.:1276.0   3rd Qu.:17382   3rd Qu.:12947  
+ Max.   :125136.12   Max.   :426086.69   Max.   :101602.37   Max.   : 7755.29   Max.   :12130.63   Max.   :3554.9   Max.   :44324   Max.   :42018  
+      AF-A       
+ Min.   :-25114  
+ 1st Qu.:  3416  
+ Median :  4289  
+ Mean   :  4216  
+ 3rd Qu.:  5064  
+ Max.   : 20601 
+ 
+ These results are more in-line with the usual value spread we would typically associate with unmixed spectral flow cytometry data for our respective fluorophores. So a win for paying attention. But what impact would it have had if we had retained the transformed values?
+
+It would likely depend on what you are trying to do. If you plan to remain in R for your data analysis, then keeping these values transformed might make sense for a downstream analysis. Vice versa, if you are exporting out the data as new .fcs files, it is likely you or someone else might want to open them in commercial software. And instead of getting back something that looks like this for a downsampled CD4+ T cell population:
+
+![]("C:/Users/Macarena/Desktop/citometria/Cytometry in R/week10/TransformationReversed.png")
+
+You will end up getting back a visual that looks like this
+
+![]("C:/Users/Macarena/Desktop/citometria/Cytometry in R/week10/TransformationRetained.png")
+
+Since the commercial software applies scaling/transformation on top of the existing values (which were previously transformed in R). Consequently, lets go ahead and set ‘inverse.transform’ as Downsampling()’s third argument, but set the default equal to TRUE, since the main use case for today is ability to export out as .fcs files.
+
+```{r}
+#' This function downsamples from a designated gate to our desired number
+#' of cells, returning as a new .fcs file
+#' 
+#' @param x A GatingSet object, typically iterated in.
+#' @param subset The gate from which to retrieve cell counts from 
+#' @param inverse.transform Whether to revert values back to their
+#' original untransformed values before export as an .fcs file, default
+#' is set to TRUE
+#' 
+Downsampling <- function(x, subset, inverse.transform=TRUE){
+  EventsInTheGate <- gs_pop_get_data(x, subset,
+   inverse.transform=inverse.transform)
+  MeasurementData <- exprs(EventsInTheGate[[1]])
+  summary(MeasurementData)
+}
+```
+
+```{r}
+map(.x=SFC_GatingSet[1], subset="Tcells", .f=Downsampling)
+```
+[[1]]
+      Time            SSC-W             SSC-H             SSC-A             FSC-W            FSC-H             FSC-A            SSC-B-W           SSC-B-H       
+ Min.   :    19   Min.   : 650411   Min.   :  99153   Min.   : 149656   Min.   :617511   Min.   : 775895   Min.   : 940884   Min.   : 626911   Min.   : 104214  
+ 1st Qu.:223170   1st Qu.: 746861   1st Qu.: 376063   1st Qu.: 484396   1st Qu.:712088   1st Qu.:1161711   1st Qu.:1400395   1st Qu.: 728517   1st Qu.: 311299  
+ Median :445908   Median : 766409   Median : 445912   Median : 571694   Median :725497   Median :1308198   Median :1590182   Median : 748431   Median : 363094  
+ Mean   :443520   Mean   : 774832   Mean   : 456002   Mean   : 588302   Mean   :727769   Mean   :1300039   Mean   :1578574   Mean   : 757485   Mean   : 373550  
+ 3rd Qu.:664009   3rd Qu.: 789017   3rd Qu.: 517820   3rd Qu.: 663263   3rd Qu.:739876   3rd Qu.:1438212   3rd Qu.:1756559   3rd Qu.: 773541   3rd Qu.: 420458  
+ Max.   :896504   Max.   :1430309   Max.   :2688042   Max.   :3487913   Max.   :911656   Max.   :2107301   Max.   :2513021   Max.   :1430571   Max.   :2591438  
+    SSC-B-A           BUV395-A        BUV563-A         BUV615-A            BUV661-A           BUV737-A        BUV805-A       Pacific Blue-A   
+ Min.   : 149874   Min.   :-2119   Min.   : -6924   Min.   :-10901.65   Min.   :-3033.63   Min.   :-1613   Min.   :-2572.1   Min.   :-6585.3  
+ 1st Qu.: 390511   1st Qu.: 1856   1st Qu.:  2938   1st Qu.:  -471.83   1st Qu.: -258.53   1st Qu.: 3311   1st Qu.:  335.6   1st Qu.:  203.2  
+ Median : 456485   Median : 4887   Median :  6041   Median :   -51.77   Median :   31.72   Median : 6526   Median :24648.6   Median :  477.3  
+ Mean   : 471655   Mean   : 7112   Mean   :  9492   Mean   :   190.12   Mean   :  314.42   Mean   : 7416   Mean   :19845.4   Mean   :  508.5  
+ 3rd Qu.: 528192   3rd Qu.:10275   3rd Qu.: 12131   3rd Qu.:   409.62   3rd Qu.:  332.67   3rd Qu.:10415   3rd Qu.:32927.7   3rd Qu.:  755.7  
+ Max.   :3461185   Max.   :68245   Max.   :221842   Max.   : 27270.46   Max.   :90016.48   Max.   :39197   Max.   :84099.4   Max.   :44859.2  
+    BV480-A             BV570-A            BV605-A          BV650-A             BV711-A            BV750-A           BV786-A         Alexa Fluor 488-A  
+ Min.   :  -2878.1   Min.   :-9883.27   Min.   : -3565   Min.   : -4697.76   Min.   :-4487.03   Min.   :-1888.3   Min.   :-4111.13   Min.   :-13602.64  
+ 1st Qu.:   -148.2   1st Qu.: -432.71   1st Qu.: 11097   1st Qu.:   -69.55   1st Qu.: -511.18   1st Qu.:  247.7   1st Qu.: -567.39   1st Qu.:    87.62  
+ Median :    210.8   Median :   44.24   Median : 22284   Median :   388.91   Median :   52.05   Median :  754.8   Median :   51.38   Median :   389.27  
+ Mean   :   1620.6   Mean   :  135.69   Mean   : 29136   Mean   : 21920.07   Mean   :  130.00   Mean   :  872.5   Mean   :  132.75   Mean   :   503.87  
+ 3rd Qu.:    612.8   3rd Qu.:  512.64   3rd Qu.: 39745   3rd Qu.: 36322.99   3rd Qu.:  565.60   3rd Qu.: 1324.0   3rd Qu.:  692.11   3rd Qu.:   747.52  
+ Max.   :3641199.2   Max.   :55880.32   Max.   :202829   Max.   :217840.59   Max.   :38725.14   Max.   :10592.2   Max.   :47909.14   Max.   : 17081.65  
+ Spark Blue 550-A Spark Blue 574-A    RB613-A            RB705-A          RB780-A             PE-A          PE-Dazzle594-A       PE-Cy5-A        PE-Fire 700-A  
+ Min.   :12220    Min.   : 5962    Min.   : -4391.1   Min.   : -1719   Min.   :-3726.5   Min.   :-16555.3   Min.   :-2327.7   Min.   :-1413.16   Min.   :-1175  
+ 1st Qu.:23663    1st Qu.: 9809    1st Qu.:  -308.8   1st Qu.: 13788   1st Qu.: -314.5   1st Qu.:   692.4   1st Qu.:  155.6   1st Qu.:   80.22   1st Qu.: 2607  
+ Median :29622    Median :11941    Median :   287.3   Median : 39412   Median :  100.4   Median :  1575.8   Median :  560.1   Median :  405.26   Median : 4434  
+ Mean   :30892    Mean   :12259    Mean   :  2005.0   Mean   : 41475   Mean   :  154.4   Mean   :  1838.1   Mean   :  614.3   Mean   : 1320.70   Mean   : 5100  
+ 3rd Qu.:36548    3rd Qu.:14184    3rd Qu.:  1104.3   3rd Qu.: 62495   3rd Qu.:  534.9   3rd Qu.:  2655.6   3rd Qu.: 1001.1   3rd Qu.: 1205.39   3rd Qu.: 6848  
+ Max.   :68934    Max.   :27834    Max.   :117274.7   Max.   :253578   Max.   :44938.6   Max.   : 20731.3   Max.   :76953.5   Max.   :53463.78   Max.   :33774  
+ PE-Fire 744-A        PE-Vio770-A            APC-A           Alexa Fluor 647-A    APC-R700-A        Zombie NIR-A    APC-Fire 750-A  APC-Fire 810-A 
+ Min.   : -2785.91   Min.   : -1751.47   Min.   : -6016.86   Min.   :-3156.95   Min.   :-2228.60   Min.   :-771.6   Min.   :-6337   Min.   :-1188  
+ 1st Qu.:  -245.89   1st Qu.:    40.83   1st Qu.:   -17.61   1st Qu.: -376.49   1st Qu.:  -74.91   1st Qu.: 412.5   1st Qu.:10074   1st Qu.: 5480  
+ Median :    88.08   Median :   440.31   Median :   414.00   Median :   52.88   Median :  253.73   Median : 819.3   Median :13652   Median : 9477  
+ Mean   :   810.01   Mean   :  1123.58   Mean   :   646.52   Mean   :   35.59   Mean   :  297.63   Mean   : 880.4   Mean   :13846   Mean   : 9351  
+ 3rd Qu.:   432.54   3rd Qu.:   931.15   3rd Qu.:   868.62   3rd Qu.:  463.24   3rd Qu.:  600.46   3rd Qu.:1276.0   3rd Qu.:17382   3rd Qu.:12947  
+ Max.   :125136.12   Max.   :426086.69   Max.   :101602.37   Max.   : 7755.29   Max.   :12130.63   Max.   :3554.9   Max.   :44324   Max.   :42018  
+      AF-A       
+ Min.   :-25114  
+ 1st Qu.:  3416  
+ Median :  4289  
+ Mean   :  4216  
+ 3rd Qu.:  5064  
+ Max.   : 20601 
+
+ ## Subsetting
+ Now that Downsampling() is returning the correct underlying MFI measurement data for our gate of interest, let’s start setting up the code to take the existing number of rows and downsample them to match a desired number of cells. A useful place to pick up at is confirming what type of object we are working with by adding class() back in on our last named object inside the function.
+ 
