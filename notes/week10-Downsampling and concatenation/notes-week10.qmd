@@ -644,3 +644,26 @@ map(.x=SFC_GatingSet[1], subset="Tcells", .f=Downsampling)
  ## Subsetting
  Now that Downsampling() is returning the correct underlying MFI measurement data for our gate of interest, let’s start setting up the code to take the existing number of rows and downsample them to match a desired number of cells. A useful place to pick up at is confirming what type of object we are working with by adding class() back in on our last named object inside the function.
  
+ ```{r}
+ #' This function downsamples from a designated gate to our desired number
+#' of cells, returning as a new .fcs file
+#' 
+#' @param x A GatingSet object, typically iterated in.
+#' @param subset The gate from which to retrieve cell counts from 
+#' @param inverse.transform Whether to revert values back to their
+#' original untransformed values before export as an .fcs file, default
+#' is set to TRUE
+#' 
+Downsampling <- function(x, subset, inverse.transform=TRUE){
+  EventsInTheGate <- gs_pop_get_data(x, subset,
+   inverse.transform=inverse.transform)
+  MeasurementData <- exprs(EventsInTheGate[[1]])
+  class(MeasurementData)
+}
+ ```
+ 
+ ```{r}
+ map(.x=SFC_GatingSet[1], subset="Tcells", .f=Downsampling)
+ ```
+ [[1]]
+[1] "matrix" "array" 
