@@ -667,3 +667,258 @@ Downsampling <- function(x, subset, inverse.transform=TRUE){
  ```
  [[1]]
 [1] "matrix" "array" 
+
+While matrices are also rectangular in shape, they are often not as easy to manipulate compared to “data.frame” or “tibble” objects. Let’s go ahead and convert our matrix into a data.frame using as.data.frame().
+
+```{r}
+#' This function downsamples from a designated gate to our desired number
+#' of cells, returning as a new .fcs file
+#' 
+#' @param x A GatingSet object, typically iterated in.
+#' @param subset The gate from which to retrieve cell counts from 
+#' @param inverse.transform Whether to revert values back to their
+#' original untransformed values before export as an .fcs file, default
+#' is set to TRUE
+#' 
+Downsampling <- function(x, subset, inverse.transform=TRUE){
+  EventsInTheGate <- gs_pop_get_data(x, subset,
+   inverse.transform=inverse.transform)
+  MeasurementData <- exprs(EventsInTheGate[[1]])
+  MeasurementDataFramed <- as.data.frame(MeasurementData, check.names = FALSE)
+  class(MeasurementDataFramed)
+}
+```
+
+```{r}
+map(.x=SFC_GatingSet[1], subset="Tcells", .f=Downsampling)
+```
+[[1]]
+[1] "data.frame"
+
+Having a ‘data.frame’ object returned, lets switch out our current class() readout for nrow(), so that we can see how many cells we are working with before setting up the downsample code.
+
+```{r}
+#' This function downsamples from a designated gate to our desired number
+#' of cells, returning as a new .fcs file
+#' 
+#' @param x A GatingSet object, typically iterated in.
+#' @param subset The gate from which to retrieve cell counts from 
+#' @param inverse.transform Whether to revert values back to their
+#' original untransformed values before export as an .fcs file, default
+#' is set to TRUE
+#' 
+Downsampling <- function(x, subset, inverse.transform=TRUE){
+  EventsInTheGate <- gs_pop_get_data(x, subset,
+   inverse.transform=inverse.transform)
+  MeasurementData <- exprs(EventsInTheGate[[1]])
+  MeasurementDataFramed <- as.data.frame(MeasurementData, check.names = FALSE)
+  nrow(MeasurementDataFramed)
+}
+```
+
+```{r}
+map(.x=SFC_GatingSet[1], subset="Tcells", .f=Downsampling)
+```
+[[1]]
+[1] 9005
+
+When we downsample from our existing data.frame, we would want to be able to retrieve out a specific number of cells (corresponding to individual rows) for a given specimen. These would ideally be selected randomly (and without replacement) so the return we get back would ideally be representative of what we would had seen for the original specimen.
+
+Fortunately, dplyr’s slice_sample() function is set up to do this for us, so we can set up its line of code within Downsampling(). In this case, we are passing slice_sample() our data.frame, an outside argument (DownsampleCount), and setting the replace argument to FALSE to accomplish this.
+
+```{r}
+#' This function downsamples from a designated gate to our desired number
+#' of cells, returning as a new .fcs file
+#' 
+#' @param x A GatingSet object, typically iterated in.
+#' @param subset The gate from which to retrieve cell counts from 
+#' @param inverse.transform Whether to revert values back to their
+#' original untransformed values before export as an .fcs file, default
+#' is set to TRUE
+#' @param DownsampleCount The desired number of cells to downsample from
+#' each gated population. 
+#' 
+Downsampling <- function(x, subset, inverse.transform=TRUE, DownsampleCount){
+  EventsInTheGate <- gs_pop_get_data(x, subset,
+   inverse.transform=inverse.transform)
+  MeasurementData <- exprs(EventsInTheGate[[1]])
+  MeasurementDataFramed <- as.data.frame(MeasurementData, check.names = FALSE)
+
+  Downsampled_DataFrame <- slice_sample(MeasurementDataFramed, n = DownsampleCount, replace = FALSE)
+
+  nrow(Downsampled_DataFrame)
+}
+```
+
+```{r}
+map(.x=SFC_GatingSet[1], subset="Tcells", .f=Downsampling, DownsampleCount=1000)
+```
+[[1]]
+[1] 1000
+
+Seing as we have now downsampled to our target number of cells, let’s switch from using nrow() for return(), so that our returned object is the actual MFI values. To keep things orderly for the website, lets temporarily switch our “DownsampleCount” argument to 10.
+
+```{r}
+#' This function downsamples from a designated gate to our desired number
+#' of cells, returning as a new .fcs file
+#' 
+#' @param x A GatingSet object, typically iterated in.
+#' @param subset The gate from which to retrieve cell counts from 
+#' @param inverse.transform Whether to revert values back to their
+#' original untransformed values before export as an .fcs file, default
+#' is set to TRUE
+#' @param DownsampleCount The desired number of cells to downsample from
+#' each gated population. 
+#' 
+Downsampling <- function(x, subset, inverse.transform=TRUE, DownsampleCount){
+  EventsInTheGate <- gs_pop_get_data(x, subset,
+   inverse.transform=inverse.transform)
+  MeasurementData <- exprs(EventsInTheGate[[1]])
+  MeasurementDataFramed <- as.data.frame(MeasurementData, check.names = FALSE)
+
+  Downsampled_DataFrame <- slice_sample(MeasurementDataFramed, n = DownsampleCount, replace = FALSE)
+
+  return(Downsampled_DataFrame)
+}
+```
+
+```{r}
+map(.x=SFC_GatingSet[1], subset="Tcells", .f=Downsampling, DownsampleCount=10)
+```
+[[1]]
+     Time    SSC-W  SSC-H    SSC-A    FSC-W   FSC-H   FSC-A  SSC-B-W SSC-B-H  SSC-B-A  BUV395-A   BUV563-A   BUV615-A    BUV661-A  BUV737-A   BUV805-A
+1  625190 778347.9 477405 619312.0 772089.2 1305376 1679778 766872.4  349349 446510.2 18143.250   800.1056  1227.3851    7.162624  6731.030 22664.9141
+2  575810 755777.8 284237 358033.3 705978.8 1261547 1484376 741820.2  219149 270948.6  5264.039   106.2783   175.6296  169.632782 14149.477 36511.6719
+3   93311 763354.7 492748 626902.5 730219.4 1373134 1671148 739519.9  352503 434471.6  2793.462  9031.4492   206.7556 -525.446289  3315.611 35022.6328
+4   98917 798562.1 299406 398490.5 736729.8 1064384 1306939 776499.8  269919 349320.1  7341.140 15915.9609   553.8736 -421.011566  5758.278  -253.3772
+5  261580 775183.9 516092 666777.0 760414.6 1462900 1854018 754111.6  382687 480981.2  4214.797  2497.9021  -102.4402 -214.502548  5732.277   184.2956
+6  136992 749347.7 292468 365267.0 720242.1  943009 1131991 742035.1  281622 348289.0 10935.342  6080.7583   466.6136 1046.610718  9306.068 20975.3398
+7  161059 853481.3 391626 557075.8 757165.1 1342157 1693724 851406.2  319709 453670.4  1398.598 23950.0859   239.6974  321.851501  9513.285 25256.1895
+8  888067 824867.4 569939 783540.2 751620.5 1309257 1640107 817643.3  425461 579792.2 11463.314 11668.8291   126.0130   48.929955  4749.728 25319.2793
+9  102664 775890.8 538255 696045.2 735344.9 1231570 1509381 769444.6  366074 469456.1  5611.585  2525.5591 -2005.0074 -181.856873  4546.451  -472.6853
+10 552359 751470.1 418597 524271.9 723971.3 1386510 1672989 741395.7  321409 397152.1  7767.877  5011.7354  -430.4062  455.375793  7583.418 37298.1367
+   Pacific Blue-A    BV480-A    BV570-A    BV605-A    BV650-A    BV711-A    BV750-A     BV786-A Alexa Fluor 488-A Spark Blue 550-A Spark Blue 574-A   RB613-A
+1       332.41650  -47.01189 -242.63307  16550.893   338.7156   83.73573   23.85567  1117.21008         582.94958         28543.12        11928.233  498.9186
+2       151.78409  200.45068  172.84520   9363.221  2631.0618 -250.12549  497.96964  1404.52356         263.22577         28445.12        10249.930 -631.3950
+3       430.37689   10.91681  165.43263  18228.156  -174.4520  279.74014 1637.08313   451.75687        -186.24971         25092.51         6995.734 -199.9772
+4        57.61217  318.27567 -545.16650  74835.211 53979.5117 -828.32812 1737.69934 -1602.37830         870.52832         31934.47        12756.413  322.1815
+5       193.89822  -19.46144  309.85352  30873.818 87663.4453 1231.11816  -93.13383   -93.52295         -46.13445         40405.02        15108.957  946.5299
+6       586.39062  -60.85189 -554.41858  37862.176  -374.8628 -504.33298  927.51862  -443.79581         551.08972         33534.32        11985.690 -345.4969
+7       576.56299  158.58598  739.37445  20361.158   699.5674  296.80823  901.38519   479.85083         625.94379         26687.98        15087.406  -30.3857
+8       377.71939 -183.04483  -86.36446  12019.869   272.2732 -159.81361 -123.82663  1633.97900         151.99660         32715.76         7777.927  981.2333
+9      1076.29993  265.54956 1241.17737 117128.297 81981.0000  643.58942 -537.41174  1885.70496         266.71893         29659.27        12103.782  486.8053
+10      613.84637 -331.07144  284.85919  43782.598   538.8544  264.15646 2095.33691   890.09924         615.48645         23197.31        10494.148  864.8149
+     RB705-A     RB780-A      PE-A PE-Dazzle594-A    PE-Cy5-A PE-Fire 700-A PE-Fire 744-A PE-Vio770-A      APC-A Alexa Fluor 647-A APC-R700-A Zombie NIR-A
+1  44838.508 -141.585068 1068.2528       578.6277  -64.876808      4269.905    -202.18224  1048.51550  793.43475         371.38504 -613.87531    2043.3976
+2  27483.652  598.196106 1058.2180       293.4682  165.636078      2071.323     568.53308   249.52765  333.54977        -587.59106  868.64899    -102.8294
+3  42719.836   -8.468122 2283.2017      -224.1359  127.101288      2758.384    -569.53607  1182.81165 1095.60669          81.92484  -34.87518    1089.9259
+4  45776.945 -815.360107  567.6264      1034.4785 1201.292236      2185.473     256.07065   203.22432  887.91266         178.59489  625.20990    1009.0977
+5   6368.570  608.893005 2592.7739       944.8301 2856.818115      3225.984    -271.71750  1770.93811 1544.25122        -448.50470  442.44052    1125.8389
+6  34369.695  643.594238 4197.4761      1500.0323    4.783360      5015.515      92.60738   504.29309 -359.98053         698.12653  941.68384     899.7871
+7  28408.859 1386.730591 4264.9146      -597.1237  508.787720      7236.833     960.18005   143.71167  136.92210         118.64117 1368.51392     640.4598
+8  58408.574  164.525543 3364.6177       554.7925 -375.413147      7178.272     523.82959   185.51820  -98.60514         132.37144  -59.86410    1598.0328
+9   8827.783 4133.052734  399.1211       194.7530 3084.345947      4067.024      72.06303  5995.08447 1741.64331        -400.03513  307.41357     833.0505
+10 55555.387 -246.124710  942.3546      1063.8234    5.414372      5490.021     185.81908    55.72056  560.93927         187.70859   99.84937    1160.2867
+   APC-Fire 750-A APC-Fire 810-A     AF-A
+1       16674.268      12961.646 5846.889
+2       10726.335       8901.772 3642.393
+3       14285.583      10966.334 4965.288
+4        8933.297      12931.965 3294.394
+5       17426.600      10220.262 5342.306
+6       12976.565      12468.265 2928.806
+7       16802.729      18170.705 4243.143
+8       19433.396      13158.336 5663.485
+9       20943.109      14394.367 4701.339
+10      13995.416       9620.977 5281.644
+
+## Alternate Scenario 1
+All-in-all, our Downsampling() function appears to be in working order. Before moving on to figuring how to convert the data.frame into an .fcs, lets consider a couple things.
+
+As we saw, for our dataset, the counts were fairly similar across the board for our ‘Tcells’ gate.
+
+![]("C:/Users/Macarena/MacarenaLM/notes/week10-Downsampling and concatenation/ggplot2 scatter plot 1.png")
+
+But what would happen in a scenario where we provided a downsample count that was greater than the number of cells present in the specimen? Would that work? Or would we get back an error?
+
+Lets check with the CD8+ gate, using a count of 2500 (which would not be enough for INF179). Lets also switch back our function readout within the function to nrow() for an easier visual summary check.
+
+```{r}
+#' This function downsamples from a designated gate to our desired number
+#' of cells, returning as a new .fcs file
+#' 
+#' @param x A GatingSet object, typically iterated in.
+#' @param subset The gate from which to retrieve cell counts from 
+#' @param inverse.transform Whether to revert values back to their
+#' original untransformed values before export as an .fcs file, default
+#' is set to TRUE
+#' @param DownsampleCount The desired number of cells to downsample from
+#' each gated population. 
+#' 
+Downsampling <- function(x, subset, inverse.transform=TRUE, DownsampleCount){
+  EventsInTheGate <- gs_pop_get_data(x, subset,
+   inverse.transform=inverse.transform)
+  MeasurementData <- exprs(EventsInTheGate[[1]])
+  MeasurementDataFramed <- as.data.frame(MeasurementData, check.names = FALSE)
+
+  Downsampled_DataFrame <- slice_sample(MeasurementDataFramed, n = DownsampleCount, replace = FALSE)
+
+  nrow(Downsampled_DataFrame)
+}
+```
+
+```{r}
+map(.x=SFC_GatingSet, subset="CD8+", .f=Downsampling, DownsampleCount=2500)
+```
+[[1]]
+[1] 2500
+
+[[2]]
+[1] 2500
+
+[[3]]
+[1] 1713
+
+Based on the returns, it appears the default behavior for slice_sample() in this scenario where not enough cells are present is just to return all cells that are currently present. Which is good, so one potential worry off our list.
+
+## Alternate Scenario 2
+Alternatively, what if we wanted to retrieve a certain percentage of cells from within a gate for each individual specimen, rather than a fixed count?
+
+While we could write this as an entirely separate function, the smarter way (reusing existing code) would be to set up a conditional.
+
+One way to implement this using our existing arguments would be, if our ‘DownsampleCount’ argument is less than 1, this would correspond to the desired downsampling proportion that we would to subsample for the respective gated cell population.
+
+So in practice, we would modify the function as follows, and update the documentation, as it is not an immediately obvious practice.
+
+```{r}
+#' This function downsamples from a designated gate to our desired number
+#' of cells, returning as a new .fcs file
+#' 
+#' @param x A GatingSet object, typically iterated in.
+#' @param subset The gate from which to retrieve cell counts from 
+#' @param inverse.transform Whether to revert values back to their
+#' original untransformed values before export as an .fcs file, default
+#' is set to TRUE
+#' @param DownsampleCount The desired number of cells to downsample from
+#' each gated population. If value is less than 1, subsets out the 
+#' equivalent proportion from that specimen
+#' 
+Downsampling <- function(x, subset, inverse.transform=TRUE, DownsampleCount){
+  EventsInTheGate <- gs_pop_get_data(x, subset,
+   inverse.transform=inverse.transform)
+  MeasurementData <- exprs(EventsInTheGate[[1]])
+  MeasurementDataFramed <- as.data.frame(MeasurementData, check.names = FALSE)
+
+  if (DownsampleCount < 1) {
+      Count <- nrow(EventsInTheGate) # Original Count
+      Count <- as.numeric(Count) #Sanity Check on Value Type
+      Count <- Count*DownsampleCount # Target Cells
+      Count <- round(Count, 0)
+      DownsampleCount <- Count # Over-writting DownsampleCount used for downsampling
+    }
+
+
+  Downsampled_DataFrame <- slice_sample(MeasurementDataFramed, n = DownsampleCount, replace = FALSE)
+
+  nrow(Downsampled_DataFrame)
+}
+```
