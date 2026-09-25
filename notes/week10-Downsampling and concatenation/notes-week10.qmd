@@ -922,3 +922,29 @@ Downsampling <- function(x, subset, inverse.transform=TRUE, DownsampleCount){
   nrow(Downsampled_DataFrame)
 }
 ```
+
+```{r}
+# 0.1 or 10% of each .fcs file
+
+map(.x=SFC_GatingSet, subset="CD8+", .f=Downsampling, DownsampleCount=0.1)
+```
+[[1]]
+[1] 257
+
+[[2]]
+[1] 308
+
+[[3]]
+[1] 171
+
+And with that, the beating heart of our Downsampling function has now been properly set up.
+
+## returnType
+We should probably start figuring out what object format we want our Downsampling() function to be returning.
+
+Having generated a subsetted-exprs-matrix, we could reinsert it into the .fcs file, and write it out to a specific folder. This would allow us to access it for subsequent use later on. We would still however need to make a few additional adjustments to the .fcs file metadata, so that we properly document the changes that have been made (so we don’t end up confusing these downsampled files with the original ones).
+
+Alternately, after downsampling, we may just want to return out outputs directly to R for continued analysis. In this scenario, we might want back the data as a ‘data.frame’ object (which wouldn’t have any associated metadata) or as a ‘flowFrame’ or ‘cytoframe’ object (which would have corresponding metadata).
+
+Let’s start with the main goal, our downsampled output as an .fcs file, and then add conditionals to allow for the return the other two options.
+
