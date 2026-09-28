@@ -948,3 +948,171 @@ Alternately, after downsampling, we may just want to return out outputs directly
 
 Let’s start with the main goal, our downsampled output as an .fcs file, and then add conditionals to allow for the return the other two options.
 
+## Creating new .fcs files
+Remembering back to Week 03, .fcs files in R are made up of 3 slots in the S4 object, ‘exprs’ (which we have been manipulating today), ‘parameters’ (containing general fluorophore/marker panel info), and ‘description/keyword’ (all the other metadata).
+
+So far, we have not changed anything in terms of the number of columns, so we shouldn’t need to make any changes to parameters (yey!). But we would need to swap out the existing exprs matrix (corresponding to that of the original .fcs file) for our downsampled one. Similarly, good reproducibility practice means we should update the appropiate keywords so that the generated .fcs files are not the originals.
+
+Lets continue by converting our ‘data.frame’ object back to the original ‘matrix’ type object, using the as.matrix() function.
+
+```{r}
+#' This function downsamples from a designated gate to our desired number
+#' of cells, returning as a new .fcs file
+#' 
+#' @param x A GatingSet object, typically iterated in.
+#' @param subset The gate from which to retrieve cell counts from 
+#' @param inverse.transform Whether to revert values back to their
+#' original untransformed values before export as an .fcs file, default
+#' is set to TRUE
+#' @param DownsampleCount The desired number of cells to downsample from
+#' each gated population. If value is less than 1, subsets out the 
+#' equivalent proportion from that specimen
+#' 
+Downsampling <- function(x, subset, inverse.transform=TRUE, DownsampleCount){
+  EventsInTheGate <- gs_pop_get_data(x, subset,
+   inverse.transform=inverse.transform)
+  MeasurementData <- exprs(EventsInTheGate[[1]])
+  MeasurementDataFramed <- as.data.frame(MeasurementData, check.names = FALSE)
+
+  if (DownsampleCount < 1) {
+      Count <- nrow(EventsInTheGate) # Original Count
+      Count <- as.numeric(Count) #Sanity Check on Value Type
+      Count <- Count*DownsampleCount # Target Cells
+      Count <- round(Count, 0)
+      DownsampleCount <- Count # Over-writting DownsampleCount used for downsampling
+    }
+
+
+  Downsampled_DataFrame <- slice_sample(MeasurementDataFramed, n = DownsampleCount, replace = FALSE)
+
+  DownsampledMatrix <- as.matrix(Downsampled_DataFrame)
+  class(DownsampledMatrix)
+}
+```
+
+```{r}
+map(.x=SFC_GatingSet, subset="CD8+", .f=Downsampling, DownsampleCount=2500)
+```
+[[1]]
+[1] "matrix" "array" 
+
+[[2]]
+[1] "matrix" "array" 
+
+[[3]]
+[1] "matrix" "array" 
+
+As mentioned, we will need to break out and copy the pieces from the original .fcs file into the new .fcs. The easiest way to gain access to all this information is to switch over from a cytoframe (working via a pointer) to a flowFrame (loaded into RAM). This will allow us access to the flowCore helper functions (parameters(), exprs(), and keyword()) to access the corresponding slots.
+
+```{r}
+#' This function downsamples from a designated gate to our desired number
+#' of cells, returning as a new .fcs file
+#' 
+#' @param x A GatingSet object, typically iterated in.
+#' @param subset The gate from which to retrieve cell counts from 
+#' @param inverse.transform Whether to revert values back to their
+#' original untransformed values before export as an .fcs file, default
+#' is set to TRUE
+#' @param DownsampleCount The desired number of cells to downsample from
+#' each gated population. If value is less than 1, subsets out the 
+#' equivalent proportion from that specimen
+#' 
+Downsampling <- function(x, subset, inverse.transform=TRUE, DownsampleCount){
+  EventsInTheGate <- gs_pop_get_data(x, subset,
+   inverse.transform=inverse.transform)
+  MeasurementData <- exprs(EventsInTheGate[[1]])
+  MeasurementDataFramed <- as.data.frame(MeasurementData, check.names = FALSE)
+
+  if (DownsampleCount < 1) {
+      Count <- nrow(EventsInTheGate) # Original Count
+      Count <- as.numeric(Count) #Sanity Check on Value Type
+      Count <- Count*DownsampleCount # Target Cells
+      Count <- round(Count, 0)
+      DownsampleCount <- Count # Over-writting DownsampleCount used for downsampling
+    }
+
+  Downsampled_DataFrame <- slice_sample(MeasurementDataFramed, n = DownsampleCount, replace = FALSE)
+
+  DownsampledMatrix <- as.matrix(Downsampled_DataFrame)
+
+  flowFrame <- EventsInTheGate[[1, returnType = "flowFrame"]]
+  OriginalParameters <- parameters(flowFrame)
+  OriginalDescription <- keyword(flowFrame)
+
+  return(OriginalParameters)
+}
+```
+
+```{r}
+map(.x=SFC_GatingSet[1], subset="CD8+", .f=Downsampling, DownsampleCount=2500)
+```
+[[1]]
+An object of class 'AnnotatedDataFrame'
+  rowNames: $P1 $P2 ... $P43 (43 total)
+  varLabels: name desc ... maxRange (5 total)
+  varMetadata: labelDescription
+
+Seeing as we now have access to the ‘flowFrame’ contents, we can now cobble together our “DownsampledMatrix” (corresponding to the new ‘exprs’ slot) with the contents of the original ‘description’ and ‘parameters’ slots.
+
+With all the components gathered, creating a new .fcs file is as simple as handing them off to the new() function.
+
+```{r}
+#' This function downsamples from a designated gate to our desired number
+#' of cells, returning as a new .fcs file
+#' 
+#' @param x A GatingSet object, typically iterated in.
+#' @param subset The gate from which to retrieve cell counts from 
+#' @param inverse.transform Whether to revert values back to their
+#' original untransformed values before export as an .fcs file, default
+#' is set to TRUE
+#' @param DownsampleCount The desired number of cells to downsample from
+#' each gated population. If value is less than 1, subsets out the 
+#' equivalent proportion from that specimen
+#' 
+Downsampling <- function(x, subset, inverse.transform=TRUE, DownsampleCount){
+  EventsInTheGate <- gs_pop_get_data(x, subset,
+   inverse.transform=inverse.transform)
+  MeasurementData <- exprs(EventsInTheGate[[1]])
+  MeasurementDataFramed <- as.data.frame(MeasurementData, check.names = FALSE)
+
+  if (DownsampleCount < 1) {
+      Count <- nrow(EventsInTheGate) # Original Count
+      Count <- as.numeric(Count) #Sanity Check on Value Type
+      Count <- Count*DownsampleCount # Target Cells
+      Count <- round(Count, 0)
+      DownsampleCount <- Count # Over-writting DownsampleCount used for downsampling
+    }
+
+  Downsampled_DataFrame <- slice_sample(MeasurementDataFramed, n = DownsampleCount, replace = FALSE)
+
+  DownsampledMatrix <- as.matrix(Downsampled_DataFrame)
+
+  flowFrame <- EventsInTheGate[[1, returnType = "flowFrame"]]
+  OriginalParameters <- parameters(flowFrame)
+  OriginalDescription <- keyword(flowFrame)
+
+  NewFCS <- new("flowFrame", exprs=DownsampledMatrix, parameters=OriginalParameters, description=OriginalDescription)
+
+  return(NewFCS)
+}
+```
+
+```{r}
+map(.x=SFC_GatingSet[1], subset="CD8+", .f=Downsampling, DownsampleCount=2500)
+```
+[[1]]
+flowFrame object '2025_07_26_AB_02-INF052-00_Ctrl_Unmixed__Tcells.fcs'
+with 2500 cells and 43 observables:
+               name      desc     range  minRange  maxRange
+$P1            Time        NA    896744         0    896744
+$P2           SSC-W        NA   4194303         0   4194303
+$P3           SSC-H        NA   4194303         0   4194303
+$P4           SSC-A        NA   4194303         0   4194303
+$P5           FSC-W        NA   4194303         0   4194303
+...             ...       ...       ...       ...       ...
+$P39     APC-R700-A    CD107a   4194275      -111   4194275
+$P40   Zombie NIR-A Viability   4194275      -111   4194275
+$P41 APC-Fire 750-A      CD27   4194275      -111   4194275
+$P42 APC-Fire 810-A      CCR7   4194275      -111   4194275
+$P43           AF-A        NA   4194275      -111   4194275
+472 keywords are stored in the 'description' slot
