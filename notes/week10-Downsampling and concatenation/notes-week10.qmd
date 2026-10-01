@@ -1289,3 +1289,6 @@ $P43           AF-A        NA   4194275      -111   4194275
 We are now able to get back a standard flowFrame object. Looking at the readout output, we see that it automatically updated to reflect the new number of downsampled cells, while retaining the metadata from the original .fcs file.
 
 ## Updating keywords
+Before calling it good, and saving this flowFrame as an .fcs, lets back up a couple lines and update a few important keywords within the ‘description’ slot, so that we can tell our “downsampled in R” .fcs file apart from the original .fcs file.
+
+A simpler way of doing this is setting up another argument (which we will designate as ‘addon’), that will append a character value between the specimens corresponding tubename and the ending .fcs. For this particular instrument manufacturer, changing the “GUID” keyword for this .fcs file makes sense (although the equivalent keyword may vary depending on other platforms).
