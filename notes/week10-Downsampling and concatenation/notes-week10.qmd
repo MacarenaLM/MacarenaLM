@@ -1653,3 +1653,140 @@ And there we go, Downsampling() now has the functionality to return objects in d
 
 ## Dependencies
 One important thing before proceeding, Downsampling currently works because we called library() on all the packages needed to run the various functions we were using inside of it. If we were to close Positron and reopen, if we forgot to run one of these libraries (let’s say dplyr), we would get the following style error:
+
+```{r}
+Data <- map(.x=SFC_GatingSet[1], subset="CD8+", .f=Downsampling, DownsampleCount=2500, addon="CD8",
+  returnType="data.frame")
+head(Data[[1]], 3)
+```
+
+![]("C:/Users/Macarena/MacarenaLM/notes/week10-Downsampling and concatenation/error no dplyr.png")
+
+Since dplyr is not attached to our local environment, when slice_sample() is encountered within the function, and not defined elsewhere, we get an error returned. While we could remember to load all our various R packages at the start to avoid this issue, this opens another can of worms, as many R packages have functions with identical names, which results in the last package called masking those with identical names before it. This can often cause functions to fail, so less than ideal.
+
+There are two ways around this. Later on in the course, we will see how to use the @importFrom tag within a Roxygen2 skeleton, alongside the devtools package load_all() function to specify function-level dependencies from the get-go. However, since a couple additional setup steps are needed, for now, we will default to updating our functions to use the “packageName :: function name” option, with the ‘::’ telling R to use the function from that package regardless if it is currently attached to the local environment or not.
+
+In our case, I will go ahead and add the @importFrom tags (syntax is package name, followed by functions being imported from it) within the roxygen skeleton, and then within the function do the equivalent second option using ‘::’
+
+```{r}
+#' This function downsamples from a designated gate to our desired number
+#' of cells, returning as a new .fcs file
+#' 
+#' @param x A GatingSet object, typically iterated in.
+#' @param subset The gate from which to retrieve cell counts from 
+#' @param inverse.transform Whether to revert values back to their
+#' original untransformed values before export as an .fcs file, default
+#' is set to TRUE
+#' @param DownsampleCount The desired number of cells to downsample from
+#' each gated population. If value is less than 1, subsets out the 
+#' equivalent proportion from that specimen
+#' @param addon An additional character value to add before .fcs in the GUID
+#' keyword to tell the downsampled file apart from the original. 
+#' @param StorageLocation A file.path to the folder you want to store the new downsampled
+#' fcs file to. Default NULL results in .fcs file being stored in current working directory
+#' @param returnType Whether to return as a "fcs" file (default), or "flowFrame" or "data.frame"
+#' 
+#' @importFrom flowWorkspace gs_pop_get_data
+#' @importFrom flowCore parameters keyword write.FCS
+#' @importFrom Biobase exprs
+#' @importFrom dplyr slice_sample
+#'  
+#' 
+Downsampling <- function(x, subset, inverse.transform=TRUE, DownsampleCount,
+  addon, StorageLocation=NULL, returnType="fcs"){
+  EventsInTheGate <- flowWorkspace::gs_pop_get_data(x, subset,
+   inverse.transform=inverse.transform)
+  MeasurementData <- Biobase::exprs(EventsInTheGate[[1]])
+  MeasurementDataFramed <- as.data.frame(MeasurementData, check.names = FALSE)
+
+  if (DownsampleCount < 1) {
+      Count <- nrow(EventsInTheGate) # Original Count
+      Count <- as.numeric(Count) #Sanity Check on Value Type
+      Count <- Count*DownsampleCount # Target Cells
+      Count <- round(Count, 0)
+      DownsampleCount <- Count # Over-writting DownsampleCount used for downsampling
+    }
+
+  Downsampled_DataFrame <- dplyr::slice_sample(MeasurementDataFramed, n = DownsampleCount, replace = FALSE)
+
+  DownsampledMatrix <- as.matrix(Downsampled_DataFrame)
+
+  flowFrame <- EventsInTheGate[[1, returnType = "flowFrame"]]
+  OriginalParameters <- flowCore::parameters(flowFrame)
+  OriginalDescription <- flowCore::keyword(flowFrame)
+
+  OriginalName <- OriginalDescription$`GUID`
+  UpdatedName <- paste0("_", addon, ".fcs")
+  UpdatedGUID <- sub(".fcs", UpdatedName, OriginalName) #Swtiching out .fcs for Updated Name via the sub function
+  OriginalDescription$`GUID` <- UpdatedGUID
+
+  NewFCS <- new("flowFrame", exprs=DownsampledMatrix, parameters=OriginalParameters, description=OriginalDescription)
+
+  if (is.null(StorageLocation)){StorageLocation <- getwd()}
+
+  StoreFCSFileHere <- file.path(StorageLocation, UpdatedGUID)
+  
+  if (returnType == "fcs"){
+    flowCore::write.FCS(NewFCS, filename = StoreFCSFileHere, delimiter="#") # Write out .fcs file
+  } else if (returnType == "data.frame"){
+    return(Downsampled_DataFrame) #Return data.frame without metadata
+  } else {
+    return(NewFCS) #All other criterias return a flowFrame with metadata
+    }
+
+}
+```
+
+```{r}
+purrr::map(.x=SFC_GatingSet[1], subset="CD8+", .f=Downsampling, DownsampleCount=2500, addon="CD8",
+  returnType="flowFrame")
+```
+[[1]]
+flowFrame object '2025_07_26_AB_02-INF052-00_Ctrl_Unmixed__Tcells_CD8.fcs'
+with 2500 cells and 43 observables:
+               name      desc     range  minRange  maxRange
+$P1            Time        NA    896744         0    896744
+$P2           SSC-W        NA   4194303         0   4194303
+$P3           SSC-H        NA   4194303         0   4194303
+$P4           SSC-A        NA   4194303         0   4194303
+$P5           FSC-W        NA   4194303         0   4194303
+...             ...       ...       ...       ...       ...
+$P39     APC-R700-A    CD107a   4194275      -111   4194275
+$P40   Zombie NIR-A Viability   4194275      -111   4194275
+$P41 APC-Fire 750-A      CD27   4194275      -111   4194275
+$P42 APC-Fire 810-A      CCR7   4194275      -111   4194275
+$P43           AF-A        NA   4194275      -111   4194275
+472 keywords are stored in the 'description' slot
+
+Now, with the flowWorkspace, flowCore, Biobase and dplyr dependencies specied within the function, Downsample runs without issues regardless of whether the packages are attached to our local environment.
+
+## At last
+We can now remove the indexing ([1]) from SFC_GatingSet that we used throughout the building process, and proceed to downsample our entire GatingSet based on our parameters of interests.
+
+For example, returning 2500 CD4+ T cells as .fcs files (save it on Data folder)
+
+```{r}
+purrr::walk(.x=SFC_GatingSet, subset="CD4+", .f=Downsampling, DownsampleCount=2500, addon="CD4",
+  returnType="fcs", StorageLocation="C:/Users/Macarena/MacarenaLM/notes/week10-Downsampling and concatenation/data")
+```
+Or 10% of all T cells (save it on Data folder)
+
+```{r}
+purrr::walk(.x=SFC_GatingSet, subset="Tcells", .f=Downsampling, DownsampleCount=0.1, addon="_Tcells",
+  returnType="fcs", StorageLocation="C:/Users/Macarena/MacarenaLM/notes/week10-Downsampling and concatenation/data")
+```
+
+# Export
+Now that we have fully assembled Downsampling(), there is actually another useful use case when it comes to its ability to export out as fully-compatible .fcs files. If instead of providing a downsample number, we provided an implausibly high number (lets say 10,000,000) we would basically directly export out the entire gated cell population of interest as its own .fcs file.
+
+This can be quite useful, as you can set up your cleanup gates and major cell population gates (double checking to make sure they are applied correctly), and then export out your actual cell populations of interest as smaller .fcs files for future analysis. That way, if you are implementing hybrid workflows with large spectral flow cytometry files relying on commercial software (similar to the Flow-Jo/CytoML example from Week 05), you do not crash your RAM just trying to open the workspace.
+
+```{r}
+AllDNs <- purrr::map(.x=SFC_GatingSet, subset="Tcells", .f=Downsampling, DownsampleCount=10000000, addon="DN_All",
+  returnType="fcs", StorageLocation="C:/Users/Macarena/MacarenaLM/notes/week10-Downsampling and concatenation/data")
+```
+It has created a new .fcs
+
+# Concatenate
+
+  ## Nested Functions
