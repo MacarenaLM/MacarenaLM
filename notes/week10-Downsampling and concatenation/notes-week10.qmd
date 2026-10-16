@@ -1790,3 +1790,14 @@ It has created a new .fcs
 # Concatenate
 
   ## Nested Functions
+So far, we have continued the process of learning how to write our own functions to carry out useful tasks, culminating in creating our Downsampling function. While downsampling itself can be useful in certain situations, it is often used as part of a workflow where the downsampled outputs are combined together into a single .fcs file (concatenation) for use in unsupervised workflows (like dimensionality visualization).
+
+Unlike Downsampling(), which works within an individual .fcs files at a time, if we were to build out a Concatenate() function, we would need to first retrieve the downsampled returns from every .fcs file via iteration, then combine them together, before outputting them as a new .fcs file.
+
+The tricky part is that in practice, often when we Concatenate, we want to add in keywords to be able to tell the cells coming from the individual contributors of the concatenated file apart after the fact. For .fcs files, these keywords end up becoming additional columns in the ‘exprs’ matrix, which causes the need to not only modify exprs, but also parameters and description slots rather extensively before we can create the new .fcs file.
+
+However, I promised to not drown you in your first forray to the deep-end of the pool, so there will be no more function building in this session. I will provide the out code for Concatenate() and its various nested helper functions below, and instead focus on how to use it for actual implementation within our workflows for the rest of the time we have left.
+
+If, however, you are not burnt out on function building and want to optionally read through the equivalent Concatenate walk-through, follow the link here (https://umgcccfcsr.github.io/CytometryInR/course/10_Downsampling/concatenate.html)
+
+
