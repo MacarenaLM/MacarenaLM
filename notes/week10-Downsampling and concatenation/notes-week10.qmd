@@ -1800,4 +1800,299 @@ However, I promised to not drown you in your first forray to the deep-end of the
 
 If, however, you are not burnt out on function building and want to optionally read through the equivalent Concatenate walk-through, follow the link here (https://umgcccfcsr.github.io/CytometryInR/course/10_Downsampling/concatenate.html)
 
+## Concatenate code
+Briefly as far as explainers go, Concatenate needs to iterate through various .fcs files to retrieve the Downsampling outputs, as well as extract corresponding metadata for each iterated .fcs file. These get added in as new columns, with the cascading changes ending up applied to ‘exprs’, ‘parameters’, and ‘keyword’ slots, before being outputted as our return object type of choice. Because of all these moving parts, Concatenate is an example of a nested function, with several smaller helper functions that are called to help carry out the individual tasks.
+
+To see the Concatenate and associated helper functions, click the code-show arrow below. To skip the code and start using them, run the “Run Cell” option to get them to appear correctly in your local environment.
+
+```{r}
+#' Concatenate Internal
+#' 
+#' @param x TBD
+#' @param y TBD
+#' @param metadata TBD
+#' 
+#' @importFrom dplyr filter bind_cols
+#' 
+KeywordAppend <- function(x, y, metadata) {
+  df <- y
+  rownames(metadata) <- NULL
+  AddThisRow <- metadata |> filter(name %in% x)
+  ExpandedData <- bind_cols(df, AddThisRow)
+  return(ExpandedData)
+}
+
+#' Concatenate Internal
+#' 
+#' @param DictionaryList TBD
+#' @param data TBD
+#' 
+#' @importFrom dplyr left_join select rename
+#' @importFrom tidyselect all_of
+#' @importFrom rlang sym
+#' 
+KeywordTranslate <- function(DictionaryList, data) {
+
+  for (Entry in DictionaryList) {
+    ColumnName <- names(Entry)[1] 
+    KeyName <- names(Entry)[2]
+
+    data <- data |> dplyr::left_join(Entry, by = ColumnName) |>
+      dplyr::select(-tidyselect::all_of(ColumnName)) |> dplyr::rename(!!ColumnName := !!rlang::sym(KeyName))
+  }
+
+  return(data)
+}
+
+#' Concatenate Internal
+#' 
+#' @param x TBD
+#' @param data TBD
+#' 
+#' @importFrom dplyr select pull
+#' @importFrom tidyselect all_of
+#' @importFrom tibble tibble
+#' 
+#' 
+ColumnToKeyword <- function(x, data){
+  IndividualColumn <- data |> dplyr::select(tidyselect::all_of(x))
+  
+  if(!is.numeric(IndividualColumn)){ # Is not numeric
+    Values <- IndividualColumn |> dplyr::pull(x) |> unique()
+
+    Dictionary <- tibble::tibble(Values = Values, Values_Key = seq(1000, by = 1000, length.out = length(Values)))
+    colnames(Dictionary) <- gsub("Values", x, colnames(Dictionary))
+    return(Dictionary)
+  } else { # Is numeric already
+    Values <- IndividualColumn |> dplyr::pull(x) |> unique()
+    Dictionary <- tibble::tibble(Values = Values, Values_Key = Values)
+    colnames(Dictionary) <- gsub("Values", x, colnames(Dictionary))
+    return(Dictionary)
+  }
+}
+
+#' Concatenate Internal
+#' 
+#' @param flowFrame TBD
+#' @param NewColumns TBD
+#' 
+#' @importFrom flowCore pData parameters
+#' 
+ParameterUpdate <- function(flowFrame, NewColumns){
+    NewColumnLength <- ncol(NewColumns)
+    NewColumnNames <- colnames(NewColumns)
+    OldParameters <- pData(parameters(flowFrame))
+    NewParameter <- max(as.integer(gsub("\\$P", "", rownames(OldParameters)))) + 1
+    NewParameter <- seq(NewParameter, length.out = NewColumnLength)
+    NewParameter <- paste0("$P", NewParameter)
+    
+    UpdatedParameters <- do.call(rbind, lapply(NewColumnNames, function(i){
+                        vec <- NewColumns[,i]
+                        rg <- range(vec)
+                        data.frame(name = i, desc = NA, range = diff(rg) + 1, minRange = rg[1], maxRange = rg[2])
+                    }))
+    rownames(UpdatedParameters) <- NewParameter
+    return(UpdatedParameters)
+}
+
+#' Concatenates together .fcs files present in the GatingSet on the
+#'  basis of a given gate
+#' 
+#' @param gs A GatingSet object
+#' @param subset The gate from which to retrieve cell counts from 
+#' @param inverse.transform Whether to revert values back to their
+#' original untransformed values before export as an .fcs file, default
+#' is set to TRUE
+#' @param DownsampleCount The desired number of cells to downsample from
+#' each gated population. If value is less than 1, subsets out the 
+#' equivalent proportion from that specimen
+#' @param addon An additional character value to add before .fcs in the GUID
+#' keyword to tell the downsampled file apart from the original. 
+#' @param StorageLocation A file.path to the folder you want to store the new downsampled
+#' fcs file to. Default NULL results in .fcs file being stored in current working directory
+#' @param returnType Whether to return as a "fcs" file (default), or "flowFrame" or "data.frame"
+#' @param desiredCols A vector containing the names of the columns from the pData metadata
+#' that need to be added as keywords to the concatenated .fcs file. 
+#' @param specimenIndex Which specimen in the GatingSet to use as the metadata
+#' framework for the new fcs file. Default is set to 1. 
+#' @param filename Desired name for the concatenated file, default is MyConcatenatedFCS
+#' 
+#' @importFrom flowCore pData parameters keyword exprs write.FCS
+#' @importFrom flowWorkspace gs_pop_get_data
+#' @importFrom dplyr select bind_rows
+#' @importFrom tidyselect all_of
+#' @importFrom purrr map map2 flatten
+#' 
+Concatenate <- function(gs, subset, inverse.transform=TRUE, DownsampleCount,
+  addon, StorageLocation=NULL, returnType="flowFrame", desiredCols,
+  specimenIndex=1, filename="MyConcatenatedFCS"){
+
+  Metadata <- flowCore::pData(gs)
+  DesiredMetadata <- Metadata |> dplyr::select(tidyselect::all_of(desiredCols))
+
+  dataFrameList <- purrr::map(.x=gs, subset=subset, .f=Downsampling,
+   DownsampleCount=DownsampleCount, addon=addon, returnType="data.frame",
+  inverse.transform=inverse.transform, StorageLocation=StorageLocation)
+
+  TheFileNames <- DesiredMetadata |> dplyr::pull(name)
+
+  ExpandedDataframes <- purrr::map2(.x=TheFileNames, .y=dataFrameList,
+   .f=KeywordAppend, metadata=DesiredMetadata)
+
+  CombinedData <- dplyr::bind_rows(ExpandedDataframes)
+
+  NewData <- CombinedData |> dplyr::select(tidyselect::all_of(desiredCols))
+  OldData <- CombinedData |> dplyr::select(!tidyselect::all_of(desiredCols))
+
+  Dictionaries <- purrr::map(.x=desiredCols, .f=ColumnToKeyword, data=NewData)
+
+  EventsInTheGate <- flowWorkspace::gs_pop_get_data(gs[[specimenIndex]], subset,
+   inverse.transform=inverse.transform)
+  flowFrame <- EventsInTheGate[[1, returnType = "flowFrame"]]
+  OriginalParameters <- flowCore::parameters(flowFrame)
+  OriginalDescription <- flowCore::keyword(flowFrame)
+
+  NewKeywords <- purrr::flatten(Dictionaries)
+  NewDescriptions <- c(OriginalDescription, NewKeywords)
+
+  TranslatedNewData <- KeywordTranslate(data=NewData, DictionaryList=Dictionaries)
+
+  NewDataMatrix <- as.matrix(TranslatedNewData)
+  OldDataMatrix <- as.matrix(OldData)
+
+  new_fcs <- new("flowFrame", exprs=OldDataMatrix, parameters=OriginalParameters,
+                 description=NewDescriptions)
+
+  NewParameters <- ParameterUpdate(flowFrame=new_fcs, NewColumns=NewDataMatrix)
+
+  pd <- pData(parameters(new_fcs))
+  pd <- rbind(pd, NewParameters)
+  new_fcs@exprs <- cbind(exprs(new_fcs), NewDataMatrix)
+  pData(parameters(new_fcs)) <- pd
+  new_pid <- rownames(pd)
+  new_kw <- new_fcs@description
+
+  for (i in new_pid){
+    new_kw[paste0(i,"B")] <- new_kw["$P1B"] #Unclear Purpose
+    new_kw[paste0(i,"E")] <- "0,0"
+    new_kw[paste0(i,"N")] <- pd[[i,1]]
+    #new_kw[paste0(i,"V")] <- new_kw["$P1V"] # Extra Unclear Purpose
+    new_kw[paste0(i,"R")] <- pd[[i,5]]
+    new_kw[paste0(i,"DISPLAY")] <- "LIN"
+    new_kw[paste0(i,"TYPE")] <- "Identity"
+    new_kw[paste0("flowCore_", i,"Rmax")] <- pd[[i,5]]
+    new_kw[paste0("flowCore_", i,"Rmin")] <- pd[[i,4]]
+  }
+  
+  UpdatedParameters <- parameters(new_fcs)
+  UpdatedExprs <- exprs(new_fcs)
+
+  UpdatedFCS <- new("flowFrame", exprs=UpdatedExprs, parameters=UpdatedParameters, description=new_kw)
+
+  AssembledName <- paste0(filename, ".fcs")
+  UpdatedFCS@description$GUID <- AssembledName
+  UpdatedFCS@description$`$FIL` <- AssembledName 
+  #UpdatedFCS@description$CREATOR <- "CytometryInR_2026"
+  #UpdatedFCS@description$GROUPNAME <- filename
+  #UpdatedFCS@description$TUBENAME <- filename
+  #UpdatedFCS@description$USERSETTINGNAME <- filename
+  #Date <- Sys.time()
+  #Date <- as.Date(Date)
+  #UpdatedFCS@description$`$DATE` <- Date
+
+  if (is.null(StorageLocation)){StorageLocation <- getwd()}
+
+  StoreFCSFileHere <- file.path(StorageLocation, AssembledName)
+  
+  if (returnType == "fcs"){
+    flowCore::write.FCS(UpdatedFCS, filename = StoreFCSFileHere, delimiter="#") # Write out .fcs file
+  } else if (returnType == "data.frame"){
+    return(Downsampled_DataFrame) #Return data.frame without metadata
+  } else {
+    return(UpdatedFCS) #All other criterias return a flowFrame with metadata
+    }
+}
+```
+
+## Update Metadata
+
+With Concatenate and it’s helpers now active as functions within your local environment, we can now focus on the workflow needed to run these on our GatingSet. The way Concatenate was set up, additional keywords can be added in by retrieving the corresponding columns from the ‘GatingSet’ metadata (which is visible via pData()).
+
+```{r}
+CurrentMetadata <- pData(SFC_GatingSet)
+CurrentMetadata
+```
+                                                                                                  name
+2025_07_26_AB_02-INF052-00_Ctrl_Unmixed__Tcells.fcs 2025_07_26_AB_02-INF052-00_Ctrl_Unmixed__Tcells.fcs
+2025_07_26_AB_02-INF100-00_Ctrl_Unmixed__Tcells.fcs 2025_07_26_AB_02-INF100-00_Ctrl_Unmixed__Tcells.fcs
+2025_07_26_AB_02-INF179-00_Ctrl_Unmixed__Tcells.fcs 2025_07_26_AB_02-INF179-00_Ctrl_Unmixed__Tcells.fcs
+
+As you can see, in our current GatingSet, it’s just the standard name column. To edit the GatingSet metadata, we can repeat the steps used back during Week 07 to merge in additional metadata that is stored for the respective specimens in a .csv file (located in our case within the Week 10 data folder).
+
+```{r}
+TheCSV <- list.files(StorageLocation, pattern=".csv", full.names=TRUE)
+AdditionalMetadata <- read.csv(TheCSV, check.names=FALSE)
+colnames(CurrentMetadata)
+```
+[1] "name"
+
+```{r}
+colnames(AdditionalMetadata)
+```
+[1] "name"       "condition"  "infant_sex" "HEU_status"
+
+Seeing as both our data.frames have a column in common (and the names present are equivalent for both), we can use dplyr packages left_join() function to combine both data.frames together them. Once this is accomplished, we can then assign this back to our GatingSet.
+
+```{r}
+UpdatedMetadata <- left_join(CurrentMetadata, AdditionalMetadata, by="name")
+rownames(UpdatedMetadata) <- UpdatedMetadata$name
+pData(SFC_GatingSet) <- UpdatedMetadata
+pData(SFC_GatingSet)
+```
+                                                                                                   name condition infant_sex
+2025_07_26_AB_02-INF052-00_Ctrl_Unmixed__Tcells.fcs 2025_07_26_AB_02-INF052-00_Ctrl_Unmixed__Tcells.fcs      Ctrl       Male
+2025_07_26_AB_02-INF100-00_Ctrl_Unmixed__Tcells.fcs 2025_07_26_AB_02-INF100-00_Ctrl_Unmixed__Tcells.fcs      Ctrl     Female
+2025_07_26_AB_02-INF179-00_Ctrl_Unmixed__Tcells.fcs 2025_07_26_AB_02-INF179-00_Ctrl_Unmixed__Tcells.fcs      Ctrl       Male
+                                                    HEU_status
+2025_07_26_AB_02-INF052-00_Ctrl_Unmixed__Tcells.fcs     HEU-hi
+2025_07_26_AB_02-INF100-00_Ctrl_Unmixed__Tcells.fcs     HEU-lo
+2025_07_26_AB_02-INF179-00_Ctrl_Unmixed__Tcells.fcs         HU
+
+Our metadata is now assembled, and we can provide the columns we want to add in as keywords to Concatenate()‘s ’desiredCols’ argument in the form of a vector (ex. desiredCols=c(“name”, “condition”, “infant_sex”, “HEU_status”))
+
+## Concatenate
+
+Now that we have our functions, updated metadata, and our assembled GatingSet object, we can concatenate together gates of interest. In the example below, we are downsampling for 2000 CD4+ T cells, appending four keyword columns, and having R return the values as a flowFrame.
+
+```{r}
+Concatenate(gs=SFC_GatingSet, subset="CD4+", addon="CD4", DownsampleCount=2000,
+  desiredCols=c("name", "condition", "infant_sex", "HEU_status"), returnType="flowframe",
+  filename="ConcatenatedCD4")
+```
+
+(this, from now, is from the bonus content):
+
+While down-sampling by itself can be useful under certain situations, it is more often used as part of a workflow where the downsampled outputs are combined together into a single .fcs file (concatenation) for use in unsupervised workflows (like dimensionality visualization).
+
+While nesting Downsampling() within Concatenate() to create a nested function is a simple enough process, in practice the tricky part is that when we concatenate .fcs files together, we typically want to add keywords to allow us distinguish within the concatenated file the original .fcs file from which a cell derrived.
+
+For .fcs files, these keywords end up being integrated in as additional numeric columns in the ‘exprs’ matrix, which results in the need to not only modify the exprs slot, but subsequently additional modifications to the parameters and description slots before we can create the new .fcs file.
+
+It is because of all these numerous moving parts that showing the full-walkthrough for Concatenate() within Week 10 was not feasible, and why we resorted to just sharing the fully assembled Concatenate() function and its various nested helper functions in the R folder so that the focus could remain on their actual implementation within a workflow.
+
+However, if you are not yet burnt out on function building, the walk-through documenting the process via which Concatenate was created can be seen below.
+
+ ## Set up
+
+Seeing as this portion of the original walk-through (index.qmd) has now been relocated to its own separate .qmd file (concatenate.qmd), we will need to reload in all the different components we had previously assembled to replicate the working environment contents that should have been present at the point of the workflow we started to assemble Concatenate().
+
+Lets re-attach the required R packages to our local environment via the library() call.
+
+Finally, where we left off, we had Downsampling() fully assembled and active in our enviroment. Since we will need it when building out Concatenate(), we can source() the final version of Downsampling() function that was stored within an “R” folder in our working environment at the end of the Week 10 walk-through. The source() function is the equivalent of calling library() on an R package, but at the level of individual .R files, returning their generated contents to your local environment.
+
+```{r}
+#DownsamplingRFilePath <- file.path("course", "10_Downsampling", "R", "Downsampling.R") # For Interactive
+DownsamplingRFilePath <- file.path("R", "Downsampling.R") # For Quarto Rendering
+source(DownsamplingRFilePath)
+```
 
