@@ -2030,7 +2030,7 @@ CurrentMetadata
 As you can see, in our current GatingSet, it’s just the standard name column. To edit the GatingSet metadata, we can repeat the steps used back during Week 07 to merge in additional metadata that is stored for the respective specimens in a .csv file (located in our case within the Week 10 data folder).
 
 ```{r}
-TheCSV <- list.files(StorageLocation, pattern=".csv", full.names=TRUE)
+TheCSV <- list.files("C:/Users/Macarena/MacarenaLM/notes/week10-Downsampling and concatenation/data", pattern=".csv", full.names=TRUE)
 AdditionalMetadata <- read.csv(TheCSV, check.names=FALSE)
 colnames(CurrentMetadata)
 ```
@@ -2069,30 +2069,73 @@ Concatenate(gs=SFC_GatingSet, subset="CD4+", addon="CD4", DownsampleCount=2000,
   desiredCols=c("name", "condition", "infant_sex", "HEU_status"), returnType="flowframe",
   filename="ConcatenatedCD4")
 ```
+flowFrame object 'ConcatenatedCD4.fcs'
+with 6000 cells and 47 observables:
+           name   desc     range  minRange  maxRange
+$P1        Time     NA    896744         0    896744
+$P2       SSC-W     NA   4194303         0   4194303
+$P3       SSC-H     NA   4194303         0   4194303
+$P4       SSC-A     NA   4194303         0   4194303
+$P5       FSC-W     NA   4194303         0   4194303
+...         ...    ...       ...       ...       ...
+$P43       AF-A     NA   4194275      -111   4194275
+$P44       name     NA      2001      1000      3000
+$P45  condition     NA         1      1000      1000
+$P46 infant_sex     NA      1001      1000      2000
+$P47 HEU_status     NA      2001      1000      3000
+555 keywords are stored in the 'description' slot
 
-(this, from now, is from the bonus content):
-
-While down-sampling by itself can be useful under certain situations, it is more often used as part of a workflow where the downsampled outputs are combined together into a single .fcs file (concatenation) for use in unsupervised workflows (like dimensionality visualization).
-
-While nesting Downsampling() within Concatenate() to create a nested function is a simple enough process, in practice the tricky part is that when we concatenate .fcs files together, we typically want to add keywords to allow us distinguish within the concatenated file the original .fcs file from which a cell derrived.
-
-For .fcs files, these keywords end up being integrated in as additional numeric columns in the ‘exprs’ matrix, which results in the need to not only modify the exprs slot, but subsequently additional modifications to the parameters and description slots before we can create the new .fcs file.
-
-It is because of all these numerous moving parts that showing the full-walkthrough for Concatenate() within Week 10 was not feasible, and why we resorted to just sharing the fully assembled Concatenate() function and its various nested helper functions in the R folder so that the focus could remain on their actual implementation within a workflow.
-
-However, if you are not yet burnt out on function building, the walk-through documenting the process via which Concatenate was created can be seen below.
-
- ## Set up
-
-Seeing as this portion of the original walk-through (index.qmd) has now been relocated to its own separate .qmd file (concatenate.qmd), we will need to reload in all the different components we had previously assembled to replicate the working environment contents that should have been present at the point of the workflow we started to assemble Concatenate().
-
-Lets re-attach the required R packages to our local environment via the library() call.
-
-Finally, where we left off, we had Downsampling() fully assembled and active in our enviroment. Since we will need it when building out Concatenate(), we can source() the final version of Downsampling() function that was stored within an “R” folder in our working environment at the end of the Week 10 walk-through. The source() function is the equivalent of calling library() on an R package, but at the level of individual .R files, returning their generated contents to your local environment.
+And just as easily, we can modify returnType to return as an .fcs file
 
 ```{r}
-#DownsamplingRFilePath <- file.path("course", "10_Downsampling", "R", "Downsampling.R") # For Interactive
-DownsamplingRFilePath <- file.path("R", "Downsampling.R") # For Quarto Rendering
-source(DownsamplingRFilePath)
+Concatenate(gs=SFC_GatingSet, subset="CD4+", addon="CD4", DownsampleCount=2000,
+  desiredCols=c("name", "condition", "infant_sex", "HEU_status"), returnType="fcs")
 ```
+[1] "c:/Users/Macarena/MacarenaLM/MyConcatenatedFCS.fcs" (It has been created a new fcs file)
 
+Which, as always, for sanity check when working with your own functions, its always best to double check everything stored correctly and opens as you will anticipate.
+
+![]("C:/Users/Macarena/MacarenaLM/notes/week10-Downsampling and concatenation/Comprob Floreada Concatenate.png")
+
+Likewise, similar to what we encountered with Downsampling, if we provide an improbably high-number for ‘DownsampleCount’, we just end up combining all our cells of interest for a given cell population, from each individual, together into a single file.
+
+```{r}
+Concatenate(gs=SFC_GatingSet, subset="CD8+", addon="CD8", DownsampleCount=10000000,
+  desiredCols=c("name", "condition", "infant_sex", "HEU_status"), returnType="flowframe")
+```
+flowFrame object 'MyConcatenatedFCS.fcs'
+with 7370 cells and 47 observables:
+           name   desc     range  minRange  maxRange
+$P1        Time     NA    896744         0    896744
+$P2       SSC-W     NA   4194303         0   4194303
+$P3       SSC-H     NA   4194303         0   4194303
+$P4       SSC-A     NA   4194303         0   4194303
+$P5       FSC-W     NA   4194303         0   4194303
+...         ...    ...       ...       ...       ...
+$P43       AF-A     NA   4194275      -111   4194275
+$P44       name     NA      2001      1000      3000
+$P45  condition     NA         1      1000      1000
+$P46 infant_sex     NA      1001      1000      2000
+$P47 HEU_status     NA      2001      1000      3000
+555 keywords are stored in the 'description' slot
+
+# R
+
+Over the course of today, we created two large functions, Downsampling() and Concatenate(), plus several helper functions. While currently active in our environment, what if we want to use them for a different project on another day? What would be the best way to make them available.
+
+One approach to handling this issue I frequently encounter is placing your own functions within individual code blocks at the beginning of your .qmd file, so that they get activated in your local environment from the start of the process. However, if the functions are lengthy, this ends up occupying substantial portion of the document, which is less than ideal.
+
+The approach we will be using for the next several weeks of the course is to place the completed functions in their own respective .R files, all kept together in their own R folder within our working directory.
+
+Subsequently, when we need to load all these functions into our local environment, all we need to do is provide the file paths to walk alongside source() in order to activate all the .R files, making the functions they contain within available to us.
+
+To load all these functions to our active environment, for the next several sessions, we would only need to use the source() function providing the path to the folder. This in turn will load in all the function .R files we have created, making their contents available to us in R for subsequent use. We will explore how this approach can be useful in context over the next several weeks.
+
+
+```{r}
+#RFolder <- file.path("course", "10_Downsampling", "R") # For Interactive
+RFolder <- file.path("C:/Users/Macarena/MacarenaLM/notes/week10-Downsampling and concatenation/R") # For Quarto Rendering
+MyFunctions <- list.files(RFolder, full.names=TRUE)
+purrr::walk(.x=MyFunctions, .f=source)
+```
+To load all these functions to our active environment, for the next several sessions, we would only need to use the source() function providing the path to the folder. This in turn will load in all the function .R files we have created, making their contents available to us in R for subsequent use. We will explore how this approach can be useful in context over the next several weeks.
